@@ -1,0 +1,43 @@
+{
+  "name": "next-commerce-community",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "json-server": "json-server --watch db.json --port 3000"
+  },
+  "dependencies": {
+    "@heroicons/react": "^2.2.0",
+    "@reduxjs/toolkit": "^2.6.1",
+    "autoprefixer": "10.4.15",
+    "mongoose": "^8.19.2",
+    "next": "^15.3.5",
+    "next-pwa": "^5.6.0",
+    "postcss": "^8.5.6",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "react-hot-toast": "^2.4.1",
+    "react-infinite-scroll-component": "^6.1.0",
+    "react-multi-date-picker": "^4.5.2",
+    "react-qr-code": "^2.0.18",
+    "react-range-slider-input": "^3.0.7",
+    "react-redux": "^9.2.0",
+    "recharts": "^3.2.1",
+    "sweetalert2": "^11.22.2",
+    "swiper": "^10.2.0",
+    "tailwindcss": "3.3.3",
+    "tailwindcss-rtl": "^0.9.0"
+  },
+  "devDependencies": {
+    "@types/node": "20.6.2",
+    "@types/react": "19.0.12",
+    "@types/react-dom": "19.0.4",
+    "eslint": "8.49.0",
+    "eslint-config-next": "15.2.3",
+    "json-server": "^1.0.0-beta.3",
+    "typescript": "5.2.2"
+  }
+}

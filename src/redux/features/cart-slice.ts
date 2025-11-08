@@ -1,0 +1,125 @@
+// 📌 این فایل مربوط به مدیریت سبد خرید (Cart) با استفاده از Redux Toolkit است.
+// در اینجا اکشن‌ها و سلکتورها + مدیریت تخفیف کوپن اضافه شده‌اند.
+
+import { createSelector, createSlice, PayloadAction } from "@reduxjs/toolkit";
+import { RootState } from "../store";
+
+// 🎯 نوع آیتم‌های داخل سبد
+type CartItem = {
+  id: number;           // آیدی محصول
+  title: string;        // نام محصول
+  price: number;        // قیمت اصلی
+  discountedPrice: number; // قیمت بعد از تخفیف محصول
+  quantity: number;     // تعداد
+  imgs?: {
+    thumbnails: string[];
+    previews: string[];
+  };
+};
+
+// 🎫 نوع کوپن ذخیره شده
+type Coupon = {
+  code: string;   // کد کوپن
+  amount: number; // مبلغ تخفیف (واحد پولی)
+};
+
+// 📦 استیت اولیه + فیلدهای تخفیف کوپن
+type InitialState = {
+  items: CartItem[];
+  discount: number;           // مبلغ تخفیف اعمال‌شده
+  appliedCoupon: Coupon | null; // اطلاعات کوپن اعمال‌شده
+};
+
+const initialState: InitialState = {
+  items: [],
+  discount: 0,
+  appliedCoupon: null,
+};
+
+// 🛒 ایجاد Slice مربوط به سبد خرید
+export const cart = createSlice({
+  name: "cart",
+  initialState,
+  reducers: {
+    // ➕ افزودن محصول
+    addItemToCart: (state, action: PayloadAction<CartItem>) => {
+      const { id, title, price, quantity, discountedPrice, imgs } = action.payload;
+      const existingItem = state.items.find((item) => item.id === id);
+
+      if (existingItem) {
+        // اگر وجود داشت، تعداد را زیاد کن
+        existingItem.quantity += quantity;
+      } else {
+        // در غیر این صورت آیتم جدید اضافه کن
+        state.items.push({ id, title, price, quantity, discountedPrice, imgs });
+      }
+    },
+
+    // ❌ حذف یک محصول خاص
+    removeItemFromCart: (state, action: PayloadAction<number>) => {
+      const itemId = action.payload;
+      state.items = state.items.filter((item) => item.id !== itemId);
+    },
+
+    // 🔄 تغییر تعداد محصول
+    updateCartItemQuantity: (state, action: PayloadAction<{ id: number; quantity: number }>) => {
+      const { id, quantity } = action.payload;
+      const existingItem = state.items.find((item) => item.id === id);
+      if (existingItem) {
+        existingItem.quantity = quantity;
+      }
+    },
+
+    // 🧹 خالی کردن سبد + پاک کردن کوپن
+    removeAllItemsFromCart: (state) => {
+      state.items = [];
+      state.discount = 0;
+      state.appliedCoupon = null;
+    },
+
+    // ✅ اعمال کوپن (مبلغ تخفیف ثابت)
+    applyCoupon: (state, action: PayloadAction<{ code: string; amount: number }>) => {
+      state.discount = action.payload.amount;
+      state.appliedCoupon = { code: action.payload.code, amount: action.payload.amount };
+    },
+
+    // 🚫 حذف/غیرفعال‌سازی کوپن
+    removeCoupon: (state) => {
+      state.discount = 0;
+      state.appliedCoupon = null;
+    },
+  },
+});
+
+// 🔍 سلکتورهای داده
+export const selectCartItems = (state: RootState) => state.cartReducer.items;
+
+// 💰 مجموع قیمت کالاها (قبل از کوپن)
+export const selectTotalPrice = createSelector([selectCartItems], (items) =>
+  items.reduce((total, item) => total + item.discountedPrice * item.quantity, 0)
+);
+
+// 💳 مبلغ تخفیف کوپن
+export const selectDiscount = (state: RootState) => state.cartReducer.discount;
+
+// 🧾 کوپن اعمال شده
+export const selectAppliedCoupon = (state: RootState) => state.cartReducer.appliedCoupon;
+
+// ✅ مبلغ قابل پرداخت = مجموع - تخفیف (حداقل صفر)
+export const selectPayableTotal = createSelector(
+  [selectTotalPrice, selectDiscount],
+  (total, discount) => Math.max(0, total - discount)
+);
+
+// 📤 اکسپورت اکشن‌ها
+export const {
+  addItemToCart,
+  removeItemFromCart,
+  updateCartItemQuantity,
+  removeAllItemsFromCart,
+  applyCoupon,
+  removeCoupon,
+} = cart.actions;
+
+// 📤 ریدوسر اصلی
+export default cart.reducer;
