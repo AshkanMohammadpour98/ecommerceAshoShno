@@ -93,7 +93,7 @@ export default function ChartUsers() {
 
   // گرفتن دیتای کاربران از API زمانی که کامپوننت لود می‌شود
   useEffect(() => {
-    fetch("http://localhost:3000/usersData")
+    fetch("http://localhost:3001/usersData")
       .then((res) => res.json())
       .then((data) => setUserData(data))
       .catch(() => setUserData([]));

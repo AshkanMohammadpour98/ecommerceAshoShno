@@ -47,7 +47,7 @@ export default function Page({ params }) {
 
   // گرفتن اطلاعات کاربر از API
   useEffect(() => {
-    fetch(`http://localhost:3000/usersData/${userId}`)
+    fetch(`http://localhost:3001/usersData/${userId}`)
       .then((res) => res.json())
       .then((data) => {
         // نرمال‌سازی داده‌ها + سنکرون کردن فاکتور
@@ -82,14 +82,14 @@ export default function Page({ params }) {
 
   // گرفتن کل محصولات
   useEffect(() => {
-    fetch("http://localhost:3000/products")
+    fetch("http://localhost:3001/products")
       .then((res) => res.json())
       .then((data) => setAllProducts(data));
   }, []);
 
   // گرفتن دسته‌بندی‌ها
   useEffect(() => {
-    fetch("http://localhost:3000/categories")
+    fetch("http://localhost:3001/categories")
       .then((res) => res.json())
       .then((data) => setCategories(data.map((c) => c.name)));
   }, []);
@@ -200,7 +200,7 @@ export default function Page({ params }) {
     };
 
     try {
-      const res = await fetch(`http://localhost:3000/usersData/${userId}`, {
+      const res = await fetch(`http://localhost:3001/usersData/${userId}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),

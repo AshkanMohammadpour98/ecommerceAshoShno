@@ -35,7 +35,7 @@ type Banner = {
 // ============================================
 // تنظیمات
 // ============================================
-const API_BASE = "http://localhost:3000";
+const API_BASE = "http://localhost:3001";
 const BANNERS_URL = `${API_BASE}/customerPromoBanner`;
 const PRODUCTS_URL = `${API_BASE}/products`;
 const MAX_BANNERS = 3;
@@ -371,7 +371,7 @@ const BannerForm: React.FC<BannerFormProps> = ({
                   <div className="text-xs text-gray-500 mb-2">پیش‌نمایش تصویر</div>
                   <div className="w-full flex items-center justify-center">
                     <img
-                      src={image}
+                      src={image || null}
                       alt="preview"
                       className="max-h-40 object-contain"
                       onError={(e: any) => (e.currentTarget.src = "/images/promo/promo-01.png")}
@@ -630,7 +630,7 @@ const CustomerPromoBannerAdmin: React.FC = () => {
             {/* لیست بنرها */}
             {banners.length === 0 ? (
               <div className="rounded-lg bg-white shadow p-6 text-center text-gray-500">
-                هنوز بنری ثبت نشده است. روی "افزودن بنر بزرگ" کلیک کنید.
+                هنوز بنری ثبت نشده است. روی &quot;افزودن بنر بزرگ&quot; کلیک کنید.
               </div>
             ) : (
               <div className="grid gap-5 grid-cols-1 md:grid-cols-2">
@@ -681,8 +681,8 @@ const CustomerPromoBannerAdmin: React.FC = () => {
                     >
                       <div className="flex gap-4">
                         <img
-                          src={b.image}
-                          alt={b.title}
+                          src={b.image || null}
+                          alt={b.title || null}
                           className="h-20 w-20 object-contain rounded bg-white/50"
                           onError={(e: any) => (e.currentTarget.src = "/images/promo/promo-01.png")}
                         />
@@ -768,8 +768,8 @@ const CustomerPromoBannerAdmin: React.FC = () => {
                           </a>
                         </div>
                         <img
-                          src={banners[0].image}
-                          alt={banners[0].title}
+                          src={banners[0].image || null}
+                          alt={banners[0].title || null}
                           className="absolute bottom-0 left-4 lg:left-26 -z-1 h-40 object-contain"
                         />
                       </div>
@@ -786,8 +786,8 @@ const CustomerPromoBannerAdmin: React.FC = () => {
                               style={{ backgroundColor: bn.bgColor }}
                             >
                               <img
-                                src={bn.image}
-                                alt={bn.title}
+                                src={bn.image || null}
+                                alt={bn.title || null}
                                 className={`absolute top-1/2 -translate-y-1/2 left-3 -z-1 ${
                                   i === 0 ? "h-36" : "h-32"
                                 } object-contain`}

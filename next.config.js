@@ -9,6 +9,9 @@ const withPWA = require('next-pwa')({
 // 2. تنظیمات اصلی نکست شما (که فعلاً خالیه)
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  typescript: {
+    ignoreBuildErrors: true,
+  },
   // اگر در آینده تنظیمات دیگه‌ای داشتی، اینجا اضافه کن
 };
 

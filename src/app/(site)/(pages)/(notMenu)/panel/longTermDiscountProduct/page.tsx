@@ -100,7 +100,7 @@ const DiscountCountdownAdmin: React.FC = () => {
   // دریافت لیست محصولات
   const fetchProducts = async () => {
     try {
-      const res = await fetch("http://localhost:3000/products");
+      const res = await fetch("http://localhost:3001/products");
       if (!res.ok) throw new Error("products fetch error");
       const data: Product[] = await res.json();
       setProducts(data);
@@ -118,7 +118,7 @@ const DiscountCountdownAdmin: React.FC = () => {
   const fetchActiveDiscount = async () => {
     setFetching(true);
     try {
-      const res = await fetch("http://localhost:3000/longTermDiscountProduct");
+      const res = await fetch("http://localhost:3001/longTermDiscountProduct");
       if (!res.ok) throw new Error("discount fetch error");
       const list: LongTermDiscount[] = await res.json();
 
@@ -137,7 +137,7 @@ const DiscountCountdownAdmin: React.FC = () => {
         setActiveDiscount(discount);
 
         // دریافت خود محصول
-        const pRes = await fetch(`http://localhost:3000/products/${discount.productId}`);
+        const pRes = await fetch(`http://localhost:3001/products/${discount.productId}`);
         if (pRes.ok) {
           const prod: Product = await pRes.json();
           setActiveProduct(prod);
@@ -283,7 +283,7 @@ const DiscountCountdownAdmin: React.FC = () => {
 
       // حذف محصول فعلی
       if (activeDiscount.id) {
-        await fetch(`http://localhost:3000/longTermDiscountProduct/${activeDiscount.id}`, {
+        await fetch(`http://localhost:3001/longTermDiscountProduct/${activeDiscount.id}`, {
           method: "DELETE",
         });
       }
@@ -311,7 +311,7 @@ const DiscountCountdownAdmin: React.FC = () => {
         description: description.trim(),
       };
 
-      const res = await fetch("http://localhost:3000/longTermDiscountProduct", {
+      const res = await fetch("http://localhost:3001/longTermDiscountProduct", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
@@ -380,7 +380,7 @@ const DiscountCountdownAdmin: React.FC = () => {
       };
 
       const res = await fetch(
-        `http://localhost:3000/longTermDiscountProduct/${activeDiscount.id}`,
+        `http://localhost:3001/longTermDiscountProduct/${activeDiscount.id}`,
         {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
@@ -433,7 +433,7 @@ const DiscountCountdownAdmin: React.FC = () => {
     setLoading(true);
     try {
       const res = await fetch(
-        `http://localhost:3000/longTermDiscountProduct/${activeDiscount.id}`,
+        `http://localhost:3001/longTermDiscountProduct/${activeDiscount.id}`,
         { method: "DELETE" }
       );
 
@@ -551,8 +551,8 @@ const DiscountCountdownAdmin: React.FC = () => {
                 <div className="relative w-full aspect-square bg-white rounded-xl overflow-hidden border-2 border-white shadow-2">
                   {activeProduct.imgs?.previews?.[0] ? (
                     <Image
-                      src={activeProduct.imgs.previews[0]}
-                      alt={activeProduct.title}
+                      src={activeProduct.imgs.previews[0] || null}
+                      alt={activeProduct.title || null}
                       fill
                       className="object-contain p-4"
                     />
@@ -848,8 +848,8 @@ const DiscountCountdownAdmin: React.FC = () => {
                   <div className="relative w-full aspect-square bg-gray-1 rounded-xl overflow-hidden border-2 border-gray-2">
                     {selectedProduct.imgs?.previews?.[0] ? (
                       <Image
-                        src={selectedProduct.imgs.previews[0]}
-                        alt={selectedProduct.title}
+                        src={selectedProduct.imgs.previews[0] || null}
+                        alt={selectedProduct.title || null}
                         fill
                         className="object-contain p-6"
                       />

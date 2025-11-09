@@ -1,7 +1,7 @@
 // src/app/api/products/route.js
 
 // دیتای نمونه محصول‌ها که به صورت آرایه از آبجکت‌ها ذخیره شده
-export const productsData = [
+ const productsData = [
   {
     title: "Havit HV-G69 USB Gamepad2",
     reviews: 15,

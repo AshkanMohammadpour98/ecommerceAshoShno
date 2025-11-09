@@ -57,7 +57,7 @@ export default function SigninPage() {
     setLoading(true);
 
     try {
-      const res = await fetch("http://localhost:3000/usersData");
+      const res = await fetch("http://localhost:3001/usersData");
       if (!res.ok) throw new Error("خطا در ارتباط با سرور");
       const users = await res.json();
 

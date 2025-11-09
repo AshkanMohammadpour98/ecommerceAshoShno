@@ -1,83 +1,57 @@
-// app/shop-details/[shopDetailsId]/page.tsx
-import type { Metadata } from "next";
+// app/shop-details/[shopDetailsId]/page.jsx
 import { notFound } from "next/navigation";
 import ShopDetails from "@/components/ShopDetails";
 
-type Product = {
-  title: string;
-  reviews: number;
-  price: number;
-  hasDiscount: boolean;
-  discountedPrice?: number;
-  id: string;
-  categorie: string;
-  date: string;
-  imgs: {
-    thumbnails: string[];
-    previews: string[];
-  };
-  QRDatas: {
-    id: string;
-    name: string;
-    config: {
-      v: number;
-      value: string;
-      ecc: "L" | "M" | "Q" | "H";
-      colors: { fg: string; bg: string };
-    };
-    preview: {
-      url: string; // data:image/...
-      width: number;
-      height: number;
-      mime: string;
-    };
-    dateAddQrCode: string;
-  };
-};
+const API_URL = process.env.NEXT_PUBLIC_PRODUCTS_API || "http://localhost:3001/products";
 
-const API_URL =
-  process.env.NEXT_PUBLIC_PRODUCTS_API ?? "http://localhost:3000/products";
-
-// اختیاری: ISR هر 60 ثانیه
+// ISR هر 60 ثانیه
 export const revalidate = 60;
 
-async function getProductById(id: string): Promise<Product | null> {
-  const res = await fetch(API_URL, { next: { revalidate } });
-  if (!res.ok) return null;
+async function getProductById(id) {
+  try {
+    const res = await fetch(API_URL, { next: { revalidate } });
+    if (!res.ok) return null;
 
-  const products: Product[] = await res.json();
-  return products.find((p) => p.id === id) ?? null;
+    const products = await res.json();
+    return products.find((p) => p.id === id) || null;
+  } catch (error) {
+    console.error("Error fetching product:", error);
+    return null;
+  }
 }
 
 // متادیتای داینامیک براساس محصول
-export async function generateMetadata(
-  { params }: { params: { shopDetailsId: string } }
-): Promise<Metadata> {
+export async function generateMetadata({ params }) {
   const product = await getProductById(params.shopDetailsId);
+  
   if (!product) {
     return {
       title: "محصول یافت نشد | آسو شنو",
       description: "این محصول وجود ندارد یا حذف شده است.",
     };
   }
+  
   return {
     title: `${product.title} | آسو شنو`,
     description: `جزئیات ${product.title}`,
   };
 }
 
-// اختیاری: پیش‌ساخت صفحات (SSG) برای همه محصولات
+// پیش‌ساخت صفحات (SSG) برای همه محصولات
 export async function generateStaticParams() {
-  const res = await fetch(API_URL);
-  if (!res.ok) return [];
+  try {
+    const res = await fetch(API_URL);
+    if (!res.ok) return [];
 
-  const products: Product[] = await res.json();
-  return products.map((p) => ({ shopDetailsId: p.id }));
+    const products = await res.json();
+    return products.map((p) => ({ shopDetailsId: p.id }));
+  } catch (error) {
+    console.error("Error generating static params:", error);
+    return [];
+  }
 }
 
-export default async function ShopDetailsPage(
-  { params }: { params: { shopDetailsId: string } }
-) {
+export default async function ShopDetailsPage({ params }) {
   const product = await getProductById(params.shopDetailsId);
 
   if (!product) {
@@ -86,8 +60,7 @@ export default async function ShopDetailsPage(
 
   return (
     <main>
-      {/* فرض بر اینه که ShopDetails یه prop به اسم product می‌گیره */}
-      <ShopDetails product={product!} />
+      <ShopDetails product={product} />
     </main>
   );
 }

@@ -7,7 +7,7 @@ import BlogItem from "../Blog/BlogItem";
 
 const BlogGrid = async () => {
    // اینجا مستقیم fetch میکنیم → SSR
-  const resBlogs = await fetch("http://localhost:3000/blogData", {
+  const resBlogs = await fetch("http://localhost:3001/blogData", {
     cache: "no-store", // برای اینکه هر بار رفرش شه (معادل getServerSideProps)
   });
   const blogData = await resBlogs.json();

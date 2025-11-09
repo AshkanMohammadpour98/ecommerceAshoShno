@@ -1,4 +1,4 @@
-export const categories = [
+ const categories = [
     { name: "Desktop", products: 10 },
     { name: "Laptop", products: 12 },
     { name: "Monitor", products: 30 },

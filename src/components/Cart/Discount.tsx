@@ -35,7 +35,7 @@ const Discount = () => {
 
     try {
       const code = couponCode.trim().toUpperCase();
-      const res = await fetch(`http://localhost:3000/discountCodes?discountCode=${code}`);
+      const res = await fetch(`http://localhost:3001/discountCodes?discountCode=${code}`);
 
       if (!res.ok) throw new Error("خطا در دریافت اطلاعات از سرور");
 

@@ -67,7 +67,7 @@ const PromoBanner = () => {
         setLoading(true);
         
         // درخواست به API
-        const response = await fetch('http://localhost:3000/customerPromoBanner');
+        const response = await fetch('http://localhost:3001/customerPromoBanner');
         
         // بررسی موفقیت‌آمیز بودن درخواست
         if (!response.ok) {

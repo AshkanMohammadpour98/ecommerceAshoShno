@@ -20,10 +20,10 @@ import persian_fa from "react-date-object/locales/persian_fa";
 
 /*
   نکته: اگر API شما JSON Server هست، مسیرهای زیر کار می‌کنند:
-  GET   http://localhost:3000/products
-  PATCH http://localhost:3000/products/:id
+  GET   http://localhost:3001/products
+  PATCH http://localhost:3001/products/:id
 */
-const API_BASE = "http://localhost:3000/products";
+const API_BASE = "http://localhost:3001/products";
 
 /* ابزار: تاریخ شمسی با اعداد لاتین به فرم "YYYY/MM/DD" */
 function getJalaliLatinDate(date = new Date()) {
@@ -576,7 +576,7 @@ export default function QrCodeCreator() {
                       >
                         <div className="grid grid-cols-[auto_1fr_auto] items-center gap-3 p-3 sm:p-4">
                           <img
-                            src={thumb}
+                            src={thumb || null}
                             alt={p.title}
                             className="w-14 h-14 object-contain bg-white border rounded-lg"
                             loading="lazy"

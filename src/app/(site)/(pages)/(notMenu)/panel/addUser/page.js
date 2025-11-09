@@ -69,7 +69,7 @@ export default function AddUserForm() {
   // --------------------- افکت‌ها ---------------------
   useEffect(() => {
     // گرفتن دسته‌بندی‌ها
-    fetch("http://localhost:3000/categories")
+    fetch("http://localhost:3001/categories")
       .then((resCate) => resCate.json())
       .then((dataCate) => setCategories((dataCate || []).map((c) => c.name)))
       .catch(() => setCategories([]));
@@ -79,7 +79,7 @@ export default function AddUserForm() {
     // گرفتن محصولات فقط وقتی لازم شد
     if (!enableProducts) return;
     setLoadingProducts(true);
-    fetch("http://localhost:3000/products")
+    fetch("http://localhost:3001/products")
       .then((res) => res.json())
       .then((data) => setAllProducts(data || []))
       .catch(() => setAllProducts([]))
@@ -240,7 +240,7 @@ export default function AddUserForm() {
     };
 
     try {
-      const res = await fetch("http://localhost:3000/usersData", {
+      const res = await fetch("http://localhost:3001/usersData", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
@@ -307,7 +307,7 @@ export default function AddUserForm() {
         <div className="flex flex-col sm:flex-row sm:items-center gap-4">
           <div className="w-16 h-16 rounded-full border border-gray-3 flex items-center justify-center bg-gray-1 overflow-hidden">
             {formData.img ? (
-              <img src={formData.img} alt="پیش‌نمایش" className="w-full h-full object-cover" />
+              <img src={formData.img || null} alt="پیش‌نمایش" className="w-full h-full object-cover" />
             ) : (
               <UserCircleIcon className="w-10 h-10 text-blue" />
             )}

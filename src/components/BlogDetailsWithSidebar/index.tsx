@@ -11,13 +11,13 @@ import Image from "next/image";
 
 const BlogDetailsWithSidebar = async () => {
   // اینجا مستقیم fetch میکنیم → SSR
-  const resBlogs = await fetch("http://localhost:3000/blogData", {
+  const resBlogs = await fetch("http://localhost:3001/blogData", {
     cache: "no-store", // برای اینکه هر بار رفرش شه (معادل getServerSideProps)
   });
   const blogData = await resBlogs.json();
 
   // اینجا مستقیم fetch میکنیم → SSR
-  const resProducts = await fetch("http://localhost:3000/products", {
+  const resProducts = await fetch("http://localhost:3001/products", {
     cache: "no-store", // برای اینکه هر بار رفرش شه (معادل getServerSideProps)
   });
   const productsData = await resProducts.json();

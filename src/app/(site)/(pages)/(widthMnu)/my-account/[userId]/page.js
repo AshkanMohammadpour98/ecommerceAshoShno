@@ -309,7 +309,7 @@ const MyAccount = () => {
 
         // فراخوانی API برای گرفتن رمز واقعی و تطبیق با کوکی
         const res = await fetch(
-          `http://localhost:3000/usersData/${encodeURIComponent(cred.id)}`,
+          `http://localhost:3001/usersData/${encodeURIComponent(cred.id)}`,
           { cache: "no-store" }
         );
         if (!res.ok) throw new Error("USER_NOT_FOUND");
@@ -419,7 +419,7 @@ const MyAccount = () => {
 
       const ctrl = new AbortController();
       try {
-        const res = await fetch(`http://localhost:3000/usersData/${routeUserId}`, { signal: ctrl.signal });
+        const res = await fetch(`http://localhost:3001/usersData/${routeUserId}`, { signal: ctrl.signal });
         if (!res.ok) throw new Error("خطا در برقراری ارتباط با سرور یا کاربر یافت نشد");
 
         const apiData = await res.json();
@@ -496,7 +496,7 @@ const MyAccount = () => {
       }
 
       try {
-        const res = await fetch(`http://localhost:3000/usersData/${routeUserId}`, {
+        const res = await fetch(`http://localhost:3001/usersData/${routeUserId}`, {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(patch),
@@ -606,7 +606,7 @@ const MyAccount = () => {
 
       const patch = { registerWith: newRegisterWith };
 
-      const res = await fetch(`http://localhost:3000/usersData/${routeUserId}`, {
+      const res = await fetch(`http://localhost:3001/usersData/${routeUserId}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(patch),
@@ -681,7 +681,7 @@ const MyAccount = () => {
                     const thumb = p?.imgs?.thumbnails?.[0] || p?.imgs?.previews?.[0] || "/images/placeholder.png";
                     return (
                       <div key={p?.id} className="border border-gray-3 rounded-lg p-3 bg-gray-1">
-                        <img src={thumb} alt={p?.title || "product"} className="w-full h-28 object-contain rounded mb-2 bg-white" />
+                        <img src={thumb || null} alt={p?.title || "product"} className="w-full h-28 object-contain rounded mb-2 bg-white" />
                         <div className="space-y-1">
                           <p className="font-medium line-clamp-2">{p?.title || "محصول"}</p>
                           <p className="text-dark-4">{p?.categorie || "—"}</p>
@@ -933,7 +933,7 @@ const MyAccount = () => {
             <aside className="w-full lg:w-1/3 xl:w-1/4">
               <div className="bg-white p-5 rounded-xl shadow-3">
                 <div className="flex items-center gap-4 mb-6">
-                  <img src={userData.img} alt="آواتار کاربر" className="w-16 h-16 rounded-full object-cover bg-gray-2" />
+                  <img src={userData.img || null} alt="آواتار کاربر" className="w-16 h-16 rounded-full object-cover bg-gray-2" />
                   <div>
                     <h3 className="font-bold text-custom-xl">{userData.name}</h3>
                     <p className="text-custom-sm text-dark-4">{userData.email}</p>

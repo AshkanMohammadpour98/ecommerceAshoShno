@@ -58,7 +58,7 @@ const CounDown: React.FC = () => {
       
       try {
         // 1. دریافت لیست تخفیف‌های زمان‌دار
-        const discountRes = await fetch("http://localhost:3000/longTermDiscountProduct");
+        const discountRes = await fetch("http://localhost:3001/longTermDiscountProduct");
         if (!discountRes.ok) throw new Error("discount fetch error");
         const discountData: LongTermDiscount[] = await discountRes.json();
 
@@ -77,7 +77,7 @@ const CounDown: React.FC = () => {
 
         // 2. دریافت محصول مربوطه
         const productRes = await fetch(
-          `http://localhost:3000/products/${activeDiscount.productId}`
+          `http://localhost:3001/products/${activeDiscount.productId}`
         );
         if (!productRes.ok) throw new Error("product fetch error");
         const productData: Product = await productRes.json();

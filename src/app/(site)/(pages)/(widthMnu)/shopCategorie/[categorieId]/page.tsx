@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { useParams } from "next/navigation";
 
-// Components
+// ✅ کامپوننت‌ها
 import Breadcrumb from "@/components/Common/Breadcrumb";
 import CustomSelect from "@/components/Header/CustomSelect";
 import CategoryDropdown from "@/components/ShopWithSidebar/CategoryDropdown";
@@ -14,37 +14,27 @@ import PriceDropdown from "@/components/ShopWithSidebar/PriceDropdown";
 import SingleGridItem from "@/components/Shop/SingleGridItem";
 import SingleListItem from "@/components/Shop/SingleListItem";
 
-type Product = {
-  id: string | number;
-  name: string;
-  categorie: string;
-  [key: string]: any;
-};
-
-type Category = { id: string | number; name: string };
-type Gender = { id: string | number; name: string };
-type Option = { id: string | number; label: string };
-
 const ShopWithSidebar = () => {
   // -----------------------------
-  // State
+  // 🧠 state ها
   // -----------------------------
-  const [productStyle, setProductStyle] = useState<"grid" | "list">("grid");
-  const [productSidebar, setProductSidebar] = useState(false);
-  const [stickyMenu, setStickyMenu] = useState(false);
+  const [productStyle, setProductStyle] = useState("grid"); // حالت نمایش: گرید یا لیست
+  const [productSidebar, setProductSidebar] = useState(false); // باز و بسته شدن سایدبار
+  const [stickyMenu, setStickyMenu] = useState(false); // چسبندگی منو بالا هنگام اسکرول
 
-  const [productsData, setProductsData] = useState<Product[]>([]);
-  const [categories, setCategories] = useState<Category[]>([]);
-  const [genders, setGenders] = useState<Gender[]>([]);
-  const [options, setOptions] = useState<Option[]>([]);
+  // داده‌ها از سرور گرفته می‌شوند
+  const [productsData, setProductsData] = useState([]);
+  const [categories, setCategories] = useState([]);
+  const [genders, setGenders] = useState([]);
+  const [options, setOptions] = useState([]);
 
-  const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
+  // محصولات فیلتر شده بر اساس دسته‌بندی
+  const [filteredProducts, setFilteredProducts] = useState([]);
 
   // -----------------------------
-  // Dynamic Route Param
+  // 📦 گرفتن پارامتر دسته‌بندی از URL
   // -----------------------------
-  const params = useParams<{ categorieId?: string | string[] }>();
-
+  const params = useParams();
   const decodedCategorieId = (() => {
     if (!params?.categorieId) return "";
     return decodeURIComponent(
@@ -55,22 +45,21 @@ const ShopWithSidebar = () => {
   })();
 
   // -----------------------------
-  // Sticky menu scroll listener
+  // 📜 چسباندن منو در هنگام اسکرول
   // -----------------------------
   useEffect(() => {
     const handleScroll = () => setStickyMenu(window.scrollY >= 80);
-
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
   // -----------------------------
-  // Close Sidebar on Outside Click
+  // 📦 بستن سایدبار با کلیک بیرون از آن
   // -----------------------------
   useEffect(() => {
     if (!productSidebar) return;
-    const handleClickOutside = (event: MouseEvent) => {
-      if (!(event.target as HTMLElement).closest(".sidebar-content")) {
+    const handleClickOutside = (event) => {
+      if (!event.target.closest(".sidebar-content")) {
         setProductSidebar(false);
       }
     };
@@ -79,38 +68,37 @@ const ShopWithSidebar = () => {
   }, [productSidebar]);
 
   // -----------------------------
-  // Fetch Data From Server
+  // 🔄 دریافت داده از JSON Server
   // -----------------------------
   const fetchProducts = useCallback(async () => {
     try {
       const urls = [
-        "http://localhost:3000/products",
-        "http://localhost:3000/categories",
-        "http://localhost:3000/genders",
-        "http://localhost:3000/options",
+        "http://localhost:3001/products",
+        "http://localhost:3001/categories",
+        "http://localhost:3001/genders",
+        "http://localhost:3001/options",
       ];
 
       const [resProducts, resCategories, resGenders, resOptions] =
         await Promise.all(urls.map((url) => fetch(url)));
 
       if (![resProducts, resCategories, resGenders, resOptions].every((r) => r.ok)) {
-        throw new Error("خطا در دریافت داده‌ها");
+        throw new Error("❌ خطا در دریافت داده‌ها از سرور");
       }
 
-      const [products, categoriesData, gendersData, optionsData] =
-        await Promise.all([
-          resProducts.json(),
-          resCategories.json(),
-          resGenders.json(),
-          resOptions.json(),
-        ]);
+      const [products, categoriesData, gendersData, optionsData] = await Promise.all([
+        resProducts.json(),
+        resCategories.json(),
+        resGenders.json(),
+        resOptions.json(),
+      ]);
 
       setProductsData(products);
       setCategories(categoriesData);
       setGenders(gendersData);
       setOptions(optionsData);
     } catch (err) {
-      console.error(err);
+      console.error("❌ خطا:", err);
       setProductsData([]);
       setCategories([]);
       setGenders([]);
@@ -118,12 +106,13 @@ const ShopWithSidebar = () => {
     }
   }, []);
 
+  // اجرای تابع دریافت داده در شروع
   useEffect(() => {
     fetchProducts();
   }, [fetchProducts]);
 
   // -----------------------------
-  // Filter Products by Category
+  // 🔍 فیلتر کردن محصولات بر اساس دسته‌بندی
   // -----------------------------
   useEffect(() => {
     if (!decodedCategorieId) {
@@ -136,19 +125,21 @@ const ShopWithSidebar = () => {
   }, [productsData, decodedCategorieId]);
 
   // -----------------------------
-  // Render
+  // 🧱 نمایش خروجی
   // -----------------------------
   return (
     <>
       <Breadcrumb
         title={`نمایش دسته بندی ${decodedCategorieId || "همه"}`}
-        pages={["دسته بندی ها", "/", "دسته بندی محصول با نوار کناری"]}
+        pages={["دسته بندی‌ها", "/", "محصولات با نوار کناری"]}
       />
 
       <section className="overflow-hidden relative pb-20 pt-5 lg:pt-20 xl:pt-28 bg-[#f3f4f6]">
         <div className="max-w-[1170px] mx-auto px-4 sm:px-8 xl:px-0 w-full">
           <div className="flex gap-7.5">
-            {/* Sidebar */}
+            {/* ----------------------------- */}
+            {/* 🧭 سایدبار فیلتر محصولات */}
+            {/* ----------------------------- */}
             <aside
               className={`sidebar-content fixed xl:z-1 z-9999 left-0 top-0 xl:translate-x-0 xl:static max-w-[310px] xl:max-w-[270px] w-full ease-out duration-200 
                 ${
@@ -157,7 +148,7 @@ const ShopWithSidebar = () => {
                     : "-translate-x-full"
                 }`}
             >
-              {/* Mobile Toggle Button */}
+              {/* دکمه باز/بسته شدن در موبایل */}
               <button
                 onClick={() => setProductSidebar(!productSidebar)}
                 aria-label="toggle sidebar"
@@ -172,7 +163,7 @@ const ShopWithSidebar = () => {
                 </svg>
               </button>
 
-              {/* Filters */}
+              {/* فرم فیلترها */}
               {filteredProducts.length > 0 && (
                 <form onSubmit={(e) => e.preventDefault()}>
                   <div className="flex flex-col gap-6">
@@ -197,9 +188,11 @@ const ShopWithSidebar = () => {
               )}
             </aside>
 
-            {/* Main Content */}
+            {/* ----------------------------- */}
+            {/* 🧩 بخش اصلی محصولات */}
+            {/* ----------------------------- */}
             <main className="xl:max-w-[870px] w-full">
-              {/* Top Bar */}
+              {/* نوار بالای محصولات */}
               {filteredProducts.length > 0 && (
                 <div className="rounded-lg bg-white shadow-1 pl-3 pr-2.5 py-2.5 mb-6 flex items-center justify-between">
                   <CustomSelect options={options} />
@@ -212,55 +205,43 @@ const ShopWithSidebar = () => {
                   </p>
 
                   <div className="flex gap-2.5">
-  {/* Grid Button */}
-  <button
-    onClick={() => setProductStyle("grid")}
-    className={`${
-      productStyle === "grid"
-        ? "bg-blue border-blue text-white"
-        : "text-dark bg-gray-1 border-gray-3"
-    } flex items-center justify-center w-10.5 h-9 rounded-[5px] border`}
-  >
-    <svg
-      width="18"
-      height="18"
-      viewBox="0 0 18 18"
-      fill="none"
-      xmlns="http://www.w3.org/2000/svg"
-    >
-      <rect x="1" y="1" width="6" height="6" stroke="currentColor" strokeWidth="1.5" />
-      <rect x="11" y="1" width="6" height="6" stroke="currentColor" strokeWidth="1.5" />
-      <rect x="1" y="11" width="6" height="6" stroke="currentColor" strokeWidth="1.5" />
-      <rect x="11" y="11" width="6" height="6" stroke="currentColor" strokeWidth="1.5" />
-    </svg>
-  </button>
+                    {/* حالت گرید */}
+                    <button
+                      onClick={() => setProductStyle("grid")}
+                      className={`${
+                        productStyle === "grid"
+                          ? "bg-blue border-blue text-white"
+                          : "text-dark bg-gray-1 border-gray-3"
+                      } flex items-center justify-center w-10.5 h-9 rounded-[5px] border`}
+                    >
+                      <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+                        <rect x="1" y="1" width="6" height="6" stroke="currentColor" strokeWidth="1.5" />
+                        <rect x="11" y="1" width="6" height="6" stroke="currentColor" strokeWidth="1.5" />
+                        <rect x="1" y="11" width="6" height="6" stroke="currentColor" strokeWidth="1.5" />
+                        <rect x="11" y="11" width="6" height="6" stroke="currentColor" strokeWidth="1.5" />
+                      </svg>
+                    </button>
 
-  {/* List Button */}
-  <button
-    onClick={() => setProductStyle("list")}
-    className={`${
-      productStyle === "list"
-        ? "bg-blue border-blue text-white"
-        : "text-dark bg-gray-1 border-gray-3"
-    } flex items-center justify-center w-10.5 h-9 rounded-[5px] border`}
-  >
-    <svg
-      width="18"
-      height="18"
-      viewBox="0 0 18 18"
-      fill="none"
-      xmlns="http://www.w3.org/2000/svg"
-    >
-      <line x1="1" y1="4" x2="17" y2="4" stroke="currentColor" strokeWidth="1.5" />
-      <line x1="1" y1="9" x2="17" y2="9" stroke="currentColor" strokeWidth="1.5" />
-      <line x1="1" y1="14" x2="17" y2="14" stroke="currentColor" strokeWidth="1.5" />
-    </svg>
-  </button>
-</div>
+                    {/* حالت لیست */}
+                    <button
+                      onClick={() => setProductStyle("list")}
+                      className={`${
+                        productStyle === "list"
+                          ? "bg-blue border-blue text-white"
+                          : "text-dark bg-gray-1 border-gray-3"
+                      } flex items-center justify-center w-10.5 h-9 rounded-[5px] border`}
+                    >
+                      <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+                        <line x1="1" y1="4" x2="17" y2="4" stroke="currentColor" strokeWidth="1.5" />
+                        <line x1="1" y1="9" x2="17" y2="9" stroke="currentColor" strokeWidth="1.5" />
+                        <line x1="1" y1="14" x2="17" y2="14" stroke="currentColor" strokeWidth="1.5" />
+                      </svg>
+                    </button>
+                  </div>
                 </div>
               )}
 
-              {/* Products */}
+              {/* 🧱 لیست محصولات */}
               <div
                 className={`${
                   productStyle === "grid" && filteredProducts.length > 0
@@ -268,22 +249,20 @@ const ShopWithSidebar = () => {
                     : "flex flex-col gap-7.5"
                 }`}
               >
-                {filteredProducts.length > 0 ? (
+                {Array.isArray(filteredProducts) && filteredProducts.length > 0 ? (
                   filteredProducts.map((item) =>
                     productStyle === "grid" ? (
-                      <SingleGridItem item={item} key={item.id} />
+                      <SingleGridItem item={item} key={item.id || item._id || item.name} />
                     ) : (
-                      <SingleListItem item={item} key={item.id} />
+                      <SingleListItem item={item} key={item.id || item._id || item.name} />
                     )
                   )
                 ) : (
-                  <p className="text-center text-2xl font-bold">
-                    محصولی با این دسته بندی "{decodedCategorieId}" یافت نشد
-                  </p>
+                  <p>محصولی یافت نشد 😔</p>
                 )}
               </div>
 
-              {/* Pagination */}
+              {/* 📄 صفحه‌بندی */}
               {filteredProducts.length > 0 && (
                 <div className="flex justify-center mt-15">
                   <p>Pagination here...</p>

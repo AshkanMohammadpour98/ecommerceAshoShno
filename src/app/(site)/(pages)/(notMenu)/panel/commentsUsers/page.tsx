@@ -13,7 +13,7 @@ import {
 
 // اگر در محیط‌های مختلف اجرا می‌کنی، بهتره از env استفاده کنی
 const API_URL =
-  process.env.NEXT_PUBLIC_COMMENTS_API_URL || "http://localhost:3000/commentsUsersData";
+  process.env.NEXT_PUBLIC_COMMENTS_API_URL || "http://localhost:3001/commentsUsersData";
 
 type CommentItem = {
   id?: number | string; // برای ویرایش/حذف ضروری است
@@ -260,8 +260,8 @@ const CommentsPage: React.FC = () => {
                       <div className="w-11 h-11 rounded-full overflow-hidden bg-gray-2 flex items-center justify-center shrink-0">
                         {item.authorImg ? (
                           <Image
-                            src={item.authorImg}
-                            alt={item.authorName}
+                            src={item.authorImg || null}
+                            alt={item.authorName || null}
                             width={44}
                             height={44}
                             className="object-cover w-full h-full"
@@ -318,8 +318,8 @@ const CommentsPage: React.FC = () => {
                     <div className="w-12 h-12 rounded-full overflow-hidden bg-gray-2 flex items-center justify-center">
                       {item.authorImg ? (
                         <Image
-                          src={item.authorImg}
-                          alt={item.authorName}
+                          src={item.authorImg || null}
+                          alt={item.authorName || null}
                           width={48}
                           height={48}
                           className="object-cover w-full h-full"

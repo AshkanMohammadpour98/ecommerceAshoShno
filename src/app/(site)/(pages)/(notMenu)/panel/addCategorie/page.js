@@ -20,7 +20,7 @@ export default function AddCategory() {
 
   const fetchCategories = async () => {
     try {
-      const res = await fetch("http://localhost:3000/categories");
+      const res = await fetch("http://localhost:3001/categories");
       const data = await res.json();
       setCategories(data);
     } catch (error) {
@@ -72,7 +72,7 @@ const handleNoImage = () => {
     setLoading(true);
 
     try {
-      const res = await fetch("http://localhost:3000/categories");
+      const res = await fetch("http://localhost:3001/categories");
       const categories = await res.json();
 
       const exists = categories.find(
@@ -94,7 +94,7 @@ const handleNoImage = () => {
         id: Math.random().toString(36).substr(2, 4),
       };
 
-      await fetch("http://localhost:3000/categories", {
+      await fetch("http://localhost:3001/categories", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(newCategory),
@@ -189,7 +189,7 @@ const handleNoImage = () => {
             {preview && (
               <div className="mt-3">
                 <img
-                  src={preview}
+                  src={preview || null}
                   alt="Preview"
                   className="w-24 h-24 object-cover rounded-lg border border-gray-3"
                 />
@@ -233,7 +233,7 @@ const handleNoImage = () => {
                   >
                     <div className="flex items-center gap-3">
                       <img
-                        src={cat.img || "/image/notImg.png"}
+                        src={cat.img || "@/images/notImg.png" || null}
                         alt={cat.name}
                         className="w-12 h-12 rounded-md object-cover border"
                       />

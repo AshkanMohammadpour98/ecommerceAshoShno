@@ -21,7 +21,7 @@ type Testimonial = {
 
 const API_URL =
   process.env.NEXT_PUBLIC_COMMENTS_API_URL ||
-  "http://localhost:3000/commentsUsersData"; // می‌تونی به '/commentsUsersData' تغییرش بدی
+  "http://localhost:3001/commentsUsersData"; // می‌تونی به '/commentsUsersData' تغییرش بدی
 
 const Testimonials = () => {
   const sliderRef = useRef<any>(null);

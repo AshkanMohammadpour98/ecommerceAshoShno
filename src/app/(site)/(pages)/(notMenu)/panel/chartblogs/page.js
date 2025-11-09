@@ -79,7 +79,7 @@ export default function ChartBlogs() {
   const [compareMode, setCompareMode] = useState(false);
 
   useEffect(() => {
-    fetch("http://localhost:3000/blogData")
+    fetch("http://localhost:3001/blogData")
       .then((res) => res.json())
       .then((data) => setBlogData(data))
       .catch(() => setBlogData([]));

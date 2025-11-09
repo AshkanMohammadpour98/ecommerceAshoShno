@@ -29,7 +29,7 @@ export default function EditProducts() {
   useEffect(() => {
     const fetchProducts = async () => {
       try {
-        const res = await fetch("http://localhost:3000/products");
+        const res = await fetch("http://localhost:3001/products");
         if (!res.ok) throw new Error("خطا در دریافت اطلاعات");
 
         const data = await res.json();
@@ -136,7 +136,7 @@ export default function EditProducts() {
 
                             try {
 
-                              const res = await fetch(`http://localhost:3000/products/${item.id}`, {
+                              const res = await fetch(`http://localhost:3001/products/${item.id}`, {
                                 method: 'DELETE',
                               });
 
@@ -151,7 +151,7 @@ export default function EditProducts() {
                                 showConfirmButton: false,
                                 timer: 1500
                               });
-                              const resolt = await fetch('http://localhost:3000/products');
+                              const resolt = await fetch('http://localhost:3001/products');
                               const data = await resolt.json();
                               setProductsData(data);
                             } catch (err) {

@@ -1,4 +1,4 @@
-export const categoriesHeaderData = [
+ const categoriesHeaderData = [
   {
     // عنوان دسته‌بندی (نمایش داده میشه توی UI)
     // می‌تونی آزادانه متنش رو تغییر بدی → مشکلی پیش نمیاد

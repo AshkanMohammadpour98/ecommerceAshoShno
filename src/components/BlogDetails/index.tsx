@@ -90,7 +90,7 @@ const BlogDetails = () => {
             {/* ✅ بخش نویسنده مقاله */}
             <div className="flex items-center gap-4 mt-10 p-5 rounded-xl bg-white shadow">
               <Image
-                src="/images/blog/author.jpg"
+                src="/images/blog/author.jpg" 
                 alt="نویسنده مقاله"
                 width={70}
                 height={70}

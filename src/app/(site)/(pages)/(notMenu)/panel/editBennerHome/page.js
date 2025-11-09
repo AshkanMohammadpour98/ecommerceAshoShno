@@ -47,7 +47,7 @@ const BannerSliderEditor = () => {
   // Fetch data
   const fetchBannerData = async () => {
     try {
-      const res = await fetch("http://localhost:3000/bennerHomeData");
+      const res = await fetch("http://localhost:3001/bennerHomeData");
       const data = await res.json();
       setBannerItems(data || []);
     } catch (error) {
@@ -60,7 +60,7 @@ const BannerSliderEditor = () => {
 
   const fetchProducts = async () => {
     try {
-      const res = await fetch("http://localhost:3000/products");
+      const res = await fetch("http://localhost:3001/products");
       const data = await res.json();
       setProducts(data || []);
     } catch (error) {
@@ -128,7 +128,7 @@ const BannerSliderEditor = () => {
 
     try {
       setDeletingId(id);
-      await fetch(`http://localhost:3000/bennerHomeData/${id}`, { method: "DELETE" });
+      await fetch(`http://localhost:3001/bennerHomeData/${id}`, { method: "DELETE" });
       setBannerItems((prev) => prev.filter((item) => item.id !== id));
       Swal.fire("حذف شد!", "آیتم مورد نظر از بنر حذف شد.", "success");
     } catch (error) {
@@ -146,7 +146,7 @@ const BannerSliderEditor = () => {
     }
     try {
       setAddingId(product.id);
-      const res = await fetch("http://localhost:3000/bennerHomeData", {
+      const res = await fetch("http://localhost:3001/bennerHomeData", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(product),
@@ -234,7 +234,7 @@ const BannerSliderEditor = () => {
                         return (
                           <li key={p.id} className="flex items-center gap-3 p-3 hover:bg-gray-50">
                             <img
-                              src={getImageUrl(p)}
+                              src={getImageUrl(p) || null}
                               alt={p.title}
                               onError={handleImageError}
                               className="w-12 h-12 rounded object-cover flex-shrink-0"
@@ -298,7 +298,7 @@ const BannerSliderEditor = () => {
                 </button>
                 <div className="relative w-full pt-[56.25%] bg-gray-100">
                   <img
-                    src={getImageUrl(item)}
+                    src={getImageUrl(item) || null}
                     alt={item.title || "محصول"}
                     loading="lazy"
                     onError={handleImageError}

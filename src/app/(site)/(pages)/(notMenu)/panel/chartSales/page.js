@@ -105,7 +105,7 @@ export default function ChartSales() {
   const [compareMode, setCompareMode] = useState(false);
 
   useEffect(() => {
-    fetch("http://localhost:3000/usersData")
+    fetch("http://localhost:3001/usersData")
       .then((res) => res.json())
       .then((data) => setUserData(data))
       .catch(() => setUserData([]));

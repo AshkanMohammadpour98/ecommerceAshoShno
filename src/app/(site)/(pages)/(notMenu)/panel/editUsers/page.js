@@ -30,7 +30,7 @@ export default function EditUsers() {
   useEffect(() => {
     const fetchUsers = async () => {
       try {
-        const res = await fetch("http://localhost:3000/usersData");
+        const res = await fetch("http://localhost:3001/usersData");
         if (!res.ok) throw new Error("خطا در گرفتن اطلاعات کاربران");
         const data = await res.json();
         setUsers(data || []);
@@ -57,7 +57,7 @@ export default function EditUsers() {
     if (!result.isConfirmed) return;
 
     try {
-      const res = await fetch(`http://localhost:3000/usersData/${id}`, {
+      const res = await fetch(`http://localhost:3001/usersData/${id}`, {
         method: "DELETE",
       });
       if (!res.ok) throw new Error("حذف کاربر ناموفق بود");
@@ -104,13 +104,13 @@ export default function EditUsers() {
                   {user?.img ? (
                     isBlobUrl(user.img) ? (
                       <img
-                        src={user.img}
+                        src={user.img || null}
                         alt={user.name || "کاربر"}
                         className="w-12 h-12 rounded-full object-cover border border-gray-3"
                       />
                     ) : (
                       <Image
-                        src={user.img}
+                        src={user.img || null}
                         alt={user.name || "کاربر"}
                         width={48}
                         height={48}
@@ -212,13 +212,13 @@ export default function EditUsers() {
               {selectedUser?.img ? (
                 isBlobUrl(selectedUser.img) ? (
                   <img
-                    src={selectedUser.img}
+                    src={selectedUser.img || null}
                     alt={selectedUser.name || "کاربر"}
                     className="w-12 h-12 rounded-full object-cover border border-gray-3"
                   />
                 ) : (
                   <Image
-                    src={selectedUser.img}
+                    src={selectedUser.img || null}
                     alt={selectedUser.name || "کاربر"}
                     width={48}
                     height={48}

@@ -5,9 +5,9 @@ import Swal from "sweetalert2";
 
 /**
  * Categories Manager
- * - GET  http://localhost:3000/categories
- * - PUT  http://localhost:3000/categories/:id
- * - DELETE http://localhost:3000/categories/:id
+ * - GET  http://localhost:3001/categories
+ * - PUT  http://localhost:3001/categories/:id
+ * - DELETE http://localhost:3001/categories/:id
  *
  * NOTE: این کامپوننت فرض می‌کنه API شما این روش‌ها رو پشتیبانی می‌کنه (json-server یا مشابه).
  */
@@ -35,7 +35,7 @@ export default function CategoriesManager() {
   // fetch categories
   const fetchCategories = async () => {
     try {
-      const res = await fetch("http://localhost:3000/categories");
+      const res = await fetch("http://localhost:3001/categories");
       if (!res.ok) throw new Error("Cannot fetch categories");
       const data = await res.json();
       setCategories(data);
@@ -74,7 +74,7 @@ export default function CategoriesManager() {
     if (!confirm.isConfirmed) return;
 
     try {
-      const res = await fetch(`http://localhost:3000/categories/${cat.id}`, {
+      const res = await fetch(`http://localhost:3001/categories/${cat.id}`, {
         method: "DELETE",
       });
       if (!res.ok) throw new Error("delete failed");
@@ -93,7 +93,7 @@ export default function CategoriesManager() {
     setEditModal(cat);
     setEditForm({ name: cat.name || "", products: cat.products ?? 0, img: cat.img || "" });
     setEditPreview(cat.img || null);
-    setEditNoImage(cat.img === "/image/notImg.png" || !cat.img);
+    setEditNoImage(cat.img === "/images/notImg.png" || !cat.img);
   };
 
   const closeEditModal = () => {
@@ -133,8 +133,8 @@ export default function CategoriesManager() {
       const next = !v;
       if (next) {
         // set default image
-        setEditPreview("/image/notImg.png");
-        setEditForm((p) => ({ ...p, img: "/image/notImg.png" }));
+        setEditPreview("/images/notImg.png");
+        setEditForm((p) => ({ ...p, img: "/images/notImg.png" }));
       } else {
         setEditPreview(null);
         setEditForm((p) => ({ ...p, img: "" }));
@@ -158,7 +158,7 @@ export default function CategoriesManager() {
 
     try {
       // fetch categories for duplicate check
-      const resAll = await fetch("http://localhost:3000/categories");
+      const resAll = await fetch("http://localhost:3001/categories");
       const allCats = await resAll.json();
 
       // duplicate name check (exclude current editing id)
@@ -180,7 +180,7 @@ export default function CategoriesManager() {
       };
 
       // send PUT (یا PATCH بسته به API)
-      const res = await fetch(`http://localhost:3000/categories/${editModal.id}`, {
+      const res = await fetch(`http://localhost:3001/categories/${editModal.id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(updated),
@@ -254,8 +254,8 @@ export default function CategoriesManager() {
                 <div className="flex items-start gap-4">
                   <div className="w-20 h-20 rounded-lg overflow-hidden flex-shrink-0 border">
                     <img
-                      src={cat.img || "/image/notImg.png"}
-                      alt={cat.name}
+                      src={cat.img || "/images/notImg.png"}
+                      alt={cat.name || null}
                       className="w-full h-full object-cover"
                     />
                   </div>
@@ -324,8 +324,8 @@ export default function CategoriesManager() {
             <div className="flex flex-col md:flex-row gap-6">
               <div className="w-full md:w-1/3 rounded-lg overflow-hidden border">
                 <img
-                  src={viewModal.img || "/image/notImg.png"}
-                  alt={viewModal.name}
+                  src={viewModal.img || "/images/notImg.png"}
+                  alt={viewModal.name || null}
                   className="w-full h-48 object-cover"
                 />
               </div>
@@ -429,7 +429,7 @@ export default function CategoriesManager() {
                 {editPreview && (
                   <div className="mt-3">
                     <img
-                      src={editPreview}
+                      src={editPreview || null}
                       alt="preview"
                       className="w-28 h-28 object-cover rounded-lg border"
                     />

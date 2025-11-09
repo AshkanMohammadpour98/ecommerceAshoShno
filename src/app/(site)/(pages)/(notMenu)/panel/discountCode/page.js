@@ -20,7 +20,7 @@ import { CheckCircleIcon, XCircleIcon } from "@heroicons/react/24/solid";
 
 /**
  * کامپوننت اصلی مدیریت کدهای تخفیف
- * اتصال به API: http://localhost:3000/discountCodes
+ * اتصال به API: http://localhost:3001/discountCodes
  * عملیات CRUD کامل با اعتبارسنجی
  */
 const DiscountCodesPage = () => {
@@ -35,7 +35,7 @@ const DiscountCodesPage = () => {
   const [successMessage, setSuccessMessage] = useState(null);
 
   // API Base URL
-  const API_URL = "http://localhost:3000/discountCodes";
+  const API_URL = "http://localhost:3001/discountCodes";
 
   /**
    * دریافت لیست کدهای تخفیف از API

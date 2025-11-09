@@ -13,7 +13,7 @@ import {
   ChartPieIcon,
   ChevronDownIcon,
   ChevronUpIcon,
-  ArchiveIcon,
+  ArchiveBoxIcon,
   DocumentTextIcon,
   TagIcon,
   PencilSquareIcon,
@@ -26,7 +26,7 @@ import Link from "next/link";
 const mainLinks = [
   { name: "بازگشت", icon: ArrowLeftIcon, linkBtn: "/" },
   { name: "داشبورد", icon: HomeIcon, linkBtn: "/dashbord" },
-  { name: "محصول", icon: ArchiveIcon },
+  { name: "محصول", icon: ArchiveBoxIcon },
   { name: "بلاگ", icon: DocumentTextIcon },
   { name: "یوزرها", icon: UsersIcon },
   { name: "دسته بندی", icon: TagIcon },

@@ -58,19 +58,19 @@ const ShopWithSidebar = () => {
     useEffect(() => {
     const fetchProducts = async () => {
       try {
-        const res = await fetch("http://localhost:3000/products"); 
+        const res = await fetch("http://localhost:3001/products"); 
         if (!res.ok) throw new Error("خطا در دریافت اطلاعات");
 
         const data = await res.json();
         setProductsData(data); // ذخیره داده‌ها در state
          setVisibleProducts(data.slice(0, 10)); // فقط 10 محصول اول نمایش داده میشه
 
-        const resCategories = await fetch("http://localhost:3000/categories"); 
+        const resCategories = await fetch("http://localhost:3001/categories"); 
         if (!resCategories.ok) throw new Error("خطا در دریافت اطلاعات دسته بندی ها");
         const dataCategories  = await resCategories.json();
         setCategories(dataCategories)
 
-        const resGenders = await fetch("http://localhost:3000/genders"); 
+        const resGenders = await fetch("http://localhost:3001/genders"); 
         if (!resGenders.ok) throw new Error("خطا در دریافت اطلاعات جنسیت ها  ");
         const dataGenders  = await resGenders.json();
         setGenders(dataGenders)

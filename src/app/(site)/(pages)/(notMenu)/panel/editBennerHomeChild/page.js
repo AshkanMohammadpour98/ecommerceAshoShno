@@ -36,8 +36,8 @@ const ChildBannerSliderEditor = () => {
       try {
         const [bannerRes, productsRes] = await Promise.all([
           // ✅ API Endpoint changed here
-          fetch("http://localhost:3000/bennerHomeChildData"),
-          fetch("http://localhost:3000/products")
+          fetch("http://localhost:3001/bennerHomeChildData"),
+          fetch("http://localhost:3001/products")
         ]);
         const bannerData = await bannerRes.json();
         const productsData = await productsRes.json();
@@ -108,7 +108,7 @@ const ChildBannerSliderEditor = () => {
 
     setDeletingId(id);
     try {
-      await fetch(`http://localhost:3000/bennerHomeChildData/${id}`, { method: "DELETE" });
+      await fetch(`http://localhost:3001/bennerHomeChildData/${id}`, { method: "DELETE" });
       setBannerItems(prev => prev.filter(item => item.id !== id));
     } catch (error) {
       Swal.fire("خطا", "حذف آیتم با مشکل مواجه شد.", "error");
@@ -122,7 +122,7 @@ const ChildBannerSliderEditor = () => {
     
     setAddingId(product.id);
     try {
-      const res = await fetch("http://localhost:3000/bennerHomeChildData", {
+      const res = await fetch("http://localhost:3001/bennerHomeChildData", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(product),
@@ -192,7 +192,7 @@ const ChildBannerSliderEditor = () => {
                   <ul className="divide-y divide-gray-100">
                     {filteredProducts.map(p => (
                       <li key={p.id} className="flex items-center gap-3 p-3 text-sm hover:bg-gray-50 transition-colors">
-                        <img src={getImageUrl(p)} alt="" className="w-12 h-12 rounded-md object-cover flex-shrink-0" onError={handleImageError}/>
+                        <img src={getImageUrl(p) || null} alt="img" className="w-12 h-12 rounded-md object-cover flex-shrink-0" onError={handleImageError}/>
                         <div className="flex-1 min-w-0">
                           <p className="font-semibold text-gray-800 truncate">{p.title}</p>
                           <p className="text-gray-500">{formatPrice(p.price)} تومان</p>
@@ -226,7 +226,7 @@ const ChildBannerSliderEditor = () => {
           {bannerItems.map(item => (
             <div key={item.id} className="group relative bg-white rounded-xl border border-gray-200 overflow-hidden shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
               <div className="relative w-full pt-[56.25%] bg-gray-100">
-                <img src={getImageUrl(item)} alt={item.title} className="absolute inset-0 w-full h-full object-cover" onError={handleImageError} />
+                <img src={getImageUrl(item) || null} alt={item.title || null} className="absolute inset-0 w-full h-full object-cover" onError={handleImageError} />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent"></div>
                 {item.hasDiscount && <span className="absolute top-3 right-3 text-xs font-bold text-white bg-red-600 px-2.5 py-1 rounded-full">تخفیف</span>}
                 <button onClick={() => handleDelete(item.id)} disabled={deletingId === item.id} className="absolute top-3 left-3 flex items-center justify-center w-8 h-8 rounded-full bg-white/80 backdrop-blur-sm text-red-600 opacity-0 group-hover:opacity-100 transition-all duration-300 hover:bg-red-600 hover:text-white disabled:opacity-100 disabled:bg-red-300">

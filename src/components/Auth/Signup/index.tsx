@@ -109,7 +109,7 @@ export default function RegisterPage() {
     };
 
     try {
-      const res = await fetch("http://localhost:3000/usersData", {
+      const res = await fetch("http://localhost:3001/usersData", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),

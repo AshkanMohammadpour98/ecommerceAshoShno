@@ -8,7 +8,7 @@ const BlogItem = ({ blog }: { blog: BlogItemType }) => {
       {/* لینک تصویر بلاگ */}
       <Link href="/blogs/blog-details" className="rounded-md overflow-hidden block">
         <img
-          src={blog.img}
+          src={blog.img || null}
           alt="تصویر بلاگ"
           className="rounded-md w-full"
           width={330}

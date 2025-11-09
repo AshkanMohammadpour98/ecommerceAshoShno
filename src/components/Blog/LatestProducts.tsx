@@ -22,10 +22,11 @@ const LatestProducts = ({ products }) => {
               {/* تصویر محصول */}
               <div className="flex items-center justify-center rounded-[10px] bg-gray-3 max-w-[90px] w-full h-22.5">
                 <Image
-                  src={product.imgs?.thumbnails?.[0]}
+                  src={product.imgs?.thumbnails?.[0] || null}
                   alt="product"
                   width={74}
                   height={74}
+                  unoptimized={true}
                 />
               </div>
 

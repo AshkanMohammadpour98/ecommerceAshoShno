@@ -20,10 +20,10 @@ export default function EditProductId({ params }) {
   useEffect(() => {
     const fetchProduct = async () => {
       try {
-        const res = await fetch(`http://localhost:3000/products/${productId}`);
+        const res = await fetch(`http://localhost:3001/products/${productId}`);
         const data = await res.json();
             // گرفتن دسته‌بندی‌ها
-    fetch("http://localhost:3000/categories")
+    fetch("http://localhost:3001/categories")
       .then((res) => res.json())
       .then((data) => setCategories(data))
       .catch(() => setCategories([]));
@@ -94,7 +94,7 @@ export default function EditProductId({ params }) {
     };
 
     try {
-      const res = await fetch(`http://localhost:3000/products/${productId}`, {
+      const res = await fetch(`http://localhost:3001/products/${productId}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(product),
@@ -219,7 +219,7 @@ export default function EditProductId({ params }) {
             >
               {thumb && (
                 <img
-                  src={thumb}
+                  src={thumb || null}
                   alt="thumb"
                   className="w-24 h-24 object-cover rounded-lg mb-2"
                 />
@@ -248,7 +248,7 @@ export default function EditProductId({ params }) {
             >
               {prev && (
                 <img
-                  src={prev}
+                  src={prev || null}
                   alt="preview"
                   className="w-32 h-32 object-cover rounded-lg mb-2"
                 />

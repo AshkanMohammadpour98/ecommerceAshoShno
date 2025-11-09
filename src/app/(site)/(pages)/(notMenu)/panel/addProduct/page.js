@@ -28,7 +28,7 @@ export default function AddProductForm() {
   const [categories, setCategories] = useState([]);
 
   useEffect(() => {
-    fetch("http://localhost:3000/categories")
+    fetch("http://localhost:3001/categories")
       .then((res) => res.json())
       .then((data) => setCategories(data))
       .catch(() => setCategories([]));
@@ -84,7 +84,7 @@ export default function AddProductForm() {
 
     try {
       // 1️⃣ ذخیره محصول
-      const resProduct = await fetch("http://localhost:3000/products", {
+      const resProduct = await fetch("http://localhost:3001/products", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ ...formData, id }),
@@ -98,7 +98,7 @@ export default function AddProductForm() {
       );
       if (selectedCategory) {
         const resCategory = await fetch(
-          `http://localhost:3000/categories/${selectedCategory.id}`,
+          `http://localhost:3001/categories/${selectedCategory.id}`,
           {
             method: "PATCH",
             headers: { "Content-Type": "application/json" },
@@ -294,7 +294,7 @@ export default function AddProductForm() {
             <div key={i} className="border-2 border-dashed rounded-xl p-4 flex flex-col items-center">
               {thumb ? (
                 <img
-                  src={thumb}
+                  src={thumb || null}
                   alt="thumb"
                   className="w-24 h-24 object-cover rounded mb-2"
                 />
@@ -322,7 +322,7 @@ export default function AddProductForm() {
             <div key={i} className="border-2 border-dashed rounded-xl p-4 flex flex-col items-center">
               {prev ? (
                 <img
-                  src={prev}
+                  src={prev || null }
                   alt="preview"
                   className="w-32 h-32 object-cover rounded mb-2"
                 />

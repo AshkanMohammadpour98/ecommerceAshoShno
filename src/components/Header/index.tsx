@@ -73,7 +73,7 @@ const Header = () => {
 
   // بارگذاری دسته‌بندی‌ها
   useEffect(() => {
-    fetch("http://localhost:3000/categories")
+    fetch("http://localhost:3001/categories")
       .then((res) => res.json())
       .then((data) => setOptions(Array.isArray(data) ? data : []))
       .catch(() => setOptions([]));
@@ -96,7 +96,7 @@ const Header = () => {
       return;
     }
 
-    fetch(`http://localhost:3000/usersData/${encodeURIComponent(authData.id)}`, {
+    fetch(`http://localhost:3001/usersData/${encodeURIComponent(authData.id)}`, {
       cache: "no-store",
     })
       .then((res) => {

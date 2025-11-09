@@ -33,56 +33,112 @@ export default function PanelLayout({ children }) {
       try {
         // 1) خواندن کوکی
         const cookieStr = getCookieValue(AUTH_COOKIE_NAME);
-        if (!cookieStr) throw new Error("NO_COOKIE");
+        
+        // ✅ به جای throw، بررسی و redirect
+        if (!cookieStr) {
+          console.log("No auth cookie found, redirecting to signin");
+          if (!ignore) {
+            setAuthorized(false);
+            router.replace("/signin");
+          }
+          return;
+        }
 
         let cred = null;
         try {
           cred = JSON.parse(cookieStr); // { id, password, rool }
-        } catch {
-          throw new Error("BAD_COOKIE");
+        } catch (error) {
+          console.error("Invalid cookie format:", error);
+          if (!ignore) {
+            setAuthorized(false);
+            router.replace("/signin");
+          }
+          return;
         }
-        if (!cred?.id || !cred?.password) throw new Error("BAD_COOKIE");
+
+        // بررسی وجود id و password
+        if (!cred?.id || !cred?.password) {
+          console.log("Cookie missing id or password");
+          if (!ignore) {
+            setAuthorized(false);
+            router.replace("/signin");
+          }
+          return;
+        }
 
         // 2) درخواست به API با id
         const res = await fetch(
-          `http://localhost:3000/usersData/${encodeURIComponent(cred.id)}`,
+          `http://localhost:3001/usersData/${encodeURIComponent(cred.id)}`,
           { cache: "no-store" }
         );
-        if (!res.ok) throw new Error("NOT_FOUND");
+        
+        if (!res.ok) {
+          console.error(`User not found: ${cred.id}`);
+          if (!ignore) {
+            setAuthorized(false);
+            router.replace("/signin");
+          }
+          return;
+        }
 
         const data = await res.json();
 
         // 3) گرفتن پسورد از registerWith
         const passFromServer = Array.isArray(data?.registerWith)
-          ? data.registerWith.find((x) => typeof x?.password === "string")
-              ?.password
+          ? data.registerWith.find((x) => typeof x?.password === "string")?.password
           : undefined;
 
         // 4) تطبیق پسورد
         if (!passFromServer || passFromServer !== cred.password) {
-          throw new Error("PASS_MISMATCH");
+          console.error("Password mismatch");
+          if (!ignore) {
+            setAuthorized(false);
+            router.replace("/signin");
+          }
+          return;
         }
 
-        if (!ignore) setAuthorized(true);
-      } catch (e) {
-        if (!ignore) setAuthorized(false);
-        router.replace("/signin");
+        // ✅ همه چیز OK است
+        if (!ignore) {
+          setAuthorized(true);
+        }
+
+      } catch (error) {
+        // برای هر خطای غیرمنتظره
+        console.error("Auth check error:", error);
+        if (!ignore) {
+          setAuthorized(false);
+          router.replace("/signin");
+        }
       }
     }
 
     checkAuth();
+    
     return () => {
       ignore = true;
     };
   }, [router]);
 
-  // تا زمان بررسی (یا هنگام ریدایرکت)، یه لودر ساده نمایش بده
-  if (authorized !== true) {
+  // تا زمان بررسی، لودینگ نمایش بده
+  if (authorized === null) {
     return (
       <div className="flex h-screen items-center justify-center bg-gray-100">
         <div className="flex items-center gap-3 text-gray-600">
           <span className="h-6 w-6 rounded-full border-2 border-gray-300 border-t-blue animate-spin" />
           <span>در حال بررسی دسترسی...</span>
+        </div>
+      </div>
+    );
+  }
+
+  // اگر authorized === false است، در حال redirect هستیم
+  if (authorized === false) {
+    return (
+      <div className="flex h-screen items-center justify-center bg-gray-100">
+        <div className="flex items-center gap-3 text-gray-600">
+          <span className="h-6 w-6 rounded-full border-2 border-gray-300 border-t-blue animate-spin" />
+          <span>در حال انتقال به صفحه ورود...</span>
         </div>
       </div>
     );
@@ -122,7 +178,7 @@ export default function PanelLayout({ children }) {
           <div
             className="fixed inset-0 bg-black bg-opacity-30 z-30 lg:hidden"
             onClick={() => setOpen(false)}
-          ></div>
+          />
         )}
 
         {/* محتوای اصلی */}

@@ -56,7 +56,7 @@ export default function AddBlogForm() {
 
     const newBlog = { ...formData, id: String(Date.now()) };
 
-    await fetch("http://localhost:3000/blogData", {
+    await fetch("http://localhost:3001/blogData", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(newBlog),
@@ -149,7 +149,7 @@ export default function AddBlogForm() {
                     items-center sm:flex-row sm:items-center sm:gap-4">
       {formData.img ? (
         <img
-          src={formData.img}
+          src={formData.img || null}
           alt="img add blog"
           className="w-24 h-24 sm:w-28 sm:h-28 lg:w-32 lg:h-32 
                      object-cover rounded-lg mb-2 sm:mb-0"

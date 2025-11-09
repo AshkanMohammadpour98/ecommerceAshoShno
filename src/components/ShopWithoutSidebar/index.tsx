@@ -16,7 +16,7 @@ const ShopWithoutSidebar = () => {
   useEffect(() => {
     const fetchProducts = async () => {
       try {
-        const res = await fetch("http://localhost:3000/products");
+        const res = await fetch("http://localhost:3001/products");
         if (!res.ok) throw new Error("خطا در دریافت اطلاعات");
 
         const data = await res.json();

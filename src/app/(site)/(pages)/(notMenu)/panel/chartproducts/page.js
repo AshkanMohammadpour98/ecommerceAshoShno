@@ -79,7 +79,7 @@ export default function ChartProducts() {
   const [compareMode, setCompareMode] = useState(false);
 
   useEffect(() => {
-    fetch("http://localhost:3000/products")
+    fetch("http://localhost:3001/products")
       .then((res) => res.json())
       .then((data) => setProductData(data))
       .catch(() => setProductData([]));

@@ -25,7 +25,7 @@ export default function EditBlogForm({ params }) {
 
   // ✅ گرفتن دیتای بلاگ و دسته‌بندی‌ها
   useEffect(() => {
-    fetch(`http://localhost:3000/blogData/${blogId}`)
+    fetch(`http://localhost:3001/blogData/${blogId}`)
       .then((res) => res.json())
       .then((data) => {
         setBlogData(data);
@@ -49,7 +49,7 @@ export default function EditBlogForm({ params }) {
       })
       .catch(() => setBlogData(null));
 
-    fetch("http://localhost:3000/categories")
+    fetch("http://localhost:3001/categories")
       .then((res) => res.json())
       .then((data) => setCategories(data))
       .catch(() => setCategories([]));
@@ -93,7 +93,7 @@ export default function EditBlogForm({ params }) {
     const updatedBlog = { ...blogData, date: formattedDate };
 
     try {
-      const res = await fetch(`http://localhost:3000/blogData/${blogId}`, {
+      const res = await fetch(`http://localhost:3001/blogData/${blogId}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(updatedBlog),
@@ -226,7 +226,7 @@ export default function EditBlogForm({ params }) {
         <div className="border-2 border-dashed rounded-xl p-4 flex flex-col items-center">
           {blogData.img ? (
             <img
-              src={blogData.img}
+              src={blogData.img || null}
               alt="preview"
               className="w-32 h-32 object-cover rounded-lg mb-2"
             />

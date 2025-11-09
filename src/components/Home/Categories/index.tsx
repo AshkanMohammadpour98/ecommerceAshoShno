@@ -21,7 +21,7 @@ const Categories = () => {
     const fetchProduct = async () => {
       try {
             // گرفتن دسته‌بندی‌ها
-    fetch("http://localhost:3000/categories")
+    fetch("http://localhost:3001/categories")
       .then((res) => res.json())
       .then((data) => setCategoriesHeaderDadta(data))
       .catch(() => setCategoriesHeaderDadta([]));

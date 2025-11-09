@@ -38,25 +38,25 @@ const BlogGridWithSidebar = async () => {
   // ];
 
   // اینجا مستقیم fetch میکنیم → SSR
-  const resBlogs = await fetch("http://localhost:3000/blogData", {
+  const resBlogs = await fetch("http://localhost:3001/blogData", {
     cache: "no-store", // برای اینکه هر بار رفرش شه (معادل getServerSideProps)
   });
   const blogData = await resBlogs.json();
   
   // اینجا مستقیم fetch میکنیم → SSR
-  const resProducts = await fetch("http://localhost:3000/products", {
+  const resProducts = await fetch("http://localhost:3001/products", {
     cache: "no-store", // برای اینکه هر بار رفرش شه (معادل getServerSideProps)
   });
   const productsData = await resProducts.json();
 
   // اینجا مستقیم fetch میکنیم → SSR
-  const resCategories = await fetch("http://localhost:3000/categories", {
+  const resCategories = await fetch("http://localhost:3001/categories", {
     cache: "no-store", // برای اینکه هر بار رفرش شه (معادل getServerSideProps)
   });
   const categories = await resCategories.json();
 
     // اینجا مستقیم fetch میکنیم → SSR
-  const resTags = await fetch("http://localhost:3000/tags", {
+  const resTags = await fetch("http://localhost:3001/tags", {
     cache: "no-store", // برای اینکه هر بار رفرش شه (معادل getServerSideProps)
   });
   const tags = await resTags.json();

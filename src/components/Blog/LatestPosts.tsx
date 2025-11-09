@@ -25,7 +25,7 @@ const LatestPosts = ({ blogs }) => {
                 className="max-w-[110px] w-full rounded-[10px] overflow-hidden"
               >
                 <Image
-                  src={blog.img}
+                  src={blog.img || null}
                   alt="blog"
                   className="rounded-[10px] w-full"
                   width={110}
