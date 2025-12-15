@@ -38,13 +38,18 @@ export default function RegisterPage() {
     phone: "",
     email: "",
     password: "",
-    passwordConfirm: "", // فیلد تکرار رمز عبور
+    passwordConfirm: "",
+    gender: "male", // ⭐ پیش‌فرض male
   });
+
   const [showPassword, setShowPassword] = useState(false);
-  const [showPasswordConfirm, setShowPasswordConfirm] = useState(false); // استیت برای فیلد تکرار
+  const [showPasswordConfirm, setShowPasswordConfirm] = useState(false);
   const [loading, setLoading] = useState(false);
 
+  // ⭐ آپدیت state فرم
   const handleChange = (e) => {
+    console.log(e.target.value);
+    
     const { name, value } = e.target;
     if (name === "phone") {
       setFormData((prev) => ({ ...prev, phone: onlyDigitsEnglish(value) }));
@@ -53,6 +58,7 @@ export default function RegisterPage() {
     }
   };
 
+  // ⭐ اعتبارسنجی فرم
   const validate = () => {
     if (!formData.name.trim() || !formData.lastName.trim()) {
       return { ok: false, msg: "نام و نام خانوادگی الزامی است." };
@@ -60,7 +66,7 @@ export default function RegisterPage() {
     if (registerMethod === "phone") {
       const phone = onlyDigitsEnglish(formData.phone);
       if (!(phone.length === 11 && phone.startsWith("09"))) {
-        return { ok: false, msg: "شماره تلفن نامعتبر است (مثال: 09123456789)." };
+        return { ok: false, msg: "شماره تلفن نامعتبر است (مثال: 09303456789)." };
       }
     } else {
       if (!formData.email.trim() || !formData.email.includes("@")) {
@@ -76,72 +82,124 @@ export default function RegisterPage() {
     return { ok: true };
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    const validation = validate();
-    if (!validation.ok) {
+  // ⭐ ارسال فرم
+ // ⭐ ارسال فرم
+const handleSubmit = async (e) => {
+  e.preventDefault();
+
+  // ⛔ جلوگیری از کلیک چندباره
+  if (loading) return;
+
+  // ⭐ اعتبارسنجی اولیه
+  const validation = validate();
+  if (!validation.ok) {
+    Swal.fire({ icon: "error", title: "خطا در فرم", text: validation.msg });
+    return;
+  }
+
+  // ⭐ اگر email و phone هر دو خالی هستند → خطا
+  if (!formData.phone.trim() && !formData.email.trim()) {
+    Swal.fire({
+      icon: "error",
+      title: "خطا",
+      text: "حداقل یکی از موارد ایمیل یا شماره موبایل باید وارد شود.",
+    });
+    return;
+  }
+
+  setLoading(true);
+
+  // ⭐ بدنه‌ای که قرار است ارسال شود
+  const payload = {
+    id: Date.now().toString(),
+    name: formData.name.trim(),
+    lastName: formData.lastName.trim(),
+    dateLogin: getNowJalali(),
+    phone: registerMethod === "phone" ? onlyDigitsEnglish(formData.phone) : "",
+    email: registerMethod === "email" ? formData.email.trim() : "",
+    password: formData.password,
+    gender: formData.gender || "male",
+    role: "user",
+    SuggestedCategories: [],
+    PurchasedProducts: [],
+    purchaseInvoice: [],
+    img: "",
+    address: "",
+  };
+
+  try {
+    // =============================
+    // ⭐ 1) قبل از ارسال اصلی، چک تکراری نبودن
+    // =============================
+    const checkRes = await fetch("/api/users/check", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        phone: payload.phone || null,
+        email: payload.email || null,
+      }),
+    });
+
+    const checkData = await checkRes.json();
+
+    if (checkData.exists) {
       Swal.fire({
         icon: "error",
-        title: "خطا در فرم",
-        text: validation.msg,
+        title: "ثبت‌نام ناموفق",
+        text:
+          checkData.field === "email"
+            ? "این ایمیل قبلاً استفاده شده است."
+            : "این شماره موبایل قبلاً ثبت شده است.",
       });
+
+      setLoading(false);
       return;
     }
 
-    setLoading(true);
+    // =============================
+    // ⭐ 2) ارسال به API اصلی ثبت‌نام
+    // =============================
+    const res = await fetch("/api/users", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
 
-    const payload = {
-      id: Date.now().toString(),
-      name: formData.name.trim(),
-      lastName: formData.lastName.trim(),
-      dateLogin: getNowJalali(),
-      registerWith: [
-        { phone: registerMethod === "phone" ? onlyDigitsEnglish(formData.phone) : "" },
-        { email: registerMethod === "email" ? formData.email.trim() : "" },
-        { password: formData.password }, // فقط پسورد اصلی ارسال می‌شود
-      ],
-      // مقداردهی اولیه برای فیلدهای دیگر
-      SuggestedCategories: [],
-      PurchasedProducts: [],
-      purchaseInvoice: [],
-      img: "",
-      address: "",
-    };
+    const data = await res.json();
 
-    try {
-      const res = await fetch("http://localhost:3001/usersData", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
-
-      if (res.ok) {
-        Swal.fire({
-          icon: "success",
-          title: "ثبت‌نام موفق!",
-          text: "حساب کاربری شما با موفقیت ایجاد شد.",
-          timer: 2000,
-          showConfirmButton: false,
-        });
-        router.push("/signin"); // ریدایرکت به صفحه ورود
-      } else {
-        const errorData = await res.json().catch(() => ({}));
-        Swal.fire({
-          icon: "error",
-          title: "خطا در ثبت‌نام",
-          text: errorData.message || "مشکلی پیش آمد، لطفاً دوباره تلاش کنید.",
-        });
-      }
-    } catch (error) {
+    if (!res.ok) {
       Swal.fire({
         icon: "error",
-        title: "مشکل در ارتباط",
-        text: "ارتباط با سرور برقرار نشد.",
+        title: "خطا در ثبت‌نام",
+        text: data?.error || "مشکلی پیش آمد، لطفاً دوباره تلاش کنید.",
       });
-    } finally {
       setLoading(false);
+      return;
     }
-  };
+
+    // =============================
+    // ⭐ 3) موفقیت
+    // =============================
+    Swal.fire({
+      icon: "success",
+      title: "ثبت‌نام موفق!",
+      text: "حساب کاربری شما ایجاد شد.",
+      timer: 2000,
+      showConfirmButton: false,
+    });
+
+    router.push("/signin");
+  } catch (error) {
+    Swal.fire({
+      icon: "error",
+      title: "خطای ارتباط",
+      text: "اتصال به سرور برقرار نشد.",
+    });
+  } finally {
+    setLoading(false);
+  }
+};
+
 
   return (
     <section className="flex items-center justify-center min-h-screen bg-gray p-4 mt-20">
@@ -184,7 +242,37 @@ export default function RegisterPage() {
             </div>
           </div>
 
-          {/* انتخاب روش ثبت‌نام */}
+          {/* ⭐ انتخاب جنسیت با Radio Button */}
+          <div>
+            <p className="block text-sm font-medium text-dark mb-2">جنسیت (اختیاری)</p>
+            <div className="flex gap-4">
+              <label className="flex items-center gap-2">
+                <input
+                  type="radio"
+                  name="gender"
+                  value="male"
+                  checked={formData.gender === "male"}
+                  onChange={handleChange}
+                  className="accent-blue"
+                />
+                مرد
+              </label>
+              <label className="flex items-center gap-2">
+                <input
+                  type="radio"
+                  name="gender"
+                  value="female"
+                  checked={formData.gender === "female"}
+                  onChange={handleChange}
+                  className="accent-blue"
+                />
+                زن
+              </label>
+            </div>
+            <p className="text-xs text-gray-6 mt-1">اگر انتخاب نکنید، پیش‌فرض مرد است.</p>
+          </div>
+
+          {/* ثبت‌نام با موبایل یا ایمیل */}
           <div>
             <p className="block text-sm font-medium text-dark mb-2">ثبت‌نام با</p>
             <div className="flex items-center gap-2">
@@ -275,17 +363,14 @@ export default function RegisterPage() {
                 aria-label={showPassword ? "پنهان کردن رمز" : "نمایش رمز"}
                 className="absolute inset-y-0 left-3 flex items-center text-gray-6 hover:text-dark transition"
               >
-                {showPassword ? <EyeSlashIcon className="w-5 h-5" /> : <EyeIcon className="w-5 h-5" />}
+                {showPassword ? <EyeIcon className="w-5 h-5" /> : <EyeSlashIcon className="w-5 h-5" />}
               </button>
             </div>
           </div>
 
           {/* تکرار رمز عبور */}
           <div>
-            <label
-              htmlFor="passwordConfirm"
-              className="block text-sm font-medium text-dark mb-1"
-            >
+            <label htmlFor="passwordConfirm" className="block text-sm font-medium text-dark mb-1">
               تکرار رمز عبور
             </label>
             <div className="relative">
@@ -305,11 +390,7 @@ export default function RegisterPage() {
                 aria-label={showPasswordConfirm ? "پنهان کردن رمز" : "نمایش رمز"}
                 className="absolute inset-y-0 left-3 flex items-center text-gray-6 hover:text-dark transition"
               >
-                {showPasswordConfirm ? (
-                  <EyeSlashIcon className="w-5 h-5" />
-                ) : (
-                  <EyeIcon className="w-5 h-5" />
-                )}
+                {showPasswordConfirm ? <EyeIcon className="w-5 h-5" /> : <EyeSlashIcon className="w-5 h-5" />}
               </button>
             </div>
           </div>

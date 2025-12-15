@@ -1,6 +1,8 @@
 "use client";
 import { useEffect, useState } from "react";
 import Swal from "sweetalert2";
+import { useParams } from "next/navigation";
+
 
 // ============= تاریخ جلالی و ارقام لاتین ============
 import DatePicker from "react-multi-date-picker";
@@ -8,8 +10,9 @@ import DateObject from "react-date-object";
 import persian from "react-date-object/calendars/persian";
 import persian_fa from "react-date-object/locales/persian_fa";
 import { useRouter } from "next/navigation";
-import { EyeIcon, EyeSlashIcon } from "@heroicons/react/24/outline";
+import { EyeIcon, EyeSlashIcon, UserIcon, ShieldCheckIcon } from "@heroicons/react/24/outline";
 
+// تبدیل ارقام فارسی/عربی به لاتین
 const toLatinDigits = (val = "") => {
   const map = {
     "۰": "0", "۱": "1", "۲": "2", "۳": "3", "۴": "4", "۵": "5", "۶": "6", "۷": "7", "۸": "8", "۹": "9",
@@ -18,22 +21,21 @@ const toLatinDigits = (val = "") => {
   return String(val).replace(/[۰-۹٠-٩]/g, (d) => map[d] || d);
 };
 
+// تولید شناسه یکتا برای فاکتور
 const generateInvoiceId = () =>
   Math.random().toString(36).slice(2, 8) + Date.now().toString(36).slice(-4);
 
+// گرفتن تاریخ جلالی امروز با ارقام لاتین
 const getNowJalaliLatin = () =>
   toLatinDigits(new DateObject({ calendar: persian }).format("YYYY/MM/DD"));
 
-// Helpers: خواندن/ساختن registerWith
-const pickFromRegisterWith = (arr = [], key) => {
-  const item = arr.find((o) => Object.prototype.hasOwnProperty.call(o, key));
-  return item ? item[key] : "";
-};
-const withoutKeysRegisterWith = (arr = [], keys = []) =>
-  arr.filter((o) => !keys.some((k) => Object.prototype.hasOwnProperty.call(o, k)));
+// ⬇️ حذف شده: توابع pickFromRegisterWith و withoutKeysRegisterWith دیگر نیازی نیست
+// چون email, phone, password مستقیم در سطح ریشه آبجکت کاربر هستند
+
 // ==============================================================================
 
 export default function Page({ params }) {
+  // ⬇️ تغییر یافته: پارامتر URL حالا _id مونگو است
   const userId = params.editUserId;
   const router = useRouter();
 
@@ -47,7 +49,8 @@ export default function Page({ params }) {
 
   // گرفتن اطلاعات کاربر از API
   useEffect(() => {
-    fetch(`http://localhost:3001/usersData/${userId}`)
+    // ⬇️ تغییر یافته: آدرس API جدید با _id
+    fetch(`http://localhost:3000/api/users/${userId}`)
       .then((res) => res.json())
       .then((data) => {
         // نرمال‌سازی داده‌ها + سنکرون کردن فاکتور
@@ -60,28 +63,22 @@ export default function Page({ params }) {
           })),
         };
 
-        // ایمیل/پسورد از registerWith
-        const email = pickFromRegisterWith(data.registerWith, "email");
-        const password = pickFromRegisterWith(data.registerWith, "password");
+        // ⬇️ تغییر یافته: دسترسی مستقیم به email, phone, password, gender, role
+        // دیگر نیازی به registerWith نیست
 
         const invId = data.purchaseInvoice?.[0]?.id || generateInvoiceId();
         normalized.purchaseInvoice = [
           { id: invId, countProducts: normalized.PurchasedProducts.length },
         ];
 
-        // افزودن فیلدهای کمکی برای بایند ورودی‌ها (ارسال نهایی دوباره داخل registerWith قرار می‌گیرن)
-        setFormData({
-          ...normalized,
-          email,
-          password,
-          registerWith: data.registerWith || [],
-        });
+        setFormData(normalized);
       })
       .finally(() => setLoading(false));
   }, [userId]);
 
   // گرفتن کل محصولات
   useEffect(() => {
+    // ⬇️ تغییر یافته: می‌توانید آدرس API را به localhost:3000 تغییر دهید
     fetch("http://localhost:3001/products")
       .then((res) => res.json())
       .then((data) => setAllProducts(data));
@@ -89,6 +86,7 @@ export default function Page({ params }) {
 
   // گرفتن دسته‌بندی‌ها
   useEffect(() => {
+    // ⬇️ تغییر یافته: می‌توانید آدرس API را به localhost:3000 تغییر دهید
     fetch("http://localhost:3001/categories")
       .then((res) => res.json())
       .then((data) => setCategories(data.map((c) => c.name)));
@@ -173,34 +171,42 @@ export default function Page({ params }) {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // بازسازی registerWith با ایمیل/پسورد جدید (حفظ سایر کلیدها مثل phone)
-    const restRegisterWith = withoutKeysRegisterWith(formData.registerWith, ["email", "password"]);
-    const newRegisterWith = [
-      ...restRegisterWith,
-      { email: formData.email ?? "" },
-      { password: formData.password ?? "" },
-    ];
-
-    // ساخت payload منسجم
+    // ⬇️ تغییر یافته: ساختار جدید payload بدون registerWith
+    // email, phone, password, gender, role مستقیم در سطح ریشه هستند
     const invId = formData.purchaseInvoice?.[0]?.id || generateInvoiceId();
 
-    // حذف فیلدهای کمکی email/password از ریشه تا ساختار API حفظ شود
-    // و استفاده از newRegisterWith
-    const { email, password, ...rest } = formData;
-
     const payload = {
-      ...rest,
-      registerWith: newRegisterWith,
+      // ⬇️ تغییر یافته: ارسال _id برای شناسایی در بکند (اختیاری، چون از URL می‌خواند)
+      _id: formData._id,
+      id: formData.id,
+      name: formData.name,
+      lastName: formData.lastName,
+      // ⬇️ اضافه شده: فیلد جنسیت
+      gender: formData.gender || "male",
+      // ⬇️ اضافه شده: فیلد نقش
+      role: formData.role || "user",
       dateLogin: toLatinDigits(formData.dateLogin || ""),
-      purchaseInvoice: [{ id: invId, countProducts: formData.PurchasedProducts.length }],
+      // ⬇️ تغییر یافته: email, phone, password مستقیم در ریشه
+      phone: formData.phone || "",
+      email: formData.email || "",
+      password: formData.password || "",
+      SuggestedCategories: formData.SuggestedCategories || [],
       PurchasedProducts: (formData.PurchasedProducts || []).map((p) => ({
         ...p,
         dateSlase: toLatinDigits(p.dateSlase || ""),
       })),
+      purchaseInvoice: [{ id: invId, countProducts: formData.PurchasedProducts.length }],
+      img: formData.img || "",
+      address: formData.address || "",
     };
 
+    // ⬇️ حذف شده: registerWith دیگر در payload نیست
+
     try {
-      const res = await fetch(`http://localhost:3001/usersData/${userId}`, {
+      console.log("📤 Payload ارسالی:", payload);
+
+      // ⬇️ تغییر یافته: آدرس API جدید با _id
+      const res = await fetch(`http://localhost:3000/api/users/${userId}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
@@ -256,7 +262,72 @@ export default function Page({ params }) {
           </div>
         </div>
 
-        {/* ایمیل از registerWith */}
+        {/* ⬇️ اضافه شده: جنسیت و نقش */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {/* انتخاب جنسیت */}
+          <div>
+            <label className="block text-sm font-medium text-dark mb-2">جنسیت</label>
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => setFormData((prev) => ({ ...prev, gender: "male" }))}
+                className={`inline-flex items-center gap-2 px-4 py-2 rounded-lg border text-sm transition ${
+                  formData.gender === "male"
+                    ? "bg-blue text-white border-blue"
+                    : "bg-gray-1 border-gray-3 text-dark hover:bg-gray-2"
+                }`}
+              >
+                <UserIcon className="w-4 h-4" />
+                مرد
+              </button>
+              <button
+                type="button"
+                onClick={() => setFormData((prev) => ({ ...prev, gender: "female" }))}
+                className={`inline-flex items-center gap-2 px-4 py-2 rounded-lg border text-sm transition ${
+                  formData.gender === "female"
+                    ? "bg-blue text-white border-blue"
+                    : "bg-gray-1 border-gray-3 text-dark hover:bg-gray-2"
+                }`}
+              >
+                <UserIcon className="w-4 h-4" />
+                زن
+              </button>
+            </div>
+          </div>
+
+          {/* انتخاب نقش */}
+          <div>
+            <label className="block text-sm font-medium text-dark mb-2">نقش کاربر</label>
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => setFormData((prev) => ({ ...prev, role: "user" }))}
+                className={`inline-flex items-center gap-2 px-4 py-2 rounded-lg border text-sm transition ${
+                  formData.role === "user"
+                    ? "bg-green text-white border-green"
+                    : "bg-gray-1 border-gray-3 text-dark hover:bg-gray-2"
+                }`}
+              >
+                <UserIcon className="w-4 h-4" />
+                کاربر عادی
+              </button>
+              <button
+                type="button"
+                onClick={() => setFormData((prev) => ({ ...prev, role: "admin" }))}
+                className={`inline-flex items-center gap-2 px-4 py-2 rounded-lg border text-sm transition ${
+                  formData.role === "admin"
+                    ? "bg-red text-white border-red"
+                    : "bg-gray-1 border-gray-3 text-dark hover:bg-gray-2"
+                }`}
+              >
+                <ShieldCheckIcon className="w-4 h-4" />
+                مدیر
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* ⬇️ تغییر یافته: ایمیل مستقیم از formData */}
         <div>
           <label className="text-sm font-medium text-dark">ایمیل</label>
           <input
@@ -267,19 +338,22 @@ export default function Page({ params }) {
             className="w-full border border-gray-3 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue focus:border-blue text-dark placeholder:body"
           />
         </div>
-        {/* شماره تلفن  */}
-                  <div>
-            <label className="text-sm font-medium text-dark">شماره تلفن</label>
-            <input
-              type="number"
-              name="phone"
-              value={formData.phone ?? ""}
-              onChange={handleChange}
-              className="w-full border border-gray-3 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue focus:border-blue text-dark placeholder:body"
-            />
-          </div>
 
-        {/* رمز عبور با نمایش/پنهان‌سازی و استایل هماهنگ */}
+        {/* ⬇️ تغییر یافته: شماره تلفن مستقیم از formData */}
+        <div>
+          <label className="text-sm font-medium text-dark">شماره تلفن</label>
+          <input
+            type="text"
+            name="phone"
+            value={formData.phone ?? ""}
+            onChange={handleChange}
+            dir="ltr"
+            placeholder="09123456789"
+            className="w-full border border-gray-3 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue focus:border-blue text-dark placeholder:body"
+          />
+        </div>
+
+        {/* ⬇️ تغییر یافته: رمز عبور مستقیم از formData */}
         <div>
           <label className="text-sm font-medium text-dark">رمز عبور</label>
           <div className="relative mt-1">
@@ -313,7 +387,20 @@ export default function Page({ params }) {
             placeholder="YYYY/MM/DD"
             className="w-full border border-gray-3 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue focus:border-blue text-dark placeholder:body"
           />
-          <p className="text-xs text-gray-5 mt-1">تاریخ این محصول</p>
+          <p className="text-xs text-gray-5 mt-1">فرمت: 1404/01/01</p>
+        </div>
+
+        {/* آدرس */}
+        <div>
+          <label className="text-sm font-medium text-dark">آدرس</label>
+          <textarea
+            name="address"
+            value={formData.address ?? ""}
+            onChange={handleChange}
+            rows={2}
+            className="w-full border border-gray-3 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue focus:border-blue text-dark placeholder:body"
+            placeholder="شهر، خیابان، پلاک ..."
+          />
         </div>
 
         {/* دسته‌بندی‌ها */}
@@ -402,7 +489,7 @@ export default function Page({ params }) {
                     calendar={persian}
                     locale={persian_fa}
                     format="YYYY/MM/DD"
-                    digits={["0", "1", "2", "3", "4", "5", "6", "7", "8", "9"]} // ارقام لاتین
+                    digits={["0", "1", "2", "3", "4", "5", "6", "7", "8", "9"]}
                     value={
                       product.dateSlase
                         ? new DateObject({ date: product.dateSlase, calendar: persian })

@@ -11,7 +11,7 @@ export default async function connectDB() {
         }
         
         // اتصال جدید
-        await mongoose.connect('mongodb://localhost:27017/next1codeDB')
+        await mongoose.connect(process.env.MONGO_URI)
         console.log('✅ اتصال جدید به next1codeDB موفق بود')
 
     } catch(err) {

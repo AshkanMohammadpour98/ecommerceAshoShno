@@ -8,9 +8,9 @@ import Link from "next/link";
 const BestSeller = () => {
     const [products, setProducts] = useState([]);
     useEffect(() => {
-    fetch("http://localhost:3001/products")
+    fetch("http://localhost:3000/api/products")
       .then((res) => res.json())
-      .then((data) => setProducts(data))
+      .then((data) => setProducts(data.data))
       .catch((err) => console.error("خطا در دریافت محصولات:", err));
   }, []);
   return (

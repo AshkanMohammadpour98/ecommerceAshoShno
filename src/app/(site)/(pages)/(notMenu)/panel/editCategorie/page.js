@@ -3,15 +3,6 @@ import Link from "next/link";
 import { useEffect, useState, useRef } from "react";
 import Swal from "sweetalert2";
 
-/**
- * Categories Manager
- * - GET  http://localhost:3001/categories
- * - PUT  http://localhost:3001/categories/:id
- * - DELETE http://localhost:3001/categories/:id
- *
- * NOTE: این کامپوننت فرض می‌کنه API شما این روش‌ها رو پشتیبانی می‌کنه (json-server یا مشابه).
- */
-
 export default function CategoriesManager() {
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -35,10 +26,10 @@ export default function CategoriesManager() {
   // fetch categories
   const fetchCategories = async () => {
     try {
-      const res = await fetch("http://localhost:3001/categories");
+      const res = await fetch("http://localhost:3000/api/categorys");
       if (!res.ok) throw new Error("Cannot fetch categories");
       const data = await res.json();
-      setCategories(data);
+      setCategories(data.data);
     } catch (err) {
       console.error(err);
       Swal.fire("خطا", "مشکلی در دریافت دسته‌بندی‌ها پیش آمد.", "error");
@@ -46,7 +37,7 @@ export default function CategoriesManager() {
   };
 
   useEffect(() => {
-    fetchCategories();
+   fetchCategories();
 
     // cleanup on unmount: revoke any created object URLs
     return () => {
@@ -74,14 +65,16 @@ export default function CategoriesManager() {
     if (!confirm.isConfirmed) return;
 
     try {
-      const res = await fetch(`http://localhost:3001/categories/${cat.id}`, {
+      const res = await fetch(`http://localhost:3000/api/categorys/${cat._id}`, {
         method: "DELETE",
       });
       if (!res.ok) throw new Error("delete failed");
 
       // update local state
-      setCategories((prev) => prev.filter((c) => c.id !== cat.id));
+      setCategories((prev) => prev.filter((c) => c._id !== cat._id));
       Swal.fire("حذف شد", "دسته‌بندی با موفقیت حذف شد.", "success");
+      await fetchCategories();
+
     } catch (err) {
       console.error(err);
       Swal.fire("خطا", "حذف موفق نبود. دوباره تلاش کنید.", "error");
@@ -158,12 +151,12 @@ export default function CategoriesManager() {
 
     try {
       // fetch categories for duplicate check
-      const resAll = await fetch("http://localhost:3001/categories");
+      const resAll = await fetch("http://localhost:3000/api/categorys");
       const allCats = await resAll.json();
 
-      // duplicate name check (exclude current editing id)
-      const dup = allCats.find(
-        (c) => c.name.toLowerCase() === editForm.name.trim().toLowerCase() && c.id !== editModal.id
+      // duplicate name check (exclude current editing _id)
+      const dup = allCats.data.find(
+        (c) => c.name.toLowerCase() === editForm.name.trim().toLowerCase() && c._id !== editModal._id
       );
       if (dup) {
         Swal.fire("نام تکراری", "این نام قبلاً استفاده شده. یک نام دیگر انتخاب کنید.", "warning");
@@ -180,7 +173,7 @@ export default function CategoriesManager() {
       };
 
       // send PUT (یا PATCH بسته به API)
-      const res = await fetch(`http://localhost:3001/categories/${editModal.id}`, {
+      const res = await fetch(`http://localhost:3000/api/categorys/${editModal._id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(updated),
@@ -188,7 +181,7 @@ export default function CategoriesManager() {
       if (!res.ok) throw new Error("update failed");
 
       // update local state
-      setCategories((prev) => prev.map((c) => (c.id === updated.id ? updated : c)));
+      setCategories((prev) => prev.map((c) => (c._id === updated._id ? updated : c)));
       Swal.fire("ذخیره شد", "تغییرات با موفقیت ذخیره شدند.", "success");
       closeEditModal();
     } catch (err) {
@@ -199,9 +192,9 @@ export default function CategoriesManager() {
   };
 
   // filtered categories by query
-  const filtered = categories.filter((c) =>
-    c.name.toLowerCase().includes(query.trim().toLowerCase())
-  );
+const filtered = categories.filter((c) =>
+  c?.name?.toLowerCase().includes(query.trim().toLowerCase())
+);
 
   // ---------- small helper UI pieces ----------
   const ActionBtn = ({ onClick, children, className = "" }) => (
@@ -248,7 +241,7 @@ export default function CategoriesManager() {
           {filtered.length > 0 ? (
             filtered.map((cat) => (
               <div
-                key={cat.id}
+                key={cat._id}
                 className="bg-white rounded-2xl p-4 shadow-2 flex flex-col justify-between"
               >
                 <div className="flex items-start gap-4">
@@ -264,7 +257,7 @@ export default function CategoriesManager() {
                     <h3 className="font-semibold text-lg text-dark">{cat.name}</h3>
                     <p className="text-sm text-meta-4 mt-1">محصولات: {cat.products}</p>
                     <p className="text-xs text-gray-5 mt-3 line-clamp-2">
-                      شناسه: {cat.id}
+                      شناسه: {cat._id}
                     </p>
                   </div>
                 </div>

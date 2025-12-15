@@ -48,6 +48,10 @@ export default function AddUserForm() {
     id: Date.now().toString(),
     name: "",
     lastName: "",
+    // ✅ تغیر داده شد: اضافه شدن فیلد جنسیت با مقدار پیش‌فرض
+    gender: "male",
+    // ✅ تغیر داده شد: اضافه شدن فیلد نقش با مقدار پیش‌فرض
+    role: "user",
     phone: "",
     email: "",
     password: "",
@@ -133,7 +137,8 @@ export default function AddUserForm() {
           ...prev.PurchasedProducts,
           {
             ...product,
-            dateSlase: getNowJalali(), // تاریخ امروز با ارقام لاتین
+            // تاریخ فروش برابر تاریخ امروز است
+            dateSlase: getNowJalali(), 
           },
         ];
         return {
@@ -183,17 +188,7 @@ export default function AddUserForm() {
     return { ok: true };
   };
 
-  const buildRegisterWith = (phoneVal, emailVal) => {
-    // فقط روش انتخابی + پسورد
-    const arr = [];
-    if (registerMethod === "phone") {
-      arr.push({ phone: phoneVal });
-    } else {
-      arr.push({ email: emailVal });
-    }
-    arr.push({ password: formData.password });
-    return arr;
-  };
+  // ✅ تغیر داده شد: تابع buildRegisterWith حذف شد چون در دیتای جدید نیازی به آن نیست
 
   // --------------------- ارسال ---------------------
   const handleSubmit = async (e) => {
@@ -205,42 +200,47 @@ export default function AddUserForm() {
         icon: "error",
         title: "خطا در فرم",
         text: v.msg,
-          timer: 2000, // مودال بعد از 2000 میلی‌ثانیه (2 ثانیه) بسته می‌شود
-  timerProgressBar: true, // نمایش نوار پیشرفت تایمر
-  showConfirmButton: false,
-  showCancelButton: false,
-  showCloseButton: false
+        timer: 2000, 
+        timerProgressBar: true, 
+        showConfirmButton: false,
+        showCancelButton: false,
+        showCloseButton: false
       });
       return;
     }
 
     const purchaseCount = formData.PurchasedProducts.length;
 
-    // مقدار نهایی phone/email در سطح ریشه (مطابق خواسته شما)
+    // مقدار نهایی phone/email
     const phoneFinal = registerMethod === "phone" ? onlyDigitsEnglish(formData.phone) : "";
     const emailFinal = registerMethod === "email" ? formData.email : "";
 
+    // ✅ تغیر داده شد: ساختار payload طبق نمونه دیتای جدید تنظیم شد
     const payload = {
       id: formData.id,
       name: formData.name,
       lastName: formData.lastName,
+      gender: formData.gender, // اضافه شد
+      role: formData.role,     // اضافه شد
       dateLogin: formData.dateLogin ? toEnglishDigits(formData.dateLogin) : getNowJalali(),
-      // مهم: هر دو در ریشه وجود دارند؛ اما یکی از آنها رشته خالی است
       phone: phoneFinal,
       email: emailFinal,
-      registerWith: buildRegisterWith(phoneFinal, emailFinal),
+      password: formData.password, // اضافه شد به روت
+      // registerWith: حذف شد
       SuggestedCategories: formData.SuggestedCategories,
       PurchasedProducts: (formData.PurchasedProducts || []).map((p) => ({
         ...p,
         dateSlase: toEnglishDigits(p.dateSlase || ""),
       })),
       purchaseInvoice: [{ id: generateInvoiceId(), countProducts: purchaseCount }],
-      img: formData.img || "", // اختیاری
-      address: formData.address || "", // اختیاری
+      img: formData.img || "", 
+      address: formData.address || "ادرس وجود ندارد", 
     };
 
     try {
-      const res = await fetch("http://localhost:3001/usersData", {
+      console.log("Payload to send:", payload);
+      
+      const res = await fetch("http://localhost:3000/api/users", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
@@ -248,14 +248,14 @@ export default function AddUserForm() {
 
       if (res.ok) {
         Swal.fire({
- icon: "success",
-  title: "موفقیت!",
-  text: "کاربر با موفقیت اضافه شد ✅",
-  timer: 2000, // مودال بعد از 2000 میلی‌ثانیه (2 ثانیه) بسته می‌شود
-  timerProgressBar: true, // نمایش نوار پیشرفت تایمر
-  showConfirmButton: false,
-  showCancelButton: false,
-  showCloseButton: false
+          icon: "success",
+          title: "موفقیت!",
+          text: "کاربر با موفقیت اضافه شد ✅",
+          timer: 2000, 
+          timerProgressBar: true, 
+          showConfirmButton: false,
+          showCancelButton: false,
+          showCloseButton: false
         });
 
         // ریست فرم
@@ -267,6 +267,8 @@ export default function AddUserForm() {
           id: Date.now().toString(),
           name: "",
           lastName: "",
+          gender: "male", // ریست مقدار پیش‌فرض
+          role: "user",   // ریست مقدار پیش‌فرض
           phone: "",
           email: "",
           password: "",
@@ -361,6 +363,35 @@ export default function AddUserForm() {
               required
               className="w-full rounded-md border border-gray-3 px-3 py-2 text-dark placeholder:body focus:outline-none focus:ring-2 focus:ring-blue focus:border-blue"
             />
+          </div>
+        </div>
+
+        {/* ✅ تغیر داده شد: اضافه شدن فیلدهای جنسیت و نقش */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label className="block text-sm font-medium text-dark mb-1">جنسیت</label>
+            <select
+              name="gender"
+              value={formData.gender}
+              onChange={handleChange}
+              className="w-full rounded-md border border-gray-3 px-3 py-2 text-dark focus:outline-none focus:ring-2 focus:ring-blue focus:border-blue bg-white"
+            >
+              <option value="male">مرد (Male)</option>
+              <option value="female">زن (Female)</option>
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-dark mb-1">نقش کاربر</label>
+            <select
+              name="role"
+              value={formData.role}
+              onChange={handleChange}
+              className="w-full rounded-md border border-gray-3 px-3 py-2 text-dark focus:outline-none focus:ring-2 focus:ring-blue focus:border-blue bg-white"
+            >
+              <option value="user">کاربر عادی (User)</option>
+              <option value="admin">مدیر (Admin)</option>
+            </select>
           </div>
         </div>
 

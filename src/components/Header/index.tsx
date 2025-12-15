@@ -23,7 +23,7 @@ import {
 } from "@heroicons/react/24/outline";
 
 // نام کوکی
-const AUTH_COOKIE_NAME = "auth";
+const AUTH_COOKIE_NAME = "token";
 
 // خواندن کوکی
 function readCookie(name) {
@@ -363,6 +363,7 @@ const Header = () => {
                       </li>
                     )
                   )}
+                  
                 </ul>
               </nav>
             </div>

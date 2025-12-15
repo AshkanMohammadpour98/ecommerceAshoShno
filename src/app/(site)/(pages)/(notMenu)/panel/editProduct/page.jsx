@@ -5,8 +5,8 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { useModalContext } from "@/app/context/QuickViewModalContext";
-import { AppDispatch } from "@/redux/store";
-import { useDispatch } from "react-redux";
+// import { AppDispatch } from "@/redux/store";
+// import { useDispatch } from "react-redux";
 import { updateQuickView } from "@/redux/features/quickView-slice";
 import Swal from "sweetalert2";
 
@@ -14,32 +14,31 @@ export default function EditProducts() {
 
   // استیت برای ذخیره لیست محصولات
   const [productsData, setProductsData] = useState([]);
-  // useEffect(() => {
-  //   console.log(productsData);
-
-  // }, [productsData])
 
   // کانتکست برای باز کردن مودال
   const { openModal } = useModalContext();
 
   // اتصال به Redux برای ارسال اکشن‌ها
-  const dispatch = useDispatch<AppDispatch>();
+  // const dispatch = useDispatch<AppDispatch>();
 
   // دریافت داده‌ها از API (یک‌بار بعد از mount)
   useEffect(() => {
     const fetchProducts = async () => {
       try {
-        const res = await fetch("http://localhost:3001/products");
+        const res = await fetch("http://localhost:3000/api/products");
         if (!res.ok) throw new Error("خطا در دریافت اطلاعات");
 
         const data = await res.json();
-        // اگر در داده‌ها فیلد reviews وجود نداشت، پیش‌فرض بدیم
-        const withReviews = data.map((p) => ({
-          ...p,
-          reviews: p.reviews ?? 0,
-        }));
+        console.log(data.data + "دیتای ادیت");
 
-        setProductsData(withReviews);
+        // اگر در داده‌ها فیلد reviews وجود نداشت، پیش‌فرض بدیم
+        // const withReviews = data.data.map((p) => ({
+        //   ...p,
+        //   reviews: p.reviews ?? 0,
+        // }));
+
+        setProductsData(Array.isArray(data.data) ? data.data : []);
+
       } catch (err) {
         console.error(err);
         setProductsData([]); // خطا → لیست خالی
@@ -82,11 +81,11 @@ export default function EditProducts() {
                   // کامپوننت کارت محصول بهبود یافته
                   // key={key} را به div اصلی اضافه کنید
 
-                  <div key={item.id} className="group relative flex flex-col overflow-hidden rounded-lg  bg-white shadow-sm transition-all duration-300 hover:shadow-lg dark:border-gray-700 dark:bg-gray-800">
+                  <div key={item._id} className="group relative flex flex-col overflow-hidden rounded-lg  bg-white shadow-sm transition-all duration-300 hover:shadow-lg dark:border-gray-700 dark:bg-gray-800">
                     {/* بخش تصویر محصول */}
                     <div className="relative flex h-[280px] w-full items-center justify-center overflow-hidden bg-gray-100 dark:bg-gray-700">
                       <Image
-                        src={item.imgs?.previews?.[0] || "/placeholder.png"}
+                        src={item.imgs?.previews?.[0] || "/images/notImg.png"}
                         alt={item.title || "product image"}
                         width={250}
                         height={250}
@@ -100,7 +99,7 @@ export default function EditProducts() {
                         <button
                           onClick={async () => {
 
-                            // console.log(item.id);
+                            // console.log(item._id);
                             const confirm = await Swal.fire({
                               title: 'آیا مطمئن هستید؟',
                               text: 'این محصول بعد از حذف قابل بازیابی نخواهد بود!',
@@ -136,7 +135,7 @@ export default function EditProducts() {
 
                             try {
 
-                              const res = await fetch(`http://localhost:3001/products/${item.id}`, {
+                              const res = await fetch(`http://localhost:3000/api/products/${item._id}`, {
                                 method: 'DELETE',
                               });
 
@@ -151,7 +150,7 @@ export default function EditProducts() {
                                 showConfirmButton: false,
                                 timer: 1500
                               });
-                              const resolt = await fetch('http://localhost:3001/products');
+                              const resolt = await fetch('http://localhost:3000/api/products');
                               const data = await resolt.json();
                               setProductsData(data);
                             } catch (err) {
@@ -161,11 +160,14 @@ export default function EditProducts() {
 
                           }}
                           aria-label="حذف"
-                          className="flex h-10 w-10 items-center justify-center rounded-full bg-white text-dark shadow-md 
-                          opacity-0 transition-all duration-200 transform translate-y-4 
-                          group-hover:opacity-100 group-hover:translate-y-0 delay-100 
-                          hover:bg-red-light hover:text-white 
-                          dark:bg-gray-700 dark:text-white dark:hover:bg-red"
+                          className="flex h-10 w-10 items-center justify-center rounded-full text-white shadow-md
+      opacity-100 translate-y-0                 /* موبایل/تبلت: همیشه دیده شود */
+      bg-red                                   /* رنگ پیشفرض موبایل/تبلت */
+      lg:opacity-0 lg:translate-y-4            /* دسکتاپ: پیشفرض مخفی */
+      lg:group-hover:opacity-100 lg:group-hover:translate-y-0 /* دسکتاپ: با هاور کارت ظاهر شود */
+      transition-all duration-200 delay-100
+      lg:hover:bg-red-dark                     /* دسکتاپ: هاور کمی تیره‌تر */
+      dark:bg-gray-700 dark:text-white dark:lg:hover:bg-red-dark"
                         >
                           <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="size-5">
                             <path strokeLinecap="round" strokeLinejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" />
@@ -179,11 +181,14 @@ export default function EditProducts() {
                             dispatch(updateQuickView({ ...item }));
                           }}
                           aria-label="مشاهده سریع"
-                          className="flex h-10 w-10 items-center justify-center rounded-full bg-white text-dark shadow-md 
-                            opacity-0 transition-all duration-200 transform translate-y-4 
-                            group-hover:opacity-100 group-hover:translate-y-0 delay-200 
-                            hover:bg-blue hover:text-white 
-                            dark:bg-gray-700 dark:text-white dark:hover:bg-blue-dark"
+                          className="flex h-10 w-10 items-center justify-center rounded-full text-white shadow-md
+      opacity-100 translate-y-0                 /* موبایل/تبلت: همیشه دیده شود */
+      bg-blue                                  /* رنگ پیشفرض موبایل/تبلت */
+      lg:opacity-0 lg:translate-y-4            /* دسکتاپ: پیشفرض مخفی */
+      lg:group-hover:opacity-100 lg:group-hover:translate-y-0 /* دسکتاپ: با هاور کارت ظاهر شود */
+      transition-all duration-200 delay-200
+      lg:hover:bg-blue-dark                     /* دسکتاپ: هاور کمی تیره‌تر */
+      dark:bg-gray-700 dark:text-white dark:lg:hover:bg-blue-dark"
                         >
                           <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="size-5">
                             <path strokeLinecap="round" strokeLinejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z" />
@@ -193,13 +198,16 @@ export default function EditProducts() {
 
                         {/* دکمه ویرایش */}
                         <Link
-                          href={`/panel/editProduct/${item.id}`}
+                          href={`/panel/editProduct/${item._id}`}
                           aria-label="ویرایش"
-                          className="flex h-10 w-10 items-center justify-center rounded-full bg-white text-dark shadow-md 
-                            opacity-0 transition-all duration-200 transform translate-y-4 
-                            group-hover:opacity-100 group-hover:translate-y-0 delay-300 
-                            hover:bg-green hover:text-white 
-                            dark:bg-gray-700 dark:text-white dark:hover:bg-green-dark"
+                          className=" flex h-10 w-10 items-center justify-center rounded-full text-white shadow-md
+      opacity-100 translate-y-0                 /* موبایل/تبلت: همیشه دیده شود */
+      bg-green                                 /* رنگ پیشفرض موبایل/تبلت */
+      lg:opacity-0 lg:translate-y-4            /* دسکتاپ: پیشفرض مخفی */
+      lg:group-hover:opacity-100 lg:group-hover:translate-y-0 /* دسکتاپ: با هاور کارت ظاهر شود */
+      transition-all duration-200 delay-300
+      lg:hover:bg-green-dark                    /* دسکتاپ: هاور کمی تیره‌تر */
+      dark:bg-gray-700 dark:text-white dark:lg:hover:bg-green-dark"
                         >
                           <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="size-5">
                             <path strokeLinecap="round" strokeLinejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10" />

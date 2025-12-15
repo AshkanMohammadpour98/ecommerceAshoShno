@@ -28,9 +28,9 @@ export default function AddProductForm() {
   const [categories, setCategories] = useState([]);
 
   useEffect(() => {
-    fetch("http://localhost:3001/categories")
+    fetch("http://localhost:3000/api/categorys")
       .then((res) => res.json())
-      .then((data) => setCategories(data))
+      .then((data) => setCategories(data.data))
       .catch(() => setCategories([]));
   }, []);
 
@@ -84,7 +84,7 @@ export default function AddProductForm() {
 
     try {
       // 1️⃣ ذخیره محصول
-      const resProduct = await fetch("http://localhost:3001/products", {
+      const resProduct = await fetch("http://localhost:3000/api/products", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ ...formData, id }),
@@ -98,7 +98,7 @@ export default function AddProductForm() {
       );
       if (selectedCategory) {
         const resCategory = await fetch(
-          `http://localhost:3001/categories/${selectedCategory.id}`,
+          `http://localhost:3000/api/categorys/${selectedCategory._id}`,
           {
             method: "PATCH",
             headers: { "Content-Type": "application/json" },
@@ -277,7 +277,7 @@ export default function AddProductForm() {
         >
           <option value="">-- انتخاب کنید --</option>
           {categories.map((item) => (
-            <option key={item.id} value={item.name}>
+            <option key={item._id} value={item.name}>
               {item.name}
             </option>
           ))}

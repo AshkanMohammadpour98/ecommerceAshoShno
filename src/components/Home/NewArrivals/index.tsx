@@ -12,11 +12,13 @@ const NewArrival = () => {
         useEffect(() => {
         const fetchProducts = async () => {
           try {
-            const res = await fetch("http://localhost:3001/products"); 
+            const res = await fetch("http://localhost:3000/api/products"); 
             if (!res.ok) throw new Error("خطا در دریافت اطلاعات");
     
             const data = await res.json();
-            setProductsData(data); // ذخیره داده‌ها در state
+            console.log(data);
+            
+            setProductsData(data.data); // ذخیره داده‌ها در state
           } catch (err) {
             console.error(err);
             setProductsData([]); // اگه خطا بود، state خالی بمونه

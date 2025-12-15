@@ -1,82 +1,86 @@
 // src/app/api/products/route.js
 
-// دیتای نمونه محصول‌ها که به صورت آرایه از آبجکت‌ها ذخیره شده
- const productsData = [
-  {
-    title: "Havit HV-G69 USB Gamepad2",
-    reviews: 15,
-    price: 59.0,
-    discountedPrice: 29.0,
-    id: 1,
-    categorie: "Any",
-    imgs: {
-      thumbnails: [
-        "/images/products/product-1-sm-1.png",
-        "/images/products/product-1-sm-2.png",
-      ],
-      previews: [
-        "/images/products/product-1-bg-1.png",
-        "/images/products/product-1-bg-2.png",
-      ],
-    },
-  },
-  {
-    title: "iPhone 14 Plus , 6/128GB",
-    reviews: 5,
-    price: 899.0,
-    discountedPrice: 99.0,
-    id: 2,
-    categorie: "Phone",
-    imgs: {
-      thumbnails: [
-        "/images/products/product-2-sm-1.png",
-        "/images/products/product-2-sm-2.png",
-      ],
-      previews: [
-        "/images/products/product-2-bg-1.png",
-        "/images/products/product-2-bg-2.png",
-      ],
-    },
-  },
-  // بقیه محصولات...
-];
 
-// 👉 متد GET برای گرفتن همه محصولات
+
+import { NextResponse } from "next/server";
+import connectDB from "/utils/ConnectDB";
+import Products from "/models/Products";
+
+/* =========================
+   GET → دریافت همه محصولات
+========================= */
 export async function GET() {
-  // اینجا فقط کل آرایه productsData رو برمی‌گردونیم
-  return Response.json(productsData);
+  try {
+    await connectDB();
+
+    const products = await Products.find().sort({ createdAt: -1 });
+
+    return NextResponse.json({
+      success: true,
+      count: products.length,
+      data: products,
+    });
+  } catch (error) {
+    return NextResponse.json(
+      { success: false, message: "خطا در دریافت محصولات" },
+      { status: 500 }
+    );
+  }
 }
 
-// 👉 متد POST برای اضافه کردن محصول جدید
-export async function POST(request) {
+/* =========================
+   POST → افزودن محصول جدید
+========================= */
+export async function POST(req) {
   try {
-    // گرفتن body ریکوئست به صورت json
-    const newProduct = await request.json();
+    await connectDB();
 
-    // ایجاد یک id جدید برای محصول (به صورت خودکار +۱ از آخرین محصول)
-    newProduct.id = productsData.length
-      ? productsData[productsData.length - 1].id + 1
-      : 1;
+    // 1️⃣ دریافت دیتا از فرانت
+    const body = await req.json();
 
-    // اضافه کردن محصول به آرایه اصلی
-    productsData.push(newProduct);
+    /*
+      2️⃣ نرمال‌سازی دیتا
+      چون از فرم HTML بعضی چیزها string میان
+    */
+    const normalizedData = {
+      ...body,
+      price: Number(body.price),
+      discountedPrice: Number(body.discountedPrice || 0),
+      reviews: Number(body.reviews || 0),
+      hasDiscount: Boolean(body.hasDiscount),
+    };
 
-    // برگرداندن پاسخ با محصول جدید و status 201 (Created)
-    return Response.json(
+    // 3️⃣ بررسی تکراری نبودن id فرانت
+    const exists = await Products.findOne({ id: body.id });
+    if (exists) {
+      return NextResponse.json(
+        { success: false, message: "این محصول قبلاً ثبت شده است" },
+        { status: 409 }
+      );
+    }
+
+    // 4️⃣ ذخیره در MongoDB
+    const product = await Products.create(normalizedData);
+
+    // 5️⃣ پاسخ موفق
+    return NextResponse.json(
       {
+        success: true,
         message: "محصول با موفقیت اضافه شد ✅",
-        product: newProduct,
+        data: product,
       },
       { status: 201 }
     );
   } catch (error) {
-    // اگر خطا پیش اومد، خطا رو برمی‌گردونیم
-    return Response.json(
+    console.error("POST PRODUCT ERROR:", error);
+
+    return NextResponse.json(
       {
-        message: "خطا در پردازش درخواست ❌",
+        success: false,
+        message: "افزودن محصول انجام نشد ❌",
         error: error.message,
       },
-      { status: 400 }
+      { status: 500 }
     );
   }
 }

@@ -26,6 +26,8 @@ const setCookie = (name, value, { maxAgeSec = 86400 } = {}) => {
     value
   )}; Path=/; Max-Age=${maxAgeSec}; SameSite=Lax${secure}`;
 };
+
+
 // ===================================================
 
 export default function SigninPage() {
@@ -46,90 +48,85 @@ export default function SigninPage() {
     return { ok: true };
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    const v = validate();
-    if (!v.ok) {
-      Swal.fire({ icon: "error", title: "خطا در فرم", text: v.msg });
+const handleSubmit = async (e) => {
+  e.preventDefault();
+
+  // ============= بررسی اولیه ورودی‌ها =============
+  const v = validate();
+  if (!v.ok) {
+    Swal.fire({ icon: "error", title: "خطا در فرم", text: v.msg });
+    return;
+  }
+
+  setLoading(true);
+
+  try {
+    // ============= نرمال‌سازی مقدار ورودی =============
+    // اگر کاربر گوشی بزند → فقط رقم‌ها را انگلیسی و بدون فاصله تبدیل می‌کنیم
+    // اگر ایمیل بزند → تبدیل به حروف کوچک
+    const normalizedIdentifier =
+      loginMethod === "phone"
+        ? onlyDigitsEnglish(identifier)
+        : identifier.trim().toLowerCase();
+
+    // ============= ساختن payload ارسالی به API =============
+    // API شما گفته فقط "یکی" از این دو باید پر باشد
+    const payload = {
+      phone: loginMethod === "phone" ? normalizedIdentifier : "",
+      email: loginMethod === "email" ? normalizedIdentifier : "",
+      password: password,
+      role : "user"
+    };
+
+    console.log("🔵 PAYLOAD ارسال به API:", payload);
+
+    // ============= ارسال درخواست POST به API =============
+    const res = await fetch("http://localhost:3000/api/users/signin", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+
+    const data = await res.json();
+    console.log("🟣 پاسخ API:", data);
+
+    // ============= بررسی خطاهای سرور =============
+    if (!res.ok) {
+      Swal.fire({
+        icon: "error",
+        title: "ورود ناموفق",
+        text: data.message || "اطلاعات وارد شده صحیح نیست.",
+      });
       return;
     }
 
-    setLoading(true);
+    // ============= نمایش پیام موفقیت =============
+    Swal.fire({
+      icon: "success",
+      title: "ورود موفق!",
+      text: "در حال انتقال به پنل کاربری...",
+      timer: 1200,
+      showConfirmButton: false,
+    });
 
-    try {
-      const res = await fetch("http://localhost:3001/usersData");
-      if (!res.ok) throw new Error("خطا در ارتباط با سرور");
-      const users = await res.json();
+    // ============= ریدایرکت به پنل =============
+    // اگر API شناسه کاربر را ارسال کند، از آن استفاده کن
+    setTimeout(() => {
+      window.location.href = `/my-account/${data.userId || ""}`;
+    }, 1300);
 
-      const normalizedIdentifier =
-        loginMethod === "phone"
-          ? onlyDigitsEnglish(identifier)
-          : identifier.trim().toLowerCase();
+  } catch (error) {
+    // ============= خطا در وصل شدن به سرور =============
+    Swal.fire({
+      icon: "error",
+      title: "مشکل در ارتباط",
+      text: "سرور پاسخ نداد. لطفاً دوباره تلاش کنید.",
+    });
+  } finally {
+    setLoading(false);
+  }
+};
 
-      const foundUser = users.find((u) => {
-        const rw = u.registerWith || [];
-        const passRW =
-          rw.find((o) => Object.prototype.hasOwnProperty.call(o, "password"))?.password || "";
-
-        const phoneRW =
-          rw.find((o) => Object.prototype.hasOwnProperty.call(o, "phone"))?.phone || "";
-        const emailRW =
-          rw.find((o) => Object.prototype.hasOwnProperty.call(o, "email"))?.email || "";
-
-        const rootPhone = u.phone ? onlyDigitsEnglish(u.phone) : "";
-        const rootEmail = typeof u.email === "string" ? u.email.toLowerCase() : "";
-
-        const passMatch =
-          passRW === password || (typeof u.password === "string" && u.password === password);
-
-        const contactMatch =
-          loginMethod === "phone"
-            ? (phoneRW && onlyDigitsEnglish(phoneRW) === normalizedIdentifier) ||
-              (rootPhone && rootPhone === normalizedIdentifier)
-            : (emailRW && emailRW.toLowerCase() === normalizedIdentifier) ||
-              (rootEmail && rootEmail === normalizedIdentifier);
-
-        return passMatch && contactMatch;
-      });
-
-      if (foundUser) {
-        // rool را تعیین می‌کنیم (rool/role/isAdmin)
-        const rool =
-          (typeof foundUser.rool === "string" && foundUser.rool) ||
-          (typeof foundUser.role === "string" && foundUser.role) ||
-          (foundUser.isAdmin ? "admin" : "user");
-
-        // ساخت و ذخیره کوکی 1 روزه
-        const authObj = { id: String(foundUser.id), password, rool };
-        setCookie("auth", JSON.stringify(authObj), { maxAgeSec: 86400 }); // 1 روز
-
-        Swal.fire({
-          icon: "success",
-          title: "ورود موفق!",
-          text: `خوش آمدید، ${foundUser.name || "کاربر"}!`,
-          timer: 1000,
-          showConfirmButton: false,
-        }).then(() => {
-          // ریدایرکت به پنل کاربری (روی پورت 3001)
-          window.location.href = `http://localhost:3001/my-account/${foundUser.id}`;
-        });
-      } else {
-        Swal.fire({
-          icon: "error",
-          title: "اطلاعات نادرست",
-          text: "موبایل/ایمیل یا رمز عبور وارد شده صحیح نمی‌باشد.",
-        });
-      }
-    } catch (error) {
-      Swal.fire({
-        icon: "error",
-        title: "مشکل در ارتباط",
-        text: "ارتباط با سرور برقرار نشد. لطفاً بعداً تلاش کنید.",
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
 
   return (
     <section className="flex items-center justify-center min-h-screen bg-gray p-4">
@@ -181,7 +178,7 @@ export default function SigninPage() {
               type={loginMethod === "phone" ? "tel" : "email"}
               required
               value={identifier}
-              onChange={(e) => setIdentifier(e.target.value)}
+              onChange={(e) => setIdentifier(e.target.value) }
               dir={loginMethod === "phone" ? "ltr" : "auto"}
               placeholder={loginMethod === "phone" ? "09123456789" : "example@mail.com"}
               className="w-full rounded-md border border-gray-3 px-3 py-2 text-dark placeholder:body focus:outline-none focus:ring-2 focus:ring-blue focus:border-blue"
@@ -194,7 +191,7 @@ export default function SigninPage() {
               <label htmlFor="password" className="block text-sm font-medium text-dark">
                 رمز عبور
               </label>
-              <Link href="/forgot-password" className="text-xs font-medium text-blue hover:underline">
+              <Link href="/auth/ForgotPage" className="text-xs font-medium text-blue hover:underline">
                 رمز عبور خود را فراموش کرده‌اید؟
               </Link>
             </div>

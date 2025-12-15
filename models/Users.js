@@ -1,5 +1,6 @@
 import { models, model, Schema } from "mongoose";
 
+
 const userSchema = new Schema({
     id: {
         type: String
@@ -14,14 +15,25 @@ const userSchema = new Schema({
         minLength: 3,
         trim: true
     },
-    gender : {
-        type : String
+    role : {
+        type : String,
+        enum: ["user", "admin"],   // فقط این دو مقدار مجاز هستند
+        default : "user"
     },
     dateLogin: {
         type: String
     },
-    registerWith: {
-        type: Array
+    phone : {
+        type : String,
+        unique : true
+    },
+    email : {
+        type : String,
+        unique : true
+    },
+    gender : {
+        type : String,
+        required : true
     },
     SuggestedCategories: {
         type: Array,
@@ -37,6 +49,10 @@ const userSchema = new Schema({
     },
     address: {
         type: String,
+    },
+    password : {
+        required : true,
+        type : String
     }
 })
 

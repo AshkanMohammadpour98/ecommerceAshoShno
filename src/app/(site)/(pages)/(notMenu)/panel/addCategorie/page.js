@@ -20,9 +20,9 @@ export default function AddCategory() {
 
   const fetchCategories = async () => {
     try {
-      const res = await fetch("http://localhost:3001/categories");
+      const res = await fetch("http://localhost:3000/api/categorys");
       const data = await res.json();
-      setCategories(data);
+      setCategories(Array.isArray(data.data) ? data.data : []);
     } catch (error) {
       console.error("خطا در دریافت دسته‌ها:", error);
     }
@@ -44,16 +44,16 @@ export default function AddCategory() {
       setFormData({ ...formData, img: localUrl });
     }
   };
-const handleNoImage = () => {
-  setNoImage(!noImage);
-  if (!noImage) {
-    setPreview("/images/notImg.png"); 
-    setFormData({ ...formData, img: "/images/notImg.png" });
-  } else {
-    setPreview(null);
-    setFormData({ ...formData, img: "" });
-  }
-};
+  const handleNoImage = () => {
+    setNoImage(!noImage);
+    if (!noImage) {
+      setPreview("/images/notImg.png");
+      setFormData({ ...formData, img: "/images/notImg.png" });
+    } else {
+      setPreview(null);
+      setFormData({ ...formData, img: "" });
+    }
+  };
 
 
   const handleSubmit = async (e) => {
@@ -72,12 +72,24 @@ const handleNoImage = () => {
     setLoading(true);
 
     try {
-      const res = await fetch("http://localhost:3001/categories");
+      const res = await fetch("http://localhost:3000/api/categorys");
       const categories = await res.json();
+      console.log(categories.data);
+
 
       const exists = categories.find(
         (cat) => cat.name.toLowerCase() === formData.name.toLowerCase()
       );
+
+      if (exists) {
+        Swal.fire(
+          "نام تکراری",
+          "این نام دسته‌بندی از قبل وجود دارد. لطفا نام دیگری انتخاب کنید.",
+          "warning"
+        );
+        setLoading(false);
+        return;
+      }
 
       if (exists) {
         Swal.fire(
@@ -94,7 +106,7 @@ const handleNoImage = () => {
         id: Math.random().toString(36).substr(2, 4),
       };
 
-      await fetch("http://localhost:3001/categories", {
+      await fetch("http://localhost:3000/api/categorys", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(newCategory),
@@ -154,6 +166,7 @@ const handleNoImage = () => {
             <input
               type="number"
               name="products"
+              onChange={handleChange}
               value={formData.products}
               disabled
               className="w-full rounded-lg border border-gray-3 bg-gray-2 px-4 py-2.5 text-dark cursor-not-allowed"
@@ -228,12 +241,12 @@ const handleNoImage = () => {
               {categories.length > 0 ? (
                 categories.map((cat) => (
                   <li
-                    key={cat.id}
+                    key={cat._id}
                     className="flex items-center justify-between border border-gray-3 rounded-lg p-3"
                   >
                     <div className="flex items-center gap-3">
                       <img
-                        src={cat.img || "@/images/notImg.png" || null}
+                        src={cat.img || "/images/notImg.png" || null}
                         alt={cat.name}
                         className="w-12 h-12 rounded-md object-cover border"
                       />
