@@ -38,28 +38,38 @@ const BlogGridWithSidebar = async () => {
   // ];
 
   // اینجا مستقیم fetch میکنیم → SSR
-  const resBlogs = await fetch("http://localhost:3001/blogData", {
+    // اینجا مستقیم fetch میکنیم → SSR
+  const resBlogs = await fetch("http://localhost:3000/api/blogs", {
     cache: "no-store", // برای اینکه هر بار رفرش شه (معادل getServerSideProps)
   });
-  const blogData = await resBlogs.json();
+  const blogData = await resBlogs.json(); // داده‌ها به‌طور خودکار پارس می‌شوند
+  console.log(blogData,  "resBlogs blog data");  // اینجا دیگه نیازی به JSON.parse نیست
+
+  
   
   // اینجا مستقیم fetch میکنیم → SSR
-  const resProducts = await fetch("http://localhost:3001/products", {
+  const resProducts = await fetch("http://localhost:3000/api/products", {
     cache: "no-store", // برای اینکه هر بار رفرش شه (معادل getServerSideProps)
   });
   const productsData = await resProducts.json();
+  console.log(productsData , "resBlogs productsData");
+
 
   // اینجا مستقیم fetch میکنیم → SSR
-  const resCategories = await fetch("http://localhost:3001/categories", {
+  const resCategories = await fetch("http://localhost:3000/api/categorys", {
     cache: "no-store", // برای اینکه هر بار رفرش شه (معادل getServerSideProps)
   });
   const categories = await resCategories.json();
+  console.log(categories , "resBlogs categories");
+
 
     // اینجا مستقیم fetch میکنیم → SSR
-  const resTags = await fetch("http://localhost:3001/tags", {
+  const resTags = await fetch("http://localhost:3000/api/tags", {
     cache: "no-store", // برای اینکه هر بار رفرش شه (معادل getServerSideProps)
   });
   const tags = await resTags.json();
+  console.log(tags , "resBlogs tags");
+  
 
   console.log("این صفحه برای نمایش وبلاگ‌ها به صورت گرید (شبکه‌ای) همراه با سایدبار طراحی شده است.");
 
@@ -75,7 +85,7 @@ const BlogGridWithSidebar = async () => {
           <div className="flex flex-col lg:flex-row-reverse gap-7.5 rtl:text-right">
             <div className="lg:max-w-[770px] w-full">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-y-10 gap-x-7.5">
-                {blogData.map((blog, key) => (
+                {blogData.data.map((blog, key) => (
                   <BlogItem blog={blog} key={key} />
                 ))}
               </div>
@@ -128,9 +138,9 @@ const BlogGridWithSidebar = async () => {
             {/* 📌 بخش سایدبار (کنار صفحه) */}
             <div className="lg:max-w-[370px] w-full rtl:text-right">
               <SearchForm />
-              <LatestPosts blogs={blogData} />
-              <LatestProducts products={productsData} />
-              <Categories categories={categories} />
+              <LatestPosts blogs={blogData.data} />
+              <LatestProducts products={productsData.data} />
+              <Categories categories={categories.data} />
 
               <div className="shadow-1 bg-white rounded-xl mt-7.5">
                 <div className="px-4 sm:px-6 py-4.5 border-b border-gray-3">
@@ -139,7 +149,7 @@ const BlogGridWithSidebar = async () => {
 
                 <div className="p-4 sm:p-6">
                   <div className="flex flex-wrap gap-3.5">
-                    {tags.map((tag, index) => (
+                    {tags.data.map((tag, index) => (
                       <a
                         key={index}
                         href="#"

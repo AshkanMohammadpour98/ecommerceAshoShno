@@ -1,5 +1,5 @@
 // src/app/api/blogs/route.js
-import Blog from '/models/Blog'
+import Blog from '/models/Blogs'
 import connectDB from '/utils/ConnectDB'
 
 // GET - دریافت همه بلاگ‌ها

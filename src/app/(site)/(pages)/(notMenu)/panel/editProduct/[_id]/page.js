@@ -22,8 +22,8 @@ export default function EditProductId({ params }) {
 
       try {
         const [productRes, categoryRes] = await Promise.all([
-          fetch(`http://localhost:3000/api/products/${_id}`),
-          fetch("http://localhost:3000/api/categorys")
+          fetch(`/api/products/${_id}`),
+          fetch("/api/categorys")
         ]);
 
         if (!productRes.ok) throw new Error("خطا در دریافت محصول");

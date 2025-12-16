@@ -4,7 +4,7 @@ import Link from "next/link";
 const EditBlogs = async () => {
 
      // اینجا مستقیم fetch میکنیم → SSR گرفتن دیتای همه مقالات
-   const resBlogs = await fetch("http://localhost:3001/blogData", {
+   const resBlogs = await fetch("http://localhost:3000/api/blogs", {
      cache: "no-store", // برای اینکه هر بار رفرش شه (معادل getServerSideProps)
    });
    const blogData = await resBlogs.json();
@@ -17,7 +17,7 @@ const EditBlogs = async () => {
         <div className="max-w-[1170px] w-full mx-auto px-4 sm:px-8 xl:px-0">
           {/*  لیست مقالات در حالت گرید (شبکه‌ای) */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-y-10 gap-x-7.5">
-            {blogData.map((blog, key) => (
+            {blogData.data.map((blog, key) => (
               <div key={key} className="shadow-1 bg-white rounded-xl px-4 sm:px-5 pt-5 pb-4 text-right">
                     {/* لینک تصویر بلاگ */}
                     <Link href="/blogs/blog-details" className="rounded-md overflow-hidden block">

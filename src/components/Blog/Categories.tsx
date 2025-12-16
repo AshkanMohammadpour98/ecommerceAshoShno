@@ -1,7 +1,7 @@
 import React from "react";
 
 const Categories = ({ categories }) => {
-  // console.log(categories);
+  console.log(categories , 'categories 7888888888');
   
   return (
     <div className="shadow-1 bg-white rounded-xl mt-7.5">

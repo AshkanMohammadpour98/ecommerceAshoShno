@@ -93,7 +93,7 @@ if (!body.name ) {
     }
 
   } catch (error) {
-    console.error(" خطای سمت سرور خطا در افزودن یوزر:", error);
+    console.error(" خطای سمت سرور خطا در افزودن دسته بندی:", error);
 
     return Response.json(
       {

@@ -7,7 +7,7 @@ import BlogItem from "../Blog/BlogItem";
 
 const BlogGrid = async () => {
    // اینجا مستقیم fetch میکنیم → SSR
-  const resBlogs = await fetch("http://localhost:3001/blogData", {
+  const resBlogs = await fetch("http://localhost:3000/api/blogs", {
     cache: "no-store", // برای اینکه هر بار رفرش شه (معادل getServerSideProps)
   });
   const blogData = await resBlogs.json();
@@ -22,7 +22,7 @@ const BlogGrid = async () => {
         <div className="max-w-[1170px] w-full mx-auto px-4 sm:px-8 xl:px-0">
           {/* ✅ لیست مقالات در حالت گرید (شبکه‌ای) */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-y-10 gap-x-7.5">
-            {blogData.map((blog, key) => (
+            {blogData.data.map((blog, key) => (
               <BlogItem blog={blog} key={key} />
             ))}
           </div>

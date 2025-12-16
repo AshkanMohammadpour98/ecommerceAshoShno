@@ -1,4 +1,3 @@
-// صفحه همه محصولات بدون نوار کناری ویرایش محصولات
 "use client";
 
 import { useEffect, useState } from "react";
@@ -7,81 +6,61 @@ import Image from "next/image";
 import { useModalContext } from "@/app/context/QuickViewModalContext";
 // import { AppDispatch } from "@/redux/store";
 // import { useDispatch } from "react-redux";
-import { updateQuickView } from "@/redux/features/quickView-slice";
 import Swal from "sweetalert2";
 
 export default function EditProducts() {
-
   // استیت برای ذخیره لیست محصولات
   const [productsData, setProductsData] = useState([]);
 
-  // کانتکست برای باز کردن مودال
+  // کانتکست برای باز کردن مودال مشاهده سریع
   const { openModal } = useModalContext();
 
-  // اتصال به Redux برای ارسال اکشن‌ها
+  // اتصال به Redux (در صورت نیاز)
   // const dispatch = useDispatch<AppDispatch>();
 
-  // دریافت داده‌ها از API (یک‌بار بعد از mount)
+  // دریافت داده‌ها از API بعد از mount شدن کامپوننت
   useEffect(() => {
     const fetchProducts = async () => {
       try {
-        const res = await fetch("http://localhost:3000/api/products");
+        const res = await fetch("/api/products");
         if (!res.ok) throw new Error("خطا در دریافت اطلاعات");
 
         const data = await res.json();
-        console.log(data.data + "دیتای ادیت");
-
-        // اگر در داده‌ها فیلد reviews وجود نداشت، پیش‌فرض بدیم
-        // const withReviews = data.data.map((p) => ({
-        //   ...p,
-        //   reviews: p.reviews ?? 0,
-        // }));
-
         setProductsData(Array.isArray(data.data) ? data.data : []);
-
       } catch (err) {
         console.error(err);
-        setProductsData([]); // خطا → لیست خالی
+        setProductsData([]); // در صورت خطا، لیست خالی
       }
     };
 
     fetchProducts();
   }, []);
 
-
-
   return (
-    <section className="overflow-y-scroll  h-screen relative pb-20 pt-2 lg:pt-10xl:pt-12 bg-[#f3f4f6]">
-      <div className="w-full mx-auto px-4 sm:px-8 xl:px10">
+    <section className="overflow-y-scroll h-screen relative pb-20 pt-2 lg:pt-10 xl:pt-12 bg-[#f3f4f6]">
+      <div className="w-full mx-auto px-4 sm:px-8 xl:px-10">
         <div className="flex gap-7.5">
           <div className="w-full">
-            {/* نوار بالا: کلید تغییر استایل نمایش */}
+            {/* نوار بالا: می‌توانید کلید تغییر نمایش اضافه کنید */}
             <div className="rounded-lg bg-white shadow-1 pl-3 pr-2.5 py-2.5 mb-6">
               <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2.5">
-
-
-                </div>
+                <div className="flex items-center gap-2.5"></div>
               </div>
             </div>
 
-            {/* نمایش محتوا */}
-            <div
-              className={"grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-x-7.5 gap-y-9"}>
-              {productsData.map((item, key) => {
+            {/* نمایش محصولات */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-x-7.5 gap-y-9">
+              {productsData.map((item) => {
                 // منطق ستاره‌ها برای هر محصول
                 const totalStars = 5;
                 const ratingValue = Number(item.reviews) || 0;
-                const safeFilled = Math.min(
-                  Math.max(ratingValue, 0),
-                  totalStars
-                );
+                const safeFilled = Math.min(Math.max(ratingValue, 0), totalStars);
 
                 return (
-                  // کامپوننت کارت محصول بهبود یافته
-                  // key={key} را به div اصلی اضافه کنید
-
-                  <div key={item._id} className="group relative flex flex-col overflow-hidden rounded-lg  bg-white shadow-sm transition-all duration-300 hover:shadow-lg dark:border-gray-700 dark:bg-gray-800">
+                  <div
+                    key={item._id} // استفاده از _id برای key
+                    className="group relative flex flex-col overflow-hidden rounded-lg bg-white shadow-sm transition-all duration-300 hover:shadow-lg dark:border-gray-700 dark:bg-gray-800"
+                  >
                     {/* بخش تصویر محصول */}
                     <div className="relative flex h-[280px] w-full items-center justify-center overflow-hidden bg-gray-100 dark:bg-gray-700">
                       <Image
@@ -92,14 +71,12 @@ export default function EditProducts() {
                         className="object-contain transition-transform duration-300 group-hover:scale-105"
                       />
 
-                      {/* دکمه‌های روی تصویر (Action Buttons) */}
+                      {/* دکمه‌های روی تصویر */}
                       <div className="absolute inset-x-0 bottom-4 flex items-center justify-center gap-3">
 
                         {/* دکمه حذف */}
                         <button
                           onClick={async () => {
-
-                            // console.log(item._id);
                             const confirm = await Swal.fire({
                               title: 'آیا مطمئن هستید؟',
                               text: 'این محصول بعد از حذف قابل بازیابی نخواهد بود!',
@@ -111,21 +88,15 @@ export default function EditProducts() {
                                 const confirmBtn = Swal.getConfirmButton();
                                 const cancelBtn = Swal.getCancelButton();
 
-                                // رنگ اولیه
                                 confirmBtn.style.backgroundColor = '#3085d6';
                                 confirmBtn.style.color = '#fff';
                                 cancelBtn.style.backgroundColor = '#d33';
                                 cancelBtn.style.color = '#fff';
 
-                                // اضافه کردن CSS برای hover با جاوااسکریپت
                                 const hoverStyle = document.createElement('style');
                                 hoverStyle.innerHTML = `
-                                  .swal2-confirm:hover {
-                                    background-color: #256ab3 !important; /* آبی تیره‌تر روی hover */
-                                  }
-                                  .swal2-cancel:hover {
-                                    background-color: #a00 !important; /* قرمز تیره‌تر روی hover */
-                                  }
+                                  .swal2-confirm:hover { background-color: #256ab3 !important; }
+                                  .swal2-cancel:hover { background-color: #a00 !important; }
                                 `;
                                 document.head.appendChild(hoverStyle);
                               }
@@ -134,14 +105,10 @@ export default function EditProducts() {
                             if (!confirm.isConfirmed) return;
 
                             try {
-
-                              const res = await fetch(`http://localhost:3000/api/products/${item._id}`, {
+                              const res = await fetch(`/api/products/${item._id}`, {
                                 method: 'DELETE',
                               });
-
-                              if (!res.ok) {
-                                throw new Error('حذف محصول ناموفق بود');
-                              }
+                              if (!res.ok) throw new Error('حذف محصول ناموفق بود');
 
                               Swal.fire({
                                 position: "center",
@@ -150,25 +117,22 @@ export default function EditProducts() {
                                 showConfirmButton: false,
                                 timer: 1500
                               });
-                              const resolt = await fetch('http://localhost:3000/api/products');
+
+                              // دریافت مجدد محصولات بعد از حذف
+                              const resolt = await fetch('/api/products');
                               const data = await resolt.json();
-                              setProductsData(data);
+                              setProductsData(data.data || []);
                             } catch (err) {
                               Swal.fire('خطا!', err.message, 'error');
                             }
-
-
                           }}
                           aria-label="حذف"
                           className="flex h-10 w-10 items-center justify-center rounded-full text-white shadow-md
-      opacity-100 translate-y-0                 /* موبایل/تبلت: همیشه دیده شود */
-      bg-red                                   /* رنگ پیشفرض موبایل/تبلت */
-      lg:opacity-0 lg:translate-y-4            /* دسکتاپ: پیشفرض مخفی */
-      lg:group-hover:opacity-100 lg:group-hover:translate-y-0 /* دسکتاپ: با هاور کارت ظاهر شود */
-      transition-all duration-200 delay-100
-      lg:hover:bg-red-dark                     /* دسکتاپ: هاور کمی تیره‌تر */
-      dark:bg-gray-700 dark:text-white dark:lg:hover:bg-red-dark"
+                          opacity-100 translate-y-0 bg-red lg:opacity-0 lg:translate-y-4
+                          lg:group-hover:opacity-100 lg:group-hover:translate-y-0 transition-all duration-200 delay-100
+                          lg:hover:bg-red-dark dark:bg-gray-700 dark:text-white dark:lg:hover:bg-red-dark"
                         >
+                          {/* آیکون سطل زباله */}
                           <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="size-5">
                             <path strokeLinecap="round" strokeLinejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" />
                           </svg>
@@ -176,20 +140,14 @@ export default function EditProducts() {
 
                         {/* دکمه مشاهده سریع */}
                         <button
-                          onClick={() => {
-                            openModal();
-                            dispatch(updateQuickView({ ...item }));
-                          }}
+                          onClick={() => openModal()}
                           aria-label="مشاهده سریع"
                           className="flex h-10 w-10 items-center justify-center rounded-full text-white shadow-md
-      opacity-100 translate-y-0                 /* موبایل/تبلت: همیشه دیده شود */
-      bg-blue                                  /* رنگ پیشفرض موبایل/تبلت */
-      lg:opacity-0 lg:translate-y-4            /* دسکتاپ: پیشفرض مخفی */
-      lg:group-hover:opacity-100 lg:group-hover:translate-y-0 /* دسکتاپ: با هاور کارت ظاهر شود */
-      transition-all duration-200 delay-200
-      lg:hover:bg-blue-dark                     /* دسکتاپ: هاور کمی تیره‌تر */
-      dark:bg-gray-700 dark:text-white dark:lg:hover:bg-blue-dark"
+                          opacity-100 translate-y-0 bg-blue lg:opacity-0 lg:translate-y-4
+                          lg:group-hover:opacity-100 lg:group-hover:translate-y-0 transition-all duration-200 delay-200
+                          lg:hover:bg-blue-dark dark:bg-gray-700 dark:text-white dark:lg:hover:bg-blue-dark"
                         >
+                          {/* آیکون چشم */}
                           <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="size-5">
                             <path strokeLinecap="round" strokeLinejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z" />
                             <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
@@ -200,22 +158,17 @@ export default function EditProducts() {
                         <Link
                           href={`/panel/editProduct/${item._id}`}
                           aria-label="ویرایش"
-                          className=" flex h-10 w-10 items-center justify-center rounded-full text-white shadow-md
-      opacity-100 translate-y-0                 /* موبایل/تبلت: همیشه دیده شود */
-      bg-green                                 /* رنگ پیشفرض موبایل/تبلت */
-      lg:opacity-0 lg:translate-y-4            /* دسکتاپ: پیشفرض مخفی */
-      lg:group-hover:opacity-100 lg:group-hover:translate-y-0 /* دسکتاپ: با هاور کارت ظاهر شود */
-      transition-all duration-200 delay-300
-      lg:hover:bg-green-dark                    /* دسکتاپ: هاور کمی تیره‌تر */
-      dark:bg-gray-700 dark:text-white dark:lg:hover:bg-green-dark"
+                          className="flex h-10 w-10 items-center justify-center rounded-full text-white shadow-md
+                          opacity-100 translate-y-0 bg-green lg:opacity-0 lg:translate-y-4
+                          lg:group-hover:opacity-100 lg:group-hover:translate-y-0 transition-all duration-200 delay-300
+                          lg:hover:bg-green-dark dark:bg-gray-700 dark:text-white dark:lg:hover:bg-green-dark"
                         >
+                          {/* آیکون مداد */}
                           <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="size-5">
                             <path strokeLinecap="round" strokeLinejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10" />
                           </svg>
                         </Link>
-
                       </div>
-
                     </div>
 
                     {/* بخش اطلاعات محصول */}
@@ -223,69 +176,31 @@ export default function EditProducts() {
                       {/* ستاره‌ها و امتیاز */}
                       <div className="mb-3 flex items-center justify-between">
                         <div className="flex items-center gap-1.5">
-                          {/* <!-- stars --> */}
                           <div className="flex items-center gap-1">
                             <div style={{ display: "flex", gap: "4px" }}>
                               {[...Array(totalStars)].map((_, i) => {
-                                // ستاره پر
                                 if (i < Math.floor(safeFilled)) {
-                                  return (
-                                    <Image
-                                      key={i}
-                                      src="/images/icons/icon-star.svg"
-                                      alt="star icon"
-                                      width={15}
-                                      height={15}
-                                    />
-                                  );
+                                  return <Image key={i} src="/images/icons/icon-star.svg" alt="star icon" width={15} height={15} />;
                                 }
-                                // ستاره نیمه پر (مثلاً برای امتیاز 3.5)
                                 if (i === Math.floor(safeFilled) && safeFilled % 1 >= 0.5) {
-                                  return (
-                                    <Image
-                                      key={i}
-                                      src="/images/icons/icon-star-half.svg"
-                                      alt="half star icon"
-                                      width={15}
-                                      height={15}
-                                    />
-                                  );
+                                  return <Image key={i} src="/images/icons/icon-star-half.svg" alt="half star icon" width={15} height={15} />;
                                 }
-                                // ستاره خالی (SVG که دادی)
                                 return (
-                                  <svg
-                                    key={i}
-                                    className="fill-gray-4"
-                                    width="18"
-                                    height="18"
-                                    viewBox="0 0 18 18"
-                                    fill="none"
-                                    xmlns="http://www.w3.org/2000/svg"
-                                  >
+                                  <svg key={i} className="fill-gray-4" width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
                                     <g clipPath="url(#clip0_375_9172)">
-                                      <path
-                                        d="M16.7906 6.72187L11.7 5.93438L9.39377 1.09688C9.22502 0.759375 8.77502 0.759375 8.60627 1.09688L6.30002 5.9625L1.23752 6.72187C0.871891 6.77812 0.731266 7.25625 1.01252 7.50938L4.69689 11.3063L3.82502 16.6219C3.76877 16.9875 4.13439 17.2969 4.47189 17.0719L9.05627 14.5687L13.6125 17.0719C13.9219 17.2406 14.3156 16.9594 14.2313 16.6219L13.3594 11.3063L17.0438 7.50938C17.2688 7.25625 17.1563 6.77812 16.7906 6.72187Z"
-                                        fill=""
-                                      />
+                                      <path d="M16.7906 6.72187L11.7 5.93438L9.39377 1.09688C9.22502 0.759375 8.77502 0.759375 8.60627 1.09688L6.30002 5.9625L1.23752 6.72187C0.871891 6.77812 0.731266 7.25625 1.01252 7.50938L4.69689 11.3063L3.82502 16.6219C3.76877 16.9875 4.13439 17.2969 4.47189 17.0719L9.05627 14.5687L13.6125 17.0719C13.9219 17.2406 14.3156 16.9594 14.2313 16.6219L13.3594 11.3063L17.0438 7.50938C17.2688 7.25625 17.1563 6.77812 16.7906 6.72187Z" fill=""/>
                                     </g>
                                     <defs>
-                                      <clipPath id="clip0_375_9172">
-                                        <rect width="18" height="18" fill="white" />
-                                      </clipPath>
+                                      <clipPath id="clip0_375_9172"><rect width="18" height="18" fill="white"/></clipPath>
                                     </defs>
                                   </svg>
                                 );
                               })}
                             </div>
-
                           </div>
-
-                          <span>
-                            {/* <span className="font-medium text-dark"> 4.7 امتیاز </span> */}
-                            <p className="text-custom-sm text-gray-500 dark:text-gray-400">({item.reviews || 0})</p>
-                          </span>
+                          <span className="text-custom-sm text-gray-500 dark:text-gray-400">({item.reviews || 0})</span>
                         </div>
-                        <span className="text-dark-2"> (5 نظر) </span>
+                        <span className="text-dark-2">(5 نظر)</span>
                       </div>
 
                       {/* عنوان محصول */}
@@ -297,23 +212,16 @@ export default function EditProducts() {
                       <div className="mt-auto flex items-end gap-2">
                         {(item.hasDiscount && item.discountedPrice && item.discountedPrice > 0) ? (
                           <>
-                            <span className="font-bold text-xl text-blue dark:text-blue-light">
-                              ${item.discountedPrice}
-                            </span>
-                            <span className="text-md font-medium text-gray-400 line-through dark:text-gray-500">
-                              ${item.price}
-                            </span>
+                            <span className="font-bold text-xl text-blue dark:text-blue-light">${item.discountedPrice}</span>
+                            <span className="text-md font-medium text-gray-400 line-through dark:text-gray-500">${item.price}</span>
                           </>
                         ) : (
-                          <span className="font-bold text-xl text-blue dark:text-blue-light">
-                            ${item.price}
-                          </span>
+                          <span className="font-bold text-xl text-blue dark:text-blue-light">${item.price}</span>
                         )}
                       </div>
                     </div>
                   </div>
-
-                )
+                );
               })}
             </div>
           </div>

@@ -30,9 +30,9 @@ export default function AddBlogForm() {
 
   // گرفتن دسته‌بندی‌ها
   useEffect(() => {
-    fetch("/api/categories")
+    fetch("http://localhost:3000/api/categorys")
       .then((res) => res.json())
-      .then((data) => setCategories(data))
+      .then((data) => setCategories(data.data))
       .catch(() => setCategories([]));
   }, []);
 
@@ -55,8 +55,10 @@ export default function AddBlogForm() {
     e.preventDefault();
 
     const newBlog = { ...formData, id: String(Date.now()) };
+    console.log(newBlog + 'new blog');
+    
 
-    await fetch("http://localhost:3001/blogData", {
+    await fetch("http://localhost:3000/api/blogs", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(newBlog),

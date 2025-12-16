@@ -74,13 +74,14 @@ export default function AddCategory() {
     try {
       const res = await fetch("http://localhost:3000/api/categorys");
       const categories = await res.json();
-      console.log(categories.data);
+      // console.log(categories.data  , "categories.data");
 
 
-      const exists = categories.find(
+      const exists = categories.data.find(
         (cat) => cat.name.toLowerCase() === formData.name.toLowerCase()
       );
-
+      console.log(exists);
+      
       if (exists) {
         Swal.fire(
           "نام تکراری",
