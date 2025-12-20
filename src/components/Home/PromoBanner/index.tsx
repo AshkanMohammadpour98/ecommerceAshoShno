@@ -19,40 +19,6 @@ type PromoBannerData = {
 
 // داده‌های پیش‌فرض برای زمانی که API خالی است
 const defaultBanners: PromoBannerData[] = [
-  {
-    id: 1,
-    title: "آیفون 16 پلاس",
-    subtitle: "تا 30٪ تخفیف",
-    description: "آیفون 14 همان چیپ فوق سریع A15 Bionic را دارد که در آیفون 13 پرو استفاده شده و با پردازنده 5 هسته‌ای گرافیکی، تمام ویژگی‌های جدید را پشتیبانی می‌کند.",
-    buttonText: "خرید اکنون",
-    buttonLink: "#",
-    image: "/images/promo/promo-01.png",
-    bgColor: "#F5F5F7",
-    buttonColor: "blue"
-  },
-  {
-    id: 2,
-    title: "تردمیل برقی تاشو",
-    subtitle: "ورزش در خانه",
-    description: "20٪ تخفیف",
-    buttonText: "همین حالا بگیرید",
-    buttonLink: "#",
-    image: "/images/promo/promo-02.png",
-    bgColor: "#DBF4F3",
-    buttonColor: "teal",
-    discount: "20٪ تخفیف"
-  },
-  {
-    id: 3,
-    title: "اپل واچ اولترا",
-    subtitle: "تا 40٪ تخفیف",
-    description: "بدنه تیتانیومی با کیفیت هوافضا تعادل کامل بین طراحی و کارایی را ارائه می‌دهد.",
-    buttonText: "خرید اکنون",
-    buttonLink: "#",
-    image: "/images/promo/promo-03.png",
-    bgColor: "#FFECE1",
-    buttonColor: "orange"
-  }
 ];
 
 const PromoBanner = () => {
@@ -67,7 +33,7 @@ const PromoBanner = () => {
         setLoading(true);
         
         // درخواست به API
-        const response = await fetch('http://localhost:3001/customerPromoBanner');
+        const response = await fetch('http://localhost:3000/api/customPromoBenner');
         
         // بررسی موفقیت‌آمیز بودن درخواست
         if (!response.ok) {
@@ -77,9 +43,9 @@ const PromoBanner = () => {
         const data = await response.json();
         
         // بررسی اینکه آیا داده‌ای دریافت شده و آرایه است
-        if (Array.isArray(data) && data.length > 0) {
+        if (Array.isArray(data.data) && data.data.length > 0) {
           // اگر داده‌ها کمتر از 3 تا بود، از داده‌های پیش‌فرض برای تکمیل استفاده می‌کنیم
-          const finalBanners = [...data];
+          const finalBanners = [...data.data];
           while (finalBanners.length < 3) {
             finalBanners.push(defaultBanners[finalBanners.length]);
           }

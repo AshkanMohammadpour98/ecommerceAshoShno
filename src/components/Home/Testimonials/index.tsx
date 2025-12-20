@@ -21,7 +21,7 @@ type Testimonial = {
 
 const API_URL =
   process.env.NEXT_PUBLIC_COMMENTS_API_URL ||
-  "http://localhost:3001/commentsUsersData"; // می‌تونی به '/commentsUsersData' تغییرش بدی
+  "http://localhost:3000/api/comments"; 
 
 const Testimonials = () => {
   const sliderRef = useRef<any>(null);
@@ -44,10 +44,10 @@ const Testimonials = () => {
         throw new Error(`خطا در دریافت داده‌ها: ${res.status}`);
       }
       const json = await res.json();
-      if (!Array.isArray(json)) {
+      if (!Array.isArray(json.data)) {
         throw new Error("فرمت داده دریافتی معتبر نیست (باید آرایه باشد).");
       }
-      setData(json as Testimonial[]);
+      setData(json.data as Testimonial[]);
     } catch (e: any) {
       // اگر می‌خوای در صورت خطا به داده محلی برگردی، این بخش رو باز کن:
       // setData(testimonialsData as Testimonial[]);

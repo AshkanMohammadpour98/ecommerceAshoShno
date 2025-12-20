@@ -8,7 +8,7 @@ import Swal from "sweetalert2";
 // تایپ‌ها
 // ============================================
 type Product = {
-  id: string | number;
+  _id: string | number;
   title: string;
   count: number;
   reviews: number;
@@ -21,7 +21,7 @@ type Product = {
 };
 
 type Banner = {
-  id?: string | number;        
+  _id?: string | number;        
   title: string;
   subtitle: string;
   description: string;
@@ -35,9 +35,9 @@ type Banner = {
 // ============================================
 // تنظیمات
 // ============================================
-const API_BASE = "http://localhost:3001";
-const BANNERS_URL = `${API_BASE}/customerPromoBanner`;
-const PRODUCTS_URL = `${API_BASE}/products`;
+// const API_BASE = "http://localhost:3001";
+const BANNERS_URL = `http://localhost:3000/api/customPromoBenner`;
+const PRODUCTS_URL = `http://localhost:3000/api/products`;
 const MAX_BANNERS = 3;
 
 // رنگ‌های پیشنهادی بک‌گراند برای UI راحت‌تر
@@ -70,7 +70,7 @@ const buildBannerFromProduct = (p: Product): Banner => {
     description:
       "محصول منتخب مشتری برای فروش. فرصت را از دست ندهید!",
     buttonText: "مشاهده و خرید",
-    buttonLink: `shop-details/${p.id}`, // تغییر مسیر به shop-details
+    buttonLink: `shop-details/${p._id}`, // تغییر مسیر به shop-details
     image,
     bgColor: BG_COLOR_PRESETS[0],
     buttonColor: "blue",
@@ -160,8 +160,8 @@ const BannerForm: React.FC<BannerFormProps> = ({
       try {
         setProdLoading(true);
         const res = await fetch(PRODUCTS_URL);
-        const data: Product[] = await res.json();
-        if (Array.isArray(data)) setProducts(data);
+        const data = await res.json();
+        if (Array.isArray(data.data)) setProducts(data.data);
       } catch (e) {
         // اگر خطا، چیزی نمایش ندهیم اما فرم دستی فعال بماند
       } finally {
@@ -171,14 +171,14 @@ const BannerForm: React.FC<BannerFormProps> = ({
     fetchProducts();
   }, []);
 
-  // فیلتر ساده محصولات بر اساس عنوان یا id
+  // فیلتر ساده محصولات بر اساس عنوان یا _id
   const filteredProducts = useMemo(() => {
     const q = query.trim().toLowerCase();
     if (!q) return products.slice(0, 15);
     return products.filter(
       (p) =>
         p.title.toLowerCase().includes(q) ||
-        String(p.id).toLowerCase().includes(q)
+        String(p._id).toLowerCase().includes(q)
     ).slice(0, 15);
   }, [products, query]);
 
@@ -204,7 +204,7 @@ const BannerForm: React.FC<BannerFormProps> = ({
     if (!image.trim()) return toast("آدرس تصویر را وارد کنید", "warning");
 
     onSubmit({
-      ...(initial?.id ? { id: initial.id } : {}),
+      // ...(initial?._id ? { id_: initial._id } : {}),
       title: title.trim(),
       subtitle: subtitle.trim(),
       description: description.trim(),
@@ -276,14 +276,14 @@ const BannerForm: React.FC<BannerFormProps> = ({
                     filteredProducts.map((p) => (
                       <button
                         type="button"
-                        key={String(p.id)}
+                        key={String(p._id)}
                         onClick={() => handlePickProduct(p)}
                         className="w-full px-3 py-2 text-right hover:bg-gray-50 border-b last:border-0"
                         title="کلیک برای پرکردن خودکار فرم"
                       >
                         <div className="font-medium text-sm">{p.title}</div>
                         <div className="text-xs text-gray-500">
-                          ID: {String(p.id)} | 
+                          ID: {String(p._id)} | 
                           قیمت: {p.price.toLocaleString("fa-IR")} تومان
                           {p.hasDiscount && (
                             <span className="text-green ml-1">
@@ -296,7 +296,7 @@ const BannerForm: React.FC<BannerFormProps> = ({
                   )}
                 </div>
                 <p className="text-xs text-gray-500 mt-1">
-                  نکته: با انتخاب محصول، لینک به صورت خودکار shop-details/{`{id}`} تنظیم می‌شود.
+                  نکته: با انتخاب محصول، لینک به صورت خودکار shop-details/{`{_id}`} تنظیم می‌شود.
                 </p>
               </div>
             </div>
@@ -351,7 +351,7 @@ const BannerForm: React.FC<BannerFormProps> = ({
                     placeholder="shop-details/1"
                   />
                   <p className="text-xs text-gray-500 mt-1">
-                    فرمت: shop-details/{`{product-id}`}
+                    فرمت: shop-details/{`{product-_id}`}
                   </p>
                 </div>
               </div>
@@ -481,9 +481,9 @@ const CustomerPromoBannerAdmin: React.FC = () => {
       setLoading(true);
       const res = await fetch(BANNERS_URL);
       if (!res.ok) throw new Error("Fetch error");
-      const data: Banner[] = await res.json();
+      const data = await res.json();
       // فقط 3 تای اول
-      setBanners(Array.isArray(data) ? data.slice(0, MAX_BANNERS) : []);
+      setBanners(data.data);
     } catch (e) {
       setBanners([]);
     } finally {
@@ -507,8 +507,8 @@ const CustomerPromoBannerAdmin: React.FC = () => {
   };
 
   // ویرایش بنر
-  const updateBanner = async (id: string | number, b: Banner) => {
-    const res = await fetch(`${BANNERS_URL}/${id}`, {
+  const updateBanner = async (_id: string | number, b: Banner) => {
+    const res = await fetch(`${BANNERS_URL}/${_id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(b),
@@ -518,8 +518,8 @@ const CustomerPromoBannerAdmin: React.FC = () => {
   };
 
   // حذف بنر
-  const deleteBanner = async (id: string | number) => {
-    const res = await fetch(`${BANNERS_URL}/${id}`, {
+  const deleteBanner = async (_id: string | number) => {
+    const res = await fetch(`${BANNERS_URL}/${_id}`, {
       method: "DELETE",
     });
     if (!res.ok) throw new Error("Delete failed");
@@ -530,7 +530,7 @@ const CustomerPromoBannerAdmin: React.FC = () => {
   const handleSubmitBanner = async (data: Banner) => {
     try {
       if (editing) {
-        await updateBanner(editing.id!, data);
+        await updateBanner(editing._id!, data);
         toast("با موفقیت ویرایش شد", "success");
       } else {
         if (banners.length >= MAX_BANNERS) {
@@ -562,7 +562,7 @@ const CustomerPromoBannerAdmin: React.FC = () => {
     });
     if (!confirm.isConfirmed) return;
     try {
-      await deleteBanner(b.id!);
+      await deleteBanner(b._id!);
       toast("با موفقیت حذف شد", "success");
       fetchBanners();
     } catch (e) {
@@ -635,7 +635,7 @@ const CustomerPromoBannerAdmin: React.FC = () => {
             ) : (
               <div className="grid gap-5 grid-cols-1 md:grid-cols-2">
                 {banners.map((b, idx) => (
-                  <div key={String(b.id)} className="rounded-lg bg-white shadow p-5 flex flex-col">
+                  <div key={String(b._id)} className="rounded-lg bg-white shadow p-5 flex flex-col">
                     {/* نشانگر جایگاه بنر */}
                     <div className="flex items-center justify-between mb-3">
                       <div className="text-sm font-semibold">
@@ -709,7 +709,7 @@ const CustomerPromoBannerAdmin: React.FC = () => {
                     </div>
 
                     <div className="text-xs text-gray-500 mt-2">
-                      شناسه: {String(b.id)}
+                      شناسه: {String(b._id)}
                     </div>
                   </div>
                 ))}

@@ -27,8 +27,8 @@ const ChildBannerSliderEditor = () => {
 
   // --- Helpers ---
   const formatPrice = (num) => new Intl.NumberFormat("fa-IR").format(num);
-  const getImageUrl = (item) => item?.imgs?.previews?.[0] || item?.image || "/placeholder.jpg";
-  const handleImageError = (e) => { e.target.src = "/placeholder.jpg"; };
+  const getImageUrl = (item) => item?.imgs?.previews?.[0] || item?.image || "/images/notImg.png";
+  const handleImageError = (e) => { e.target.src = "/images/notImg.png"; };
 
   // --- Data Fetching ---
   useEffect(() => {
@@ -36,13 +36,13 @@ const ChildBannerSliderEditor = () => {
       try {
         const [bannerRes, productsRes] = await Promise.all([
           // ✅ API Endpoint changed here
-          fetch("http://localhost:3001/bennerHomeChildData"),
-          fetch("http://localhost:3001/products")
+          fetch("http://localhost:3000/api/chaildBennerHome"),
+          fetch("http://localhost:3000/api/products")
         ]);
         const bannerData = await bannerRes.json();
         const productsData = await productsRes.json();
-        setBannerItems(bannerData || []);
-        setProducts(productsData || []);
+        setBannerItems(bannerData.data || []);
+        setProducts(productsData.data || []);
       } catch (error) {
         console.error("Failed to fetch data:", error);
         Swal.fire("خطا", "دریافت اطلاعات با مشکل مواجه شد", "error");
@@ -81,7 +81,7 @@ const ChildBannerSliderEditor = () => {
     return { categories: ["all", ...Object.keys(counts).sort()], catCounts: counts };
   }, [products]);
 
-  const bannerIdSet = useMemo(() => new Set(bannerItems.map(b => String(b.id))), [bannerItems]);
+  const bannerIdSet = useMemo(() => new Set(bannerItems.map(b => String(b._id))), [bannerItems]);
 
   const filteredProducts = useMemo(() => {
     const searchTerm = debouncedSearch.toLowerCase().trim();
@@ -93,7 +93,7 @@ const ChildBannerSliderEditor = () => {
 
 
   // --- Actions ---
-  const handleDelete = async (id) => {
+  const handleDelete = async(_id) => {
     const result = await Swal.fire({
       title: "آیا مطمئن هستید؟",
       text: "این آیتم از بنر حذف خواهد شد.",
@@ -106,10 +106,12 @@ const ChildBannerSliderEditor = () => {
     });
     if (!result.isConfirmed) return;
 
-    setDeletingId(id);
+    console.log(_id , 'item _id props');
+    
+    setDeletingId(_id);
     try {
-      await fetch(`http://localhost:3001/bennerHomeChildData/${id}`, { method: "DELETE" });
-      setBannerItems(prev => prev.filter(item => item.id !== id));
+      await fetch(`http://localhost:3000/api/chaildBennerHome/${_id}`, { method: "DELETE" });
+      setBannerItems(prev => prev.filter(item => item._id !== _id));
     } catch (error) {
       Swal.fire("خطا", "حذف آیتم با مشکل مواجه شد.", "error");
     } finally {
@@ -118,17 +120,17 @@ const ChildBannerSliderEditor = () => {
   };
 
   const addProductToBanner = async (product) => {
-    if (isBannerFull || bannerIdSet.has(String(product.id))) return;
+    if (isBannerFull || bannerIdSet.has(String(product._id))) return;
     
-    setAddingId(product.id);
+    setAddingId(product._id);
     try {
-      const res = await fetch("http://localhost:3001/bennerHomeChildData", {
+      const res = await fetch("http://localhost:3000/api/chaildBennerHome", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(product),
       });
       const data = await res.json();
-      setBannerItems(prev => [...prev, data]);
+      setBannerItems(prev => [...prev, data.data]);
     } catch (error) {
       Swal.fire("خطا", "افزودن محصول با مشکل مواجه شد.", "error");
     } finally {
@@ -191,21 +193,21 @@ const ChildBannerSliderEditor = () => {
                 {filteredProducts.length > 0 ? (
                   <ul className="divide-y divide-gray-100">
                     {filteredProducts.map(p => (
-                      <li key={p.id} className="flex items-center gap-3 p-3 text-sm hover:bg-gray-50 transition-colors">
+                      <li key={p._id} className="flex items-center gap-3 p-3 text-sm hover:bg-gray-50 transition-colors">
                         <img src={getImageUrl(p) || null} alt="img" className="w-12 h-12 rounded-md object-cover flex-shrink-0" onError={handleImageError}/>
                         <div className="flex-1 min-w-0">
                           <p className="font-semibold text-gray-800 truncate">{p.title}</p>
                           <p className="text-gray-500">{formatPrice(p.price)} تومان</p>
                         </div>
-                        {bannerIdSet.has(String(p.id)) ? (
+                        {bannerIdSet.has(String(p._id)) ? (
                           <span className="text-green-600 font-medium px-3 text-xs">✓ افزوده شد</span>
                         ) : (
                           <button
                             onClick={() => addProductToBanner(p)}
-                            disabled={addingId === p.id}
+                            disabled={addingId === p._id}
                             className="flex items-center justify-center gap-2 bg-blue-500 text-white font-semibold px-3 py-1.5 rounded-md hover:bg-blue-600 transition-all duration-200 disabled:bg-blue-300 disabled:cursor-not-allowed"
                           >
-                            {addingId === p.id ? <IconSpinner /> : <IconPlus />}
+                            {addingId === p._id ? <IconSpinner /> : <IconPlus />}
                           </button>
                         )}
                       </li>
@@ -224,13 +226,13 @@ const ChildBannerSliderEditor = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* Render existing items */}
           {bannerItems.map(item => (
-            <div key={item.id} className="group relative bg-white rounded-xl border border-gray-200 overflow-hidden shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
+            <div key={item._id} className="group relative bg-white rounded-xl border border-gray-200 overflow-hidden shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
               <div className="relative w-full pt-[56.25%] bg-gray-100">
                 <img src={getImageUrl(item) || null} alt={item.title || null} className="absolute inset-0 w-full h-full object-cover" onError={handleImageError} />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent"></div>
                 {item.hasDiscount && <span className="absolute top-3 right-3 text-xs font-bold text-white bg-red-600 px-2.5 py-1 rounded-full">تخفیف</span>}
-                <button onClick={() => handleDelete(item.id)} disabled={deletingId === item.id} className="absolute top-3 left-3 flex items-center justify-center w-8 h-8 rounded-full bg-white/80 backdrop-blur-sm text-red-600 opacity-0 group-hover:opacity-100 transition-all duration-300 hover:bg-red-600 hover:text-white disabled:opacity-100 disabled:bg-red-300">
-                  {deletingId === item.id ? <IconSpinner /> : <IconTrash />}
+                <button onClick={() => handleDelete(item._id)} disabled={deletingId === item._id} className="absolute top-3 left-3 flex items-center justify-center w-8 h-8 rounded-full bg-white/80 backdrop-blur-sm text-red-600 opacity-0 group-hover:opacity-100 transition-all duration-300 hover:bg-red-600 hover:text-white disabled:opacity-100 disabled:bg-red-300">
+                  {deletingId === item._id ? <IconSpinner /> : <IconTrash />}
                 </button>
               </div>
               <div className="p-4">

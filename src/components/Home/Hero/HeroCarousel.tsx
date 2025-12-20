@@ -14,11 +14,11 @@ import { useEffect, useState } from "react";
 const HeroCarousal = () => {
   const [productsDataBennerHomeData, setProductsDataBennerHomeData] = useState([])
   useEffect(() => {
-    fetch("http://localhost:3001/bennerHomeData")
+    fetch("http://localhost:3000/api/bennerHome")
       .then((res) => res.json())
-      .then((data) => setProductsDataBennerHomeData(data))
+      .then((data) => setProductsDataBennerHomeData(data.data))
       .catch(() => setProductsDataBennerHomeData([]));
-  })
+  } , [])
   return (
     <Swiper
       spaceBetween={30} // فاصله بین اسلایدها
@@ -59,7 +59,7 @@ const HeroCarousal = () => {
                 </div>
 
                 <h1 className="font-semibold text-dark text-xl sm:text-3xl mb-3">
-                  <a href="#">هدفون بی‌سیم با حذف نویز واقعی</a>
+                  <a href="#">{item.descriptionBenner ? item.descriptionBenner : ""}</a>
                 </h1>
 
                 <p>
@@ -78,7 +78,7 @@ const HeroCarousal = () => {
 
               <div>
                 <Image
-                  src={item.imgs.thumbnails[0] || null}
+                  src={ item.imgs.thumbnails[0]  ||"/images/notImg.png"}
                   alt="headphone"
                   width={351}
                   height={358}

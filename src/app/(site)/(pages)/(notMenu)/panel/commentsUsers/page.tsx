@@ -13,7 +13,7 @@ import {
 
 // اگر در محیط‌های مختلف اجرا می‌کنی، بهتره از env استفاده کنی
 const API_URL =
-  process.env.NEXT_PUBLIC_COMMENTS_API_URL || "http://localhost:3001/commentsUsersData";
+  process.env.NEXT_PUBLIC_COMMENTS_API_URL || "http://localhost:3000/api/comments";
 
 type CommentItem = {
   id?: number | string; // برای ویرایش/حذف ضروری است
@@ -44,20 +44,30 @@ const CommentsPage: React.FC = () => {
   const [busyDelete, setBusyDelete] = useState(false);
 
   const fetchAll = useCallback(async () => {
-    setLoading(true);
-    setErr(null);
-    try {
-      const res = await fetch(API_URL, { cache: "no-store" });
-      if (!res.ok) throw new Error(`خطای سرور: ${res.status}`);
-      const json = await res.json();
-      if (!Array.isArray(json)) throw new Error("داده دریافتی آرایه نیست.");
-      setData(json);
-    } catch (e: any) {
-      setErr(e?.message || "بروز خطا در دریافت داده‌ها");
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+  setLoading(true);
+  setErr(null);
+  try {
+    const res = await fetch(API_URL, { cache: "no-store" });
+    if (!res.ok) throw new Error(`خطای سرور: ${res.status}`);
+
+    const json = await res.json();
+    if (!Array.isArray(json.data))
+      throw new Error("داده دریافتی آرایه نیست.");
+
+    // 🔑 مپ کردن _id → id (بدون تغییر UI)
+    const mapped = json.data.map((item: any) => ({
+      ...item,
+      id: item._id, // 👈 مهم
+    }));
+
+    setData(mapped);
+  } catch (e: any) {
+    setErr(e?.message || "بروز خطا در دریافت داده‌ها");
+  } finally {
+    setLoading(false);
+  }
+}, []);
+
 
   useEffect(() => {
     fetchAll();
@@ -89,55 +99,66 @@ const CommentsPage: React.FC = () => {
   const onCloseDelete = () => setDeleting(null);
 
   const handleSave = async (payload: CommentItem) => {
-    if (!payload.id) {
-      alert("برای ویرایش، فیلد id لازم است.");
-      return;
-    }
-    setBusySave(true);
+  if (!payload.id) {
+    alert("برای ویرایش، فیلد id لازم است.");
+    return;
+  }
 
-    // Optimistic update
-    const prev = [...data];
-    setData((d) => d.map((x) => (x.id === payload.id ? { ...x, ...payload } : x)));
+  setBusySave(true);
 
-    try {
-      const res = await fetch(`${API_URL}/${payload.id}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
-      if (!res.ok) throw new Error(`ویرایش ناموفق: ${res.status}`);
-      onCloseEdit();
-    } catch (e: any) {
-      // revert
-      setData(prev);
-      alert(e?.message || "خطا در ذخیره تغییرات");
-    } finally {
-      setBusySave(false);
-    }
-  };
+  const prev = [...data];
+  setData((d) =>
+    d.map((x) => (x.id === payload.id ? { ...x, ...payload } : x))
+  );
 
-  const handleDelete = async () => {
-    if (!deleting?.id) {
-      alert("برای حذف، فیلد id لازم است.");
-      return;
-    }
-    setBusyDelete(true);
+  try {
+    const res = await fetch(`${API_URL}/${payload.id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        review: payload.review,
+        authorName: payload.authorName,
+        authorImg: payload.authorImg,
+        authorRole: payload.authorRole,
+      }),
+    });
 
-    // Optimistic remove
-    const prev = [...data];
-    setData((d) => d.filter((x) => x.id !== deleting.id));
+    if (!res.ok) throw new Error(`ویرایش ناموفق: ${res.status}`);
+    onCloseEdit();
+  } catch (e: any) {
+    setData(prev);
+    alert(e?.message || "خطا در ذخیره تغییرات");
+  } finally {
+    setBusySave(false);
+  }
+};
 
-    try {
-      const res = await fetch(`${API_URL}/${deleting.id}`, { method: "DELETE" });
-      if (!res.ok) throw new Error(`حذف ناموفق: ${res.status}`);
-      onCloseDelete();
-    } catch (e: any) {
-      setData(prev);
-      alert(e?.message || "خطا در حذف آیتم");
-    } finally {
-      setBusyDelete(false);
-    }
-  };
+
+ const handleDelete = async () => {
+  if (!deleting?.id) {
+    alert("برای حذف، فیلد id لازم است.");
+    return;
+  }
+
+  setBusyDelete(true);
+
+  const prev = [...data];
+  setData((d) => d.filter((x) => x.id !== deleting.id));
+
+  try {
+    const res = await fetch(`${API_URL}/${deleting.id}`, {
+      method: "DELETE",
+    });
+    if (!res.ok) throw new Error(`حذف ناموفق: ${res.status}`);
+    onCloseDelete();
+  } catch (e: any) {
+    setData(prev);
+    alert(e?.message || "خطا در حذف آیتم");
+  } finally {
+    setBusyDelete(false);
+  }
+};
+
 
   return (
     <main dir="rtl" className="bg-gray-2 min-h-screen py-10">

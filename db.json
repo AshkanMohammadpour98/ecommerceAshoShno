@@ -1942,6 +1942,47 @@
         },
         "dateAddQrCode": "1404/07/18"
       }
+    },
+    {
+      "id": "6",
+      "title": "Logitech MX Master 3 Mouse",
+      "count": 8,
+      "reviews": 2,
+      "price": 59,
+      "hasDiscount": true,
+      "discountedPrice": 29,
+      "categorie": "Mouse",
+      "date": "1404/02/02",
+      "imgs": {
+        "thumbnails": [
+          "/images/products/product-6-sm-1.png",
+          "/images/products/product-6-sm-2.png"
+        ],
+        "previews": [
+          "/images/products/product-6-bg-1.png",
+          "/images/products/product-6-bg-2.png"
+        ]
+      },
+      "QRDatas": {
+        "id": "hhh10hhh54",
+        "name": "Logitech MX Master 3 Mouse",
+        "config": {
+          "v": 1,
+          "value": "https://example6.com",
+          "ecc": "M",
+          "colors": {
+            "fg": "#111827",
+            "bg": "#ffffff"
+          }
+        },
+        "preview": {
+          "url": "data:image/webp;base64,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",
+          "width": 256,
+          "height": 256,
+          "mime": "image/webp"
+        },
+        "dateAddQrCode": "1404/07/18"
+      }
     }
   ],
   "bennerHomeChildData": [
@@ -2053,7 +2094,7 @@
       "productId": "1",
       "startedAt": "2025-10-22T14:31:52.368Z",
       "endsAt": "2025-10-23T14:47:53.600Z",
-      "description": "dd محصول تستی"
+      "descriptionBenner": "dd محصول تستی"
     }
   ],
   "customerPromoBanner": [
@@ -2061,7 +2102,7 @@
       "id": "287e",
       "title": "عنوان تستی 1 بزرگ",
       "subtitle": "ساب تاتل  ساب تایتل  تستی 1 بزرگ",
-      "description": "توضیحات ساب تاتل  ساب تایتل  تستی 1 بزرگ توضیحات ....",
+      "descriptionBenner": "توضیحات ساب تاتل  ساب تایتل  تستی 1 بزرگ توضیحات ....",
       "buttonText": "مشاهده و خرید بزرگ",
       "buttonLink": "#",
       "image": "/images/promo/promo-01.png",
@@ -2072,7 +2113,7 @@
       "id": "b8b4",
       "title": "MacBook Air M1 chip, 8/256GB",
       "subtitle": "تا 51٪ تخفیف",
-      "description": "محصول منتخب مشتری برای فروش. فرصت را از دست ندهید!",
+      "descriptionBenner": "محصول منتخب مشتری برای فروش. فرصت را از دست ندهید!",
       "buttonText": "مشاهده و خرید",
       "buttonLink": "shop-details/4",
       "image": "/images/products/product-4-bg-1.png",
@@ -2083,7 +2124,7 @@
       "id": "094d",
       "title": "Asus RT Dual Band Router",
       "subtitle": "تا 51٪ تخفیف",
-      "description": "محصول منتخب مشتری برای فروش. فرصت را از دست ندهید!",
+      "descriptionBenner": "محصول منتخب مشتری برای فروش. فرصت را از دست ندهید!",
       "buttonText": "مشاهده و خرید",
       "buttonLink": "/products/8",
       "image": "/images/products/product-8-bg-1.png",
