@@ -17,10 +17,12 @@ import {
   SparklesIcon,
 } from "@heroicons/react/24/outline";
 import { CheckCircleIcon, XCircleIcon } from "@heroicons/react/24/solid";
+import Swal from "sweetalert2";
+
 
 /**
  * کامپوننت اصلی مدیریت کدهای تخفیف
- * اتصال به API: http://localhost:3001/discountCodes
+ * اتصال به API: http://localhost:3000/api/discountCodes
  * عملیات CRUD کامل با اعتبارسنجی
  */
 const DiscountCodesPage = () => {
@@ -35,7 +37,7 @@ const DiscountCodesPage = () => {
   const [successMessage, setSuccessMessage] = useState(null);
 
   // API Base URL
-  const API_URL = "http://localhost:3001/discountCodes";
+  const API_URL = "http://localhost:3000/api/discountCodes";
 
   /**
    * دریافت لیست کدهای تخفیف از API
@@ -47,7 +49,7 @@ const DiscountCodesPage = () => {
       const response = await fetch(API_URL);
       if (!response.ok) throw new Error("خطا در دریافت اطلاعات");
       const data = await response.json();
-      setDiscountCodes(data);
+      setDiscountCodes(data.data);
     } catch (err) {
       setError("خطا در اتصال به سرور. لطفا دوباره تلاش کنید.");
       console.error("Fetch error:", err);
@@ -63,9 +65,9 @@ const DiscountCodesPage = () => {
     try {
       const response = await fetch(API_URL);
       const data = await response.json();
-      return data.some(item => 
-        item.discountCode.toLowerCase() === code.toLowerCase() && 
-        item.id !== excludeId
+      return data.data.some(item =>
+        item.discountCode.toLowerCase() === code.toLowerCase() &&
+        item._id !== excludeId
       );
     } catch (err) {
       console.error("Error checking duplicate:", err);
@@ -85,11 +87,12 @@ const DiscountCodesPage = () => {
         },
         body: JSON.stringify(code),
       });
-      
+
       if (!response.ok) throw new Error("خطا در ایجاد کد تخفیف");
-      
-      const newCode = await response.json();
-      setDiscountCodes(prev => [...prev, newCode]);
+
+      const res = await response.json();
+      setDiscountCodes(prev => [...prev, res.data]);
+
       showSuccess("کد تخفیف با موفقیت ایجاد شد");
       return true;
     } catch (err) {
@@ -102,21 +105,21 @@ const DiscountCodesPage = () => {
   /**
    * ویرایش کد تخفیف
    */
-  const updateDiscountCode = async (id, updatedCode) => {
+  const updateDiscountCode = async (_id, updatedCode) => {
     try {
-      const response = await fetch(`${API_URL}/${id}`, {
+      const response = await fetch(`${API_URL}/${_id}`, {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify(updatedCode),
       });
-      
+
       if (!response.ok) throw new Error("خطا در ویرایش کد تخفیف");
-      
+
       const updated = await response.json();
-      setDiscountCodes(prev => 
-        prev.map(code => code.id === id ? updated : code)
+      setDiscountCodes(prev =>
+        prev.map(code => code._id === _id ? updated.data : code)
       );
       showSuccess("کد تخفیف با موفقیت ویرایش شد");
       return true;
@@ -130,15 +133,15 @@ const DiscountCodesPage = () => {
   /**
    * حذف کد تخفیف
    */
-  const deleteDiscountCode = async (id) => {
+  const deleteDiscountCode = async (_id) => {
     try {
-      const response = await fetch(`${API_URL}/${id}`, {
+      const response = await fetch(`${API_URL}/${_id}`, {
         method: "DELETE",
       });
-      
+
       if (!response.ok) throw new Error("خطا در حذف کد تخفیف");
-      
-      setDiscountCodes(prev => prev.filter(code => code.id !== id));
+
+      setDiscountCodes(prev => prev.filter(code => code._id !== _id));
       showSuccess("کد تخفیف با موفقیت حذف شد");
     } catch (err) {
       setError("خطا در حذف کد تخفیف");
@@ -172,10 +175,58 @@ const DiscountCodesPage = () => {
    * حذف کد با تایید
    */
   const handleDelete = async (id) => {
-    if (confirm("آیا از حذف این کد تخفیف اطمینان دارید؟")) {
+    const result = await Swal.fire({
+      title: "آیا مطمئن هستید؟",
+      text: "این کد تخفیف به‌صورت دائمی حذف خواهد شد!",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonText: "بله، حذف شود",
+      cancelButtonText: "انصراف",
+      reverseButtons: true,
+      confirmButtonColor: "#dc2626", // قرمز
+      cancelButtonColor: "#3b82f6",  // آبی
+      didOpen: () => {
+        const confirmBtn = Swal.getConfirmButton();
+        const cancelBtn = Swal.getCancelButton();
+
+        confirmBtn.style.backgroundColor = '#3085d6';
+        confirmBtn.style.color = '#fff';
+        cancelBtn.style.backgroundColor = '#d33';
+        cancelBtn.style.color = '#fff';
+
+        const hoverStyle = document.createElement('style');
+        hoverStyle.innerHTML = `
+                                      .swal2-confirm:hover { background-color: #256ab3 !important; }
+                                      .swal2-cancel:hover { background-color: #a00 !important; }
+                                    `;
+        document.head.appendChild(hoverStyle);
+      }
+
+    });
+
+    // اگر کاربر لغو کرد
+    if (!result.isConfirmed) return;
+
+    try {
       await deleteDiscountCode(id);
+
+      Swal.fire({
+        icon: "success",
+        title: "حذف شد",
+        text: "کد تخفیف با موفقیت حذف شد",
+        timer: 1500,
+        showConfirmButton: false,
+      });
+    } catch (error) {
+      Swal.fire({
+        icon: "error",
+        title: "خطا",
+        text: "در حذف کد تخفیف مشکلی پیش آمد",
+      });
     }
   };
+
+
 
   // Load data on component mount
   useEffect(() => {
@@ -280,7 +331,7 @@ const DiscountCodesPage = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
             {filteredCodes.map((code) => (
               <DiscountCard
-                key={code.id}
+                key={code._id}
                 code={code}
                 onCopy={copyToClipboard}
                 onDelete={handleDelete}
@@ -293,9 +344,9 @@ const DiscountCodesPage = () => {
             ))}
           </div>
         ) : (
-          <EmptyState 
+          <EmptyState
             searchTerm={searchTerm}
-            onCreateNew={() => setShowForm(true)} 
+            onCreateNew={() => setShowForm(true)}
           />
         )}
       </main>
@@ -311,10 +362,10 @@ const DiscountCodesPage = () => {
           onSubmit={async (formData) => {
             // بررسی تکراری بودن کد
             const isDuplicate = await checkDuplicateCode(
-              formData.discountCode, 
-              editingCode?.id
+              formData.discountCode,
+              editingCode?._id
             );
-            
+
             if (isDuplicate) {
               setError(`کد تخفیف "${formData.discountCode}" قبلاً ثبت شده است. لطفاً کد دیگری انتخاب کنید یا کد قبلی را منقضی کنید.`);
               return false;
@@ -322,7 +373,7 @@ const DiscountCodesPage = () => {
 
             let success = false;
             if (editingCode) {
-              success = await updateDiscountCode(editingCode.id, formData);
+              success = await updateDiscountCode(editingCode._id, formData);
             } else {
               const newCode = {
                 id: Math.random().toString(36).substr(2, 9),
@@ -330,7 +381,7 @@ const DiscountCodesPage = () => {
               };
               success = await createDiscountCode(newCode);
             }
-            
+
             if (success) {
               setShowForm(false);
               setEditingCode(null);
@@ -352,7 +403,7 @@ const DiscountCard = ({ code, onCopy, onDelete, onEdit, isCopied }) => {
                     transition-all duration-300 overflow-hidden group">
       {/* نوار بالای کارت */}
       <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-blue to-blue-light" />
-      
+
       <div className="p-5 sm:p-6">
         {/* هدر کارت */}
         <div className="flex items-start justify-between mb-4">
@@ -411,7 +462,7 @@ const DiscountCard = ({ code, onCopy, onDelete, onEdit, isCopied }) => {
             <span className="text-custom-sm">ویرایش</span>
           </button>
           <button
-            onClick={() => onDelete(code.id)}
+            onClick={() => onDelete(code._id)}
             className="flex-1 flex items-center justify-center gap-2 
                      py-2.5 px-4 bg-red-light-5 hover:bg-red-light-4 
                      text-red font-medium rounded-xl
@@ -442,7 +493,7 @@ const DiscountForm = ({ editingCode, onClose, onSubmit }) => {
    */
   const validateForm = () => {
     const newErrors = {};
-    
+
     if (!formData.discountCode.trim()) {
       newErrors.discountCode = "کد تخفیف الزامی است";
     } else if (formData.discountCode.length < 3) {
@@ -450,13 +501,13 @@ const DiscountForm = ({ editingCode, onClose, onSubmit }) => {
     } else if (!/^[A-Za-z0-9]+$/.test(formData.discountCode)) {
       newErrors.discountCode = "کد تخفیف فقط باید شامل حروف انگلیسی و اعداد باشد";
     }
-    
+
     if (!formData.money || formData.money <= 0) {
       newErrors.money = "مبلغ تخفیف باید بیشتر از صفر باشد";
     } else if (formData.money > 10000000) {
       newErrors.money = "مبلغ تخفیف نمی‌تواند بیشتر از ۱۰ میلیون تومان باشد";
     }
-    
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -466,15 +517,15 @@ const DiscountForm = ({ editingCode, onClose, onSubmit }) => {
    */
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     if (!validateForm()) return;
-    
+
     setIsSubmitting(true);
     const success = await onSubmit({
       discountCode: formData.discountCode.toUpperCase(),
       money: Number(formData.money),
     });
-    
+
     setIsSubmitting(false);
     if (success) {
       onClose();
@@ -528,9 +579,9 @@ const DiscountForm = ({ editingCode, onClose, onSubmit }) => {
                        text-base text-dark placeholder-meta-5
                        focus:outline-none focus:ring-2 transition-all duration-200
                        disabled:opacity-50 disabled:cursor-not-allowed
-                       ${errors.discountCode 
-                         ? 'border-red focus:border-red focus:ring-red-light-4' 
-                         : 'border-gray-3 focus:border-blue focus:ring-blue-light-5'}`}
+                       ${errors.discountCode
+                  ? 'border-red focus:border-red focus:ring-red-light-4'
+                  : 'border-gray-3 focus:border-blue focus:ring-blue-light-5'}`}
             />
             {errors.discountCode && (
               <p className="text-red text-custom-xs mt-1 flex items-center gap-1">
@@ -563,9 +614,9 @@ const DiscountForm = ({ editingCode, onClose, onSubmit }) => {
                          text-base text-dark placeholder-meta-5
                          focus:outline-none focus:ring-2 transition-all duration-200
                          disabled:opacity-50 disabled:cursor-not-allowed
-                         ${errors.money 
-                           ? 'border-red focus:border-red focus:ring-red-light-4' 
-                           : 'border-gray-3 focus:border-blue focus:ring-blue-light-5'}`}
+                         ${errors.money
+                    ? 'border-red focus:border-red focus:ring-red-light-4'
+                    : 'border-gray-3 focus:border-blue focus:ring-blue-light-5'}`}
               />
               <CurrencyDollarIcon className="absolute left-3 top-1/2 -translate-y-1/2 
                                             w-5 h-5 text-meta-4" />
@@ -576,7 +627,7 @@ const DiscountForm = ({ editingCode, onClose, onSubmit }) => {
                 {errors.money}
               </p>
             )}
-            
+
             {/* دکمه‌های سریع مبلغ */}
             <div className="flex gap-2 mt-3">
               {[10000, 25000, 50000, 100000].map((amount) => (
@@ -667,17 +718,17 @@ const EmptyState = ({ searchTerm, onCreateNew }) => {
           <TicketIcon className="w-16 h-16 sm:w-20 sm:h-20 text-meta-4" />
         </div>
       </div>
-      
+
       <h3 className="text-custom-1 sm:text-heading-5 font-semibold text-dark mb-3">
         {searchTerm ? 'نتیجه‌ای یافت نشد!' : 'هنوز کد تخفیفی ثبت نشده!'}
       </h3>
       <p className="text-custom-sm sm:text-base text-meta-4 mb-8 max-w-md text-center">
-        {searchTerm 
+        {searchTerm
           ? `کد تخفیفی با عبارت "${searchTerm}" پیدا نشد.`
           : 'اولین کد تخفیف خود را ایجاد کنید و به مشتریان خود هدیه دهید'
         }
       </p>
-      
+
       {!searchTerm && (
         <button
           onClick={onCreateNew}

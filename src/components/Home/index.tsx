@@ -5,7 +5,7 @@ import Categories from "./Categories"; // دسته‌بندی محصولات
 import NewArrival from "./NewArrivals"; // محصولات جدید
 import PromoBanner from "./PromoBanner"; // بنرهای تبلیغاتی
 import BestSeller from "./BestSeller"; // محصولات پرفروش
-import CounDown from "./Countdown"; // شمارش معکوس برای تخفیف‌ها
+import LimitedDiscountCountdown from "./LimitedDiscountCountdown"; // شمارش معکوس برای تخفیف‌ها
 import Testimonials from "./Testimonials"; // نظرات کاربران
 // import Newsletter from "../Common/Newsletter"; // عضویت در خبرنامه
 
@@ -15,7 +15,7 @@ const Home = () => {
       <Hero />
       <Categories />
       <NewArrival />
-      <CounDown />
+      <LimitedDiscountCountdown />
       <PromoBanner />
       <BestSeller />
       <Testimonials />

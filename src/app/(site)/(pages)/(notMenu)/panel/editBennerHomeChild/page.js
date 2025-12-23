@@ -68,7 +68,7 @@ const ChildBannerSliderEditor = () => {
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
-  
+
   // ✅ Core logic for the limit
   const isBannerFull = useMemo(() => bannerItems.length >= BANNER_LIMIT, [bannerItems]);
 
@@ -93,7 +93,7 @@ const ChildBannerSliderEditor = () => {
 
 
   // --- Actions ---
-  const handleDelete = async(_id) => {
+  const handleDelete = async (_id) => {
     const result = await Swal.fire({
       title: "آیا مطمئن هستید؟",
       text: "این آیتم از بنر حذف خواهد شد.",
@@ -103,11 +103,27 @@ const ChildBannerSliderEditor = () => {
       cancelButtonText: "انصراف",
       confirmButtonColor: "#e53e3e",
       cancelButtonColor: "#6b7280",
+      didOpen: () => {
+        const confirmBtn = Swal.getConfirmButton();
+        const cancelBtn = Swal.getCancelButton();
+
+        confirmBtn.style.backgroundColor = '#3085d6';
+        confirmBtn.style.color = '#fff';
+        cancelBtn.style.backgroundColor = '#d33';
+        cancelBtn.style.color = '#fff';
+
+        const hoverStyle = document.createElement('style');
+        hoverStyle.innerHTML = `
+                                  .swal2-confirm:hover { background-color: #256ab3 !important; }
+                                  .swal2-cancel:hover { background-color: #a00 !important; }
+                                `;
+        document.head.appendChild(hoverStyle);
+      }
     });
     if (!result.isConfirmed) return;
 
-    console.log(_id , 'item _id props');
-    
+    console.log(_id, 'item _id props');
+
     setDeletingId(_id);
     try {
       await fetch(`http://localhost:3000/api/chaildBennerHome/${_id}`, { method: "DELETE" });
@@ -121,7 +137,7 @@ const ChildBannerSliderEditor = () => {
 
   const addProductToBanner = async (product) => {
     if (isBannerFull || bannerIdSet.has(String(product._id))) return;
-    
+
     setAddingId(product._id);
     try {
       const res = await fetch("http://localhost:3000/api/chaildBennerHome", {
@@ -137,7 +153,7 @@ const ChildBannerSliderEditor = () => {
       setAddingId(null);
     }
   };
-  
+
   if (loading) return <div className="p-6 text-center">در حال بارگذاری...</div>;
 
   return (
@@ -164,9 +180,8 @@ const ChildBannerSliderEditor = () => {
               <button
                 key={cat}
                 onClick={() => setSelectedCategory(cat)}
-                className={`whitespace-nowrap inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-sm font-medium transition-colors duration-200 ${
-                  selectedCategory === cat ? "bg-blue-600 text-white" : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-                }`}
+                className={`whitespace-nowrap inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-sm font-medium transition-colors duration-200 ${selectedCategory === cat ? "bg-blue-600 text-white" : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                  }`}
               >
                 <span>{cat === "all" ? "همه دسته‌ها" : cat}</span>
                 <span className={`px-2 py-0.5 rounded-full text-xs ${selectedCategory === cat ? "bg-white/20" : "bg-gray-200"}`}>
@@ -194,7 +209,7 @@ const ChildBannerSliderEditor = () => {
                   <ul className="divide-y divide-gray-100">
                     {filteredProducts.map(p => (
                       <li key={p._id} className="flex items-center gap-3 p-3 text-sm hover:bg-gray-50 transition-colors">
-                        <img src={getImageUrl(p) || null} alt="img" className="w-12 h-12 rounded-md object-cover flex-shrink-0" onError={handleImageError}/>
+                        <img src={getImageUrl(p) || null} alt="img" className="w-12 h-12 rounded-md object-cover flex-shrink-0" onError={handleImageError} />
                         <div className="flex-1 min-w-0">
                           <p className="font-semibold text-gray-800 truncate">{p.title}</p>
                           <p className="text-gray-500">{formatPrice(p.price)} تومان</p>
@@ -231,7 +246,7 @@ const ChildBannerSliderEditor = () => {
                 <img src={getImageUrl(item) || null} alt={item.title || null} className="absolute inset-0 w-full h-full object-cover" onError={handleImageError} />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent"></div>
                 {item.hasDiscount && <span className="absolute top-3 right-3 text-xs font-bold text-white bg-red-600 px-2.5 py-1 rounded-full">تخفیف</span>}
-                <button onClick={() => handleDelete(item._id)} disabled={deletingId === item._id} className="absolute top-3 left-3 flex items-center justify-center w-8 h-8 rounded-full bg-white/80 backdrop-blur-sm text-red-600 opacity-0 group-hover:opacity-100 transition-all duration-300 hover:bg-red-600 hover:text-white disabled:opacity-100 disabled:bg-red-300">
+                <button onClick={() => handleDelete(item._id)} disabled={deletingId === item._id} className="absolute top-3 left-3 flex items-center justify-center w-8 h-8 rounded-full bg-white/80 backdrop-blur-sm text-red-600 opacity-0 group-hover:opacity-100 transition-all duration-300 hover:bg-red-600 hover:text-red disabled:opacity-100 disabled:bg-red">
                   {deletingId === item._id ? <IconSpinner /> : <IconTrash />}
                 </button>
               </div>
@@ -244,7 +259,7 @@ const ChildBannerSliderEditor = () => {
               </div>
             </div>
           ))}
-          
+
           {/* ✅ Render Placeholder for empty slots */}
           {Array.from({ length: BANNER_LIMIT - bannerItems.length }).map((_, index) => (
             <button

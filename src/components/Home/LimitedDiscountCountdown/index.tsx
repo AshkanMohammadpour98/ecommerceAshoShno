@@ -4,65 +4,58 @@ import React, { useEffect, useMemo, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 
-// تایپ محصول (از /products)
-type Product = {
-  title: string;
-  count: number;
-  reviews: number;
-  price: number;
-  hasDiscount: boolean;
-  discountedPrice: number;
-  id: string | number;
-  categorie: string;
-  date: string;
-  imgs: { thumbnails: string[]; previews: string[] };
-  QRDatas?: any; // QR Code data
-};
+// ============================================
+// توابع کمکی (Helper Functions)
+// ============================================
 
-// تایپ تخفیف زمان‌دار (از /longTermDiscountProduct)
-type LongTermDiscount = {
-  id?: string | number;
-  productId: string | number;
-  startedAt: string; // ISO
-  endsAt: string; // ISO
-  description?: string;
-};
-
-// کمکی: تبدیل اعداد به فارسی
-const toFaDigits = (input: number | string) =>
+const toFaDigits = (input) =>
   input.toString().replace(/\d/g, (d) => "۰۱۲۳۴۵۶۷۸۹"[Number(d)]);
-const padFa = (n: number) => toFaDigits(n.toString().padStart(2, "0"));
-const moneyFa = (value: number) => `${value.toLocaleString("fa-IR")} تومان`;
-const clamp = (n: number, min = 0, max = 100) => Math.max(min, Math.min(max, n));
 
-const CounDown: React.FC = () => {
+const padFa = (n) => toFaDigits(n.toString().padStart(2, "0"));
+
+const moneyFa = (value) => `${value.toLocaleString("fa-IR")} تومان`;
+
+const clamp = (n, min = 0, max = 100) => Math.max(min, Math.min(max, n));
+
+const CounDown = () => {
+  // ============================================
+  // State ها
+  // ============================================
   const [loading, setLoading] = useState(true);
-  const [product, setProduct] = useState<Product | null>(null);
-  const [discount, setDiscount] = useState<LongTermDiscount | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  const [product, setProduct] = useState(null);
+  const [discount, setDiscount] = useState(null);
+  const [error, setError] = useState(null);
 
-  // شمارش معکوس
+  // State های شمارش معکوس
   const [days, setDays] = useState(0);
   const [hours, setHours] = useState(0);
   const [minutes, setMinutes] = useState(0);
   const [seconds, setSeconds] = useState(0);
   const [expired, setExpired] = useState(false);
 
-  // دریافت از API
+  // تغییر مهم: timeProgress را به استیت تبدیل کردیم تا بتوانیم هر ثانیه آپدیتش کنیم
+  const [timeProgress, setTimeProgress] = useState(0);
+
+  // ============================================
+  // دریافت داده‌ها از API
+  // ============================================
   useEffect(() => {
     let ignore = false;
-    
+
     const fetchData = async () => {
       setLoading(true);
       setError(null);
-      
-      try {
-        // 1. دریافت لیست تخفیف‌های زمان‌دار
-        const discountRes = await fetch("http://localhost:3001/longTermDiscountProduct");
-        if (!discountRes.ok) throw new Error("discount fetch error");
-        const discountData: LongTermDiscount[] = await discountRes.json();
 
-        // بررسی وجود تخفیف
+      try {
+        const discountRes = await fetch(
+          "http://localhost:3000/api/limited-discount",
+          { cache: "no-store" }
+        );
+        if (!discountRes.ok) throw new Error("discount fetch error");
+
+        const discountJson = await discountRes.json();
+        const discountData = discountJson.data || discountJson;
+
         if (!Array.isArray(discountData) || discountData.length === 0) {
           if (!ignore) {
             setProduct(null);
@@ -72,23 +65,26 @@ const CounDown: React.FC = () => {
           return;
         }
 
-        // فقط اولین مورد (باید فقط یکی باشد)
         const activeDiscount = discountData[0];
 
-        // 2. دریافت محصول مربوطه
         const productRes = await fetch(
-          `http://localhost:3001/products/${activeDiscount.productId}`
+          `http://localhost:3000/api/products/${activeDiscount.productId}`,
+          { cache: "no-store" }
         );
-        if (!productRes.ok) throw new Error("product fetch error");
-        const productData: Product = await productRes.json();
+        
+        if (!productRes.ok) throw new Error("Product not found");
+
+        const productJson = await productRes.json();
+        const productData = productJson.data || productJson;
 
         if (!ignore) {
           setDiscount(activeDiscount);
           setProduct(productData);
           setLoading(false);
         }
-      } catch (err: any) {
+      } catch (err) {
         if (!ignore) {
+          console.error(err);
           setError(err?.message || "مشکلی رخ داد");
           setLoading(false);
         }
@@ -96,48 +92,54 @@ const CounDown: React.FC = () => {
     };
 
     fetchData();
-    
+
     return () => {
       ignore = true;
     };
   }, []);
 
-  // درصد تخفیف
+  // ============================================
+  // محاسبه درصد تخفیف (قیمت)
+  // ============================================
   const discountPercent = useMemo(() => {
     if (!product?.hasDiscount || product.price <= 0) return 0;
-    return Math.max(0, Math.round(100 - (product.discountedPrice / product.price) * 100));
+    return Math.max(
+      0,
+      Math.round(100 - (product.discountedPrice / product.price) * 100)
+    );
   }, [product]);
 
-  // نوار پیشرفت زمان
-  const timeProgress = useMemo(() => {
-    if (!discount?.startedAt || !discount.endsAt) return 0;
-    const s = new Date(discount.startedAt).getTime();
-    const e = new Date(discount.endsAt).getTime();
-    if (isNaN(s) || isNaN(e) || e <= s) return 0;
-    return clamp(((Date.now() - s) / (e - s)) * 100);
-  }, [discount?.startedAt, discount?.endsAt]);
-
-  // محاسبه زمان باقی‌مانده
+  // ============================================
+  // محاسبه زمان و پیشرفت (Logic اصلی)
+  // ============================================
   const calcTimeLeft = () => {
-    if (!discount?.endsAt) return "invalid";
-    const end = new Date(discount.endsAt).getTime();
-    const diff = end - Date.now();
+    if (!discount?.endsAt || !discount?.startedAt) return "invalid";
 
+    const now = Date.now();
+    const start = new Date(discount.startedAt).getTime();
+    const end = new Date(discount.endsAt).getTime();
+    const diff = end - now;
+
+    // --- آپدیت نوار پیشرفت ---
+    // آموزش: محاسبه درصد پیشرفت در هر بار اجرای تایمر انجام می‌شود
+    // فرمول: (زمان سپری شده / کل زمان بازه) * 100
+    if (!isNaN(start) && !isNaN(end) && end > start) {
+      const progress = clamp(((now - start) / (end - start)) * 100);
+      setTimeProgress(progress);
+    } else {
+      setTimeProgress(0);
+    }
+
+    // --- منطق انقضا ---
     if (isNaN(end)) {
       setExpired(true);
-      setDays(0);
-      setHours(0);
-      setMinutes(0);
-      setSeconds(0);
       return "invalid";
     }
 
     if (diff <= 0) {
       setExpired(true);
-      setDays(0);
-      setHours(0);
-      setMinutes(0);
-      setSeconds(0);
+      setDays(0); setHours(0); setMinutes(0); setSeconds(0);
+      setTimeProgress(100); // اگر زمان تمام شد، نوار پر شود
       return "done";
     }
 
@@ -146,23 +148,30 @@ const CounDown: React.FC = () => {
     setHours(Math.floor((diff / (1000 * 60 * 60)) % 24));
     setMinutes(Math.floor((diff / (1000 * 60)) % 60));
     setSeconds(Math.floor((diff / 1000) % 60));
+
     return "ok";
   };
 
-  // آپدیت هر ثانیه
+  // ============================================
+  // تایمر آپدیت هر ثانیه
+  // ============================================
   useEffect(() => {
     if (!discount?.endsAt) return;
-    
+
+    // اجرای اولیه برای جلوگیری از پرش 1 ثانیه‌ای
     calcTimeLeft();
+
     const timer = setInterval(() => {
       const status = calcTimeLeft();
       if (status === "done" || status === "invalid") clearInterval(timer);
     }, 1000);
-    
-    return () => clearInterval(timer);
-  }, [discount?.endsAt]);
 
-  // Skeleton لودینگ
+    return () => clearInterval(timer);
+  }, [discount?.endsAt, discount?.startedAt]); // وابستگی به startedAt هم اضافه شد
+
+  // ============================================
+  // رندر (UI)
+  // ============================================
   if (loading) {
     return (
       <section className="overflow-hidden py-20" dir="rtl">
@@ -178,7 +187,10 @@ const CounDown: React.FC = () => {
                 <div className="h-4 w-80 bg-gray-3 rounded animate-pulse" />
                 <div className="flex gap-4">
                   {[...Array(4)].map((_, i) => (
-                    <div key={i} className="w-16 h-16 bg-white shadow-2 rounded-lg animate-pulse" />
+                    <div
+                      key={i}
+                      className="w-16 h-16 bg-white shadow-2 rounded-lg animate-pulse"
+                    />
                   ))}
                 </div>
                 <div className="h-10 w-48 bg-blue rounded-md animate-pulse opacity-60" />
@@ -190,14 +202,12 @@ const CounDown: React.FC = () => {
     );
   }
 
-  // اگر خطا یا دیتا موجود نیست
   if (error || !product || !discount) return null;
 
   return (
     <section className="overflow-hidden py-20" dir="rtl">
       <div className="max-w-[1170px] w-full mx-auto px-4 sm:px-8 xl:px-0">
         <div className="relative overflow-hidden z-1 rounded-xl bg-gradient-to-br from-blue-light-5 to-blue-light-4 p-4 sm:p-7.5 lg:p-10 xl:p-15 shadow-3">
-          
           <div className="grid lg:grid-cols-12 gap-8 items-center">
             {/* تصویر — سمت چپ */}
             <div className="lg:col-span-6 order-2 lg:order-1">
@@ -225,6 +235,7 @@ const CounDown: React.FC = () => {
                 <span className="inline-flex items-center justify-center bg-green-light-6 text-green-dark border border-green-light-4 rounded-md px-3 py-1.5 text-xs font-semibold">
                   پیشنهاد ویژه
                 </span>
+
                 {product.count <= 5 && (
                   <span className="inline-flex items-center justify-center bg-red-light-6 text-red-dark border border-red-light-4 rounded-md px-3 py-1.5 text-xs font-semibold">
                     موجودی محدود
@@ -239,7 +250,8 @@ const CounDown: React.FC = () => {
 
               {/* توضیح */}
               <p className="text-body leading-relaxed mb-4">
-                {discount.description || "این محصول با تخفیف زمان‌دار ارائه شده است. فرصت را از دست ندهید!"}
+                {discount.description ||
+                  "این محصول با تخفیف زمان‌دار ارائه شده است. فرصت را از دست ندهید!"}
               </p>
 
               {/* قیمت */}
@@ -249,6 +261,7 @@ const CounDown: React.FC = () => {
                     {toFaDigits(discountPercent)}٪ تخفیف
                   </span>
                 )}
+
                 <div className="flex items-baseline gap-2">
                   {product.hasDiscount ? (
                     <>
@@ -260,14 +273,20 @@ const CounDown: React.FC = () => {
                       </span>
                     </>
                   ) : (
-                    <span className="text-dark font-bold text-2xl">{moneyFa(product.price)}</span>
+                    <span className="text-dark font-bold text-2xl">
+                      {moneyFa(product.price)}
+                    </span>
                   )}
                 </div>
               </div>
 
               {/* موجودی */}
               <p className="text-dark-4 text-sm mb-5">
-                موجودی: <span className="font-semibold text-dark">{toFaDigits(product.count)}</span> عدد
+                موجودی:{" "}
+                <span className="font-semibold text-dark">
+                  {toFaDigits(product.count)}
+                </span>{" "}
+                عدد
               </p>
 
               {/* نوار پیشرفت زمان */}
@@ -277,12 +296,15 @@ const CounDown: React.FC = () => {
                     <span className="font-medium">شروع</span>
                     <span className="font-medium">پایان</span>
                   </div>
+
                   <div className="w-full h-3 bg-white/60 backdrop-blur-sm rounded-full overflow-hidden shadow-inner">
                     <div
                       className="h-full bg-gradient-to-l from-red to-green rounded-full transition-all duration-1000"
+                      // آموزش: این width حالا هر ثانیه آپدیت می‌شود
                       style={{ width: `${timeProgress}%` }}
                     />
                   </div>
+
                   <div className="text-right text-xs text-dark-4 mt-2 font-medium">
                     گذر زمان: {toFaDigits(Math.round(timeProgress))}٪
                   </div>
@@ -302,7 +324,9 @@ const CounDown: React.FC = () => {
                       <div className="text-2xl sm:text-3xl lg:text-4xl font-bold text-dark mb-1">
                         {padFa(item.value)}
                       </div>
-                      <div className="text-xs sm:text-sm text-body font-medium">{item.label}</div>
+                      <div className="text-xs sm:text-sm text-body font-medium">
+                        {item.label}
+                      </div>
                     </div>
                   </div>
                 ))}
@@ -310,7 +334,7 @@ const CounDown: React.FC = () => {
 
               {/* دکمه */}
               <Link
-                href={`/shop-details/${product.id}`}
+                href={`/shop-details/${product._id}`}
                 aria-label="مشاهده محصول"
                 className={`inline-flex items-center justify-center font-semibold text-white py-4 px-10 rounded-xl ease-out duration-200 shadow-2 ${
                   expired
@@ -319,7 +343,9 @@ const CounDown: React.FC = () => {
                 }`}
                 onClick={(e) => expired && e.preventDefault()}
               >
-                {expired ? "این تخفیف به پایان رسیده است" : "مشاهده و خرید محصول"}
+                {expired
+                  ? "این تخفیف به پایان رسیده است"
+                  : "مشاهده و خرید محصول"}
               </Link>
             </div>
           </div>

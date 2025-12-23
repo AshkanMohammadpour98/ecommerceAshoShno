@@ -6,20 +6,6 @@ import { Bars3Icon, XMarkIcon } from "@heroicons/react/24/outline";
 import Sidbar from "@/components/saidbar/sidbar";
 import { MenuProvider } from "../../../../context/MenuContext";
 
-// const AUTH_COOKIE_NAME = "auth";
-
-// خواندن مقدار کوکی و decode کردن
-// function getCookieValue(name) {
-//   if (typeof document === "undefined") return null;
-//   const raw = document.cookie.split("; ").find((r) => r.startsWith(`${name}=`));
-//   if (!raw) return null;
-//   const val = raw.substring(name.length + 1);
-//   try {
-//     return decodeURIComponent(val);
-//   } catch {
-//     return val;
-//   }
-// }
 
 export default function PanelLayout({ children }) {
   const [open, setOpen] = useState(false);

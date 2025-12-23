@@ -35,13 +35,15 @@ const Discount = () => {
 
     try {
       const code = couponCode.trim().toUpperCase();
-      const res = await fetch(`http://localhost:3001/discountCodes?discountCode=${code}`);
+      console.log(code , "code discountCode");
+      
+      const res = await fetch(`http://localhost:3000/api/discountCodes?discountCode=${code}`);
 
       if (!res.ok) throw new Error("خطا در دریافت اطلاعات از سرور");
 
       const data = await res.json();
-      if (Array.isArray(data) && data.length > 0) {
-        const found = data[0]; // { id, discountCode, money }
+      if (Array.isArray(data.data) && data.length > 0) {
+        const found = data.data[0]; // { id, discountCode, money }
         const amount = Number(found.money) || 0;
 
         // ذخیره کوپن در ریداکس

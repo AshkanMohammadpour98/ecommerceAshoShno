@@ -18,12 +18,7 @@ import DatePicker from "react-multi-date-picker";
 import persian from "react-date-object/calendars/persian";
 import persian_fa from "react-date-object/locales/persian_fa";
 
-/*
-  نکته: اگر API شما JSON Server هست، مسیرهای زیر کار می‌کنند:
-  GET   http://localhost:3001/products
-  PATCH http://localhost:3001/products/:id
-*/
-const API_BASE = "http://localhost:3001/products";
+const API_BASE = "http://localhost:3000/api/products";
 
 /* ابزار: تاریخ شمسی با اعداد لاتین به فرم "YYYY/MM/DD" */
 function getJalaliLatinDate(date = new Date()) {
@@ -222,7 +217,7 @@ export default function QrCodeCreator() {
         const res = await fetch(API_BASE);
         if (!res.ok) throw new Error("خطا در دریافت لیست محصولات");
         const data = await res.json();
-        setProducts(Array.isArray(data) ? data : []);
+        setProducts(Array.isArray(data.data) ? data.data : []);
       } catch (e) {
         setLoadError(e.message || "خطا در دریافت لیست محصولات");
       } finally {
@@ -252,7 +247,7 @@ export default function QrCodeCreator() {
       return;
     }
 
-    setSavingId(product.id);
+    setSavingId(product._id);
     try {
       const chosenDate =
         useToday
@@ -268,7 +263,7 @@ export default function QrCodeCreator() {
         colors: { fg: fgColor, bg: bgColor },
       };
 
-      // 2. ساخت یک پیش‌نمایش کم‌حجم (اختیاری) برای نمایش در لیست‌ها
+      // 2. ساخت یک پیش‌نمایش کم‌حجم  برای نمایش در لیست‌ها
       const previewDataUrl = await getQrPreviewDataUrl({
         targetPx: 256,
         format: "webp",
@@ -292,7 +287,7 @@ export default function QrCodeCreator() {
       };
 
       // 4. ارسال داده جدید به سرور
-      const res = await fetch(`${API_BASE}/${product.id}`, {
+      const res = await fetch(`${API_BASE}/${product._id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ QRDatas: newQrData }),
@@ -301,7 +296,7 @@ export default function QrCodeCreator() {
       if (!res.ok) throw new Error("ذخیره‌سازی ناموفق بود");
 
       // 5. به‌روزرسانی لیست محلی
-      setProducts((prev) => prev.map((p) => (p.id === product.id ? { ...p, QRDatas: newQrData } : p)));
+      setProducts((prev) => prev.map((p) => (p.id === product._id ? { ...p, QRDatas: newQrData } : p)));
 
       showToast("کیوآرکد با موفقیت روی محصول ذخیره شد ✅");
     } catch (e) {
@@ -565,9 +560,9 @@ export default function QrCodeCreator() {
                     "https://via.placeholder.com/64x64?text=No+Img";
                   return (
                     <li
-                      key={p.id}
+                      key={p._id}
                       className={`group border rounded-xl hover:shadow-sm transition overflow-hidden ${
-                        savingId === p.id ? "opacity-60 pointer-events-none" : ""
+                        savingId === p._id ? "opacity-60 pointer-events-none" : ""
                       }`}
                     >
                       <button

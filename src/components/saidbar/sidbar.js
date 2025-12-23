@@ -75,6 +75,7 @@ const menuItems = [
       { name: "ویرایش بنر اصلی", href: "/panel/editBennerHome" },
       { name: "ویرایش بنرکوچک", href: "/panel/editBennerHomeChild" },
       { name: "ویرایش بنر مشتریان", href: "/panel/customerPromoBanner" },
+      { name: "ویرایش بنر تخفیف ویژه ", href: "/panel/longTermDiscountProduct" },
     ],
   },
   {
