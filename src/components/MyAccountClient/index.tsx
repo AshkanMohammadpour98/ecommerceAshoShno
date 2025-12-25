@@ -1,5 +1,6 @@
 "use client";
 
+import { useUser } from "@/app/context/UserContext"; // اصلاح مسیر ایمپورت
 import React, { useState, useEffect, useCallback } from "react";
 
 // ------- TYPES BASED ON YOUR DATA -------
@@ -152,7 +153,8 @@ const AddressModal: React.FC<AddressModalProps> = ({ isOpen, closeModal }) => {
 };
 
 // ------- MAIN COMPONENT --------
-const MyAccountClient: React.FC<MyAccountClientProps> = ({ user }) => {
+const MyAccountClient: React.FC<MyAccountClientProps> = () => {
+  const user = useUser(); // 🟢 به همین راحتی! تمام دیتای کاربر اینجاست.
   const [activeTab, setActiveTab] = useState<TabKey>("dashboard");
   const [isModalOpen, setIsModalOpen] = useState(false);
 

@@ -16,6 +16,8 @@ import PreviewSliderModal from "@/components/Common/PreviewSlider";
 // import ScrollToTop from "@/components/Common/ScrollToTop";
 import PreLoader from "@/components/Common/PreLoader";
 import { usePathname } from "next/navigation";
+// import { UserProvider, useUser } from "@/app/context/UserContext"
+
 
 export default function RootLayout({
   children,
@@ -31,6 +33,7 @@ export default function RootLayout({
   useEffect(() => {
     setTimeout(() => setLoading(false), 1000);
   }, []);
+  // const user = useUser(); // 🟢 
 
   return (
     <html lang="fa" dir="rtl" suppressHydrationWarning={true}>
@@ -44,7 +47,10 @@ export default function RootLayout({
                 <ModalProvider>
                   <PreviewSliderProvider>
                     {!isPanel && <Header />}
+                          
+                            
                     {children}
+                          
 
                     <QuickViewModal />
                     <CartSidebarModal />

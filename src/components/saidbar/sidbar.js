@@ -20,6 +20,7 @@ import {
   PencilSquareIcon,
   QrCodeIcon,
   TicketIcon,
+  AdjustmentsHorizontalIcon
 } from "@heroicons/react/24/outline";
 
 // ✅ ساختار دیتا را استاندارد کردیم (پشتیبانی از فرزندان)
@@ -93,6 +94,16 @@ const menuItems = [
       { name: "لیست تخفیف ها", href: "/panel/discountCode" },
     ],
   },
+    {
+    name: "تنضیمات",
+    icon: AdjustmentsHorizontalIcon,
+    children: [
+      { name: "تنضیمات منو", href: "/panel/settingMenu" },
+      { name: "تنضیمات ایکون های خدماتی", href: "/panel/settinIconsSupportid" },
+      { name: "تنضیمات ارتباط باما", href: "/panel/contact" },
+      { name: "تنضیمات لوگو و تصاویر", href: "/panel/settingLogo" },
+    ],
+  },
   { name: "تیم", icon: UsersIcon, href: "/panel/team" },
   { name: "پروژه‌ها", icon: FolderIcon, href: "/panel/projects" },
   { name: "تقویم", icon: CalendarIcon, href: "/panel/calendar" },
@@ -132,8 +143,8 @@ export default function Sidebar() {
       {/* لوگو */}
       <div className="px-6 py-4 flex items-center shrink-0">
         <svg className="h-8 w-8 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
-             <path strokeLinecap="round" strokeLinejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-             <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+          <path strokeLinecap="round" strokeLinejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+          <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
         </svg>
         <span className="mr-2 font-bold text-gray-700">پنل مدیریت</span>
       </div>
@@ -143,7 +154,7 @@ export default function Sidebar() {
         {menuItems.map((item) => {
           // بررسی فعال بودن لینک‌های ساده
           const isActive = pathname === item.href;
-          
+
           // بررسی فعال بودن منوهای کشویی (اگر یکی از بچه‌هاش فعال باشه)
           const isParentActive = item.children && item.children.some((child) => child.href === pathname);
 
@@ -154,9 +165,9 @@ export default function Sidebar() {
                 <button
                   onClick={() => toggleMenu(item.name)}
                   className={`flex w-full justify-between items-center px-4 py-2.5 rounded-lg transition-colors duration-200
-                    ${isParentActive 
-                        ? "bg-white text-blue-600 shadow-sm font-medium" // استایل والد وقتی فرزندش فعاله
-                        : "hover:bg-gray-200 text-gray-600 hover:text-gray-900"
+                    ${isParentActive
+                      ? "bg-white text-blue-600 shadow-sm font-medium" // استایل والد وقتی فرزندش فعاله
+                      : "hover:bg-gray-200 text-gray-600 hover:text-gray-900"
                     }
                   `}
                 >
@@ -173,9 +184,8 @@ export default function Sidebar() {
 
                 {/* زیر منوها */}
                 <div
-                  className={`overflow-hidden transition-all duration-300 ease-in-out ${
-                    openMenus[item.name] ? "max-h-96 opacity-100" : "max-h-0 opacity-0"
-                  }`}
+                  className={`overflow-hidden transition-all duration-300 ease-in-out ${openMenus[item.name] ? "max-h-96 opacity-100" : "max-h-0 opacity-0"
+                    }`}
                 >
                   <div className="mr-4 pl-2 space-y-1 border-r-2 border-gray-300 pr-2 my-1">
                     {item.children.map((child) => {
@@ -186,8 +196,8 @@ export default function Sidebar() {
                           href={child.href}
                           className={`block px-3 py-2 rounded-md text-sm transition-all duration-200
                             ${isChildActive
-                                ? "bg-blue-600 text-white shadow-md font-medium translate-x-1" // 🟢 استایل فرزند فعال (سبز/آبی)
-                                : "text-gray-500 hover:bg-gray-200 hover:text-gray-900"
+                              ? "bg-blue-600 text-white shadow-md font-medium translate-x-1" // 🟢 استایل فرزند فعال (سبز/آبی)
+                              : "text-gray-500 hover:bg-gray-200 hover:text-gray-900"
                             }
                           `}
                         >
@@ -207,9 +217,9 @@ export default function Sidebar() {
               key={item.name}
               href={item.href || "#"}
               className={`flex items-center px-4 py-2.5 rounded-lg transition-colors duration-200
-                ${isActive 
-                    ? "bg-blue-600 text-white shadow-md font-medium" // 🔵 استایل لینک ساده فعال
-                    : "text-gray-600 hover:bg-gray-200 hover:text-gray-900"
+                ${isActive
+                  ? "bg-blue-600 text-white shadow-md font-medium" // 🔵 استایل لینک ساده فعال
+                  : "text-gray-600 hover:bg-gray-200 hover:text-gray-900"
                 }
               `}
             >
