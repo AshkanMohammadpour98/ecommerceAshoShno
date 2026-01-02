@@ -1,6 +1,7 @@
 // src/app/api/chaildBennerHome/route.js
 import { NextResponse } from 'next/server';
-import ChaildBennerHomes from '/models/chaildBennerHomes';
+// import ChaildBennerHomes from '/models/chaildBennerHomes';
+import ChaildBennerHomes from '/models/ChaildBennerHomes';
 import connectDB from '/utils/ConnectDB'
 
 // GET - دریافت همه بلاگ‌ها
