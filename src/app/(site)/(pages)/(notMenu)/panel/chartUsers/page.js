@@ -15,6 +15,10 @@ import {
  * 💡 تابع ایمن برای تجزیه تاریخ
  * این تابع جلوی کرش کردن را می‌گیرد اگر فرمت تاریخ اشتباه باشد یا null باشد.
  */
+// urls
+const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL;
+const USERS_URL = process.env.NEXT_PUBLIC_API_USERS_URL;
+
 function parseDate(dateStr) {
   if (!dateStr || typeof dateStr !== "string") return null;
 
@@ -111,7 +115,7 @@ export default function ChartUsers() {
   const [loading, setLoading] = useState(true); // 💡 وضعیت بارگذاری
 
   useEffect(() => {
-    fetch("http://localhost:3000/api/users")
+    fetch(`${BASE_URL}${USERS_URL}`)
       .then((res) => {
         if (!res.ok) throw new Error("خطا در شبکه");
         return res.json();

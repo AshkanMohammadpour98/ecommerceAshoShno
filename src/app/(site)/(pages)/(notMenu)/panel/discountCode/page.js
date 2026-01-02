@@ -22,7 +22,6 @@ import Swal from "sweetalert2";
 
 /**
  * کامپوننت اصلی مدیریت کدهای تخفیف
- * اتصال به API: http://localhost:3000/api/discountCodes
  * عملیات CRUD کامل با اعتبارسنجی
  */
 const DiscountCodesPage = () => {
@@ -37,7 +36,11 @@ const DiscountCodesPage = () => {
   const [successMessage, setSuccessMessage] = useState(null);
 
   // API Base URL
-  const API_URL = "http://localhost:3000/api/discountCodes";
+ 
+
+  // URLS
+  const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL;
+  const DISCOUNT_CODES_URL = process.env.NEXT_PUBLIC_API_DISCOUNT_CODES_URL;
 
   /**
    * دریافت لیست کدهای تخفیف از API
@@ -46,7 +49,7 @@ const DiscountCodesPage = () => {
     try {
       setLoading(true);
       setError(null);
-      const response = await fetch(API_URL);
+      const response = await fetch(`${BASE_URL}${DISCOUNT_CODES_URL}`);
       if (!response.ok) throw new Error("خطا در دریافت اطلاعات");
       const data = await response.json();
       setDiscountCodes(data.data);
@@ -80,7 +83,7 @@ const DiscountCodesPage = () => {
    */
   const createDiscountCode = async (code) => {
     try {
-      const response = await fetch(API_URL, {
+      const response = await fetch(`${BASE_URL}${DISCOUNT_CODES_URL}`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -135,7 +138,7 @@ const DiscountCodesPage = () => {
    */
   const deleteDiscountCode = async (_id) => {
     try {
-      const response = await fetch(`${API_URL}/${_id}`, {
+      const response = await fetch(`${BASE_URL}${DISCOUNT_CODES_URL}/${_id}`, {
         method: "DELETE",
       });
 

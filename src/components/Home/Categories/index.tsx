@@ -6,8 +6,10 @@ import { useRef, useEffect, useState } from "react";
 import "swiper/css";
 import "swiper/css/navigation";
 
-// import data from "./categoryData";
-// import { categoriesHeaderData } from "@/app/api/categoriesHeader/route";
+// URLS
+const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL
+const CATEGORYS_URL = process.env.NEXT_PUBLIC_API_CATEGORYS_URL
+
 import SingleItem from "./SingleItem";
 
 const Categories = () => {
@@ -21,9 +23,9 @@ const Categories = () => {
     const fetchProduct = async () => {
       try {
             // گرفتن دسته‌بندی‌ها
-    fetch("http://localhost:3001/categories")
+    fetch(`${BASE_URL}${CATEGORYS_URL}`)
       .then((res) => res.json())
-      .then((data) => setCategoriesHeaderDadta(data))
+      .then((data) => setCategoriesHeaderDadta(data.data))
       .catch(() => setCategoriesHeaderDadta([]));
         
       } catch (error) {

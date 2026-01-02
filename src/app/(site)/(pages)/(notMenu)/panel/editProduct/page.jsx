@@ -3,65 +3,136 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { useModalContext } from "@/app/context/QuickViewModalContext";
-// import { AppDispatch } from "@/redux/store";
-// import { useDispatch } from "react-redux";
 import Swal from "sweetalert2";
+// اضافه کردن آیکون‌ها از پکیج مورد نظر شما
+import {
+  PencilSquareIcon,
+  TrashIcon,
+  XMarkIcon,
+  EyeIcon
+} from '@heroicons/react/24/solid';
+
+import {
+  StarIcon as StarSolid
+} from "@heroicons/react/24/solid";
+
+import {
+  StarIcon as StarOutline
+} from "@heroicons/react/24/outline";
+
+// URLS
+const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL
+const PRODUCTS_URL = process.env.NEXT_PUBLIC_API_PRODUCTS_URL
+const CATEGORYS_URL = process.env.NEXT_PUBLIC_API_CATEGORYS_URL
 
 export default function EditProducts() {
-  // استیت برای ذخیره لیست محصولات
   const [productsData, setProductsData] = useState([]);
+  const [totalCount, setTotalCount] = useState(0);
+  const [categories, setCategories] = useState([]);
+  // ذخیره ID محصولی که در حال حذف است برای نمایش لودر اختصاصی
+const [deletingId, setDeletingId] = useState(null);
 
-  // کانتکست برای باز کردن مودال مشاهده سریع
-  const { openModal } = useModalContext();
+  // --- استیت‌های مربوط به مودال مشاهده سریع ---
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedProduct, setSelectedProduct] = useState(null);
+  const [activePreview, setActivePreview] = useState(0);
+  const [quantity, setQuantity] = useState(1);
 
-  // اتصال به Redux (در صورت نیاز)
-  // const dispatch = useDispatch<AppDispatch>();
+ const fetchProducts = async () => {
+  try {
+    // دریافت همزمان محصولات و دسته‌بندی‌ها
+    const [prodRes, catRes] = await Promise.all([
+      fetch(`${BASE_URL}${PRODUCTS_URL}`),
+      fetch(`${BASE_URL}${CATEGORYS_URL}`)
+    ]);
 
-  // دریافت داده‌ها از API بعد از mount شدن کامپوننت
+    if (!prodRes.ok || !catRes.ok) throw new Error("خطا در دریافت اطلاعات");
+
+    const prodData = await prodRes.json();
+    const catData = await catRes.json();
+
+    setProductsData(Array.isArray(prodData.data) ? prodData.data : []);
+    setCategories(Array.isArray(catData.data) ? catData.data : []);
+    setTotalCount(prodData.count || prodData.data?.length || 0);
+  } catch (err) {
+    console.error(err);
+  }
+};
+
   useEffect(() => {
-    const fetchProducts = async () => {
-      try {
-        const res = await fetch("/api/products");
-        if (!res.ok) throw new Error("خطا در دریافت اطلاعات");
-
-        const data = await res.json();
-        setProductsData(Array.isArray(data.data) ? data.data : []);
-      } catch (err) {
-        console.error(err);
-        setProductsData([]); // در صورت خطا، لیست خالی
-      }
-    };
-
     fetchProducts();
   }, []);
+
+  // تابع باز کردن مودال و ست کردن محصول انتخاب شده
+  const openQuickView = (product) => {
+    setSelectedProduct(product);
+    setIsModalOpen(true);
+    setActivePreview(0); // ریست کردن اسلایدر تصویر
+    setQuantity(1);      // ریست کردن تعداد
+  };
+
+  const closeModal = () => {
+    setIsModalOpen(false);
+    setSelectedProduct(null);
+  };
+
+  // --- منطق مدیریت تعداد با بررسی موجودی محصول ---
+  const handleIncrease = () => {
+    // گرفتن موجودی از خود محصول (selectedProduct.count)
+    if (quantity < selectedProduct.count) {
+      setQuantity(prev => prev + 1);
+    } else {
+      Swal.fire({
+        title: 'موجودی کافی نیست',
+        text: `حداکثر موجودی این کالا ${selectedProduct.count} عدد است.`,
+        icon: 'error',
+        confirmButtonText: 'متوجه شدم'
+      });
+    }
+  };
+
+  const handleDecrease = () => {
+    setQuantity(q => Math.max(1, q - 1));
+  };
+
+  // تابع کمکی برای کاهش تعداد محصولات در دسته‌بندی
+  const decrementCategoryCount = async (categoryName) => {
+  const category = categories.find(cat => cat.name === categoryName);
+  if (!category) return;
+
+  try {
+    await fetch(`${BASE_URL}${CATEGORYS_URL}/${category._id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ 
+        products: Math.max(0, (category.products || 0) - 1),
+        id: category.id // طبق دستور شما برای مقایسه/جستجو id ارسال می‌شود
+      }),
+    });
+  } catch (err) {
+    console.error("خطا در به‌روزرسانی تعداد دسته‌بندی:", err);
+  }
+};
 
   return (
     <section className="overflow-y-scroll h-screen relative pb-20 pt-2 lg:pt-10 xl:pt-12 bg-[#f3f4f6]">
       <div className="w-full mx-auto px-4 sm:px-8 xl:px-10">
         <div className="flex gap-7.5">
           <div className="w-full">
-            {/* نوار بالا: می‌توانید کلید تغییر نمایش اضافه کنید */}
-            <div className="rounded-lg bg-white shadow-1 pl-3 pr-2.5 py-2.5 mb-6">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2.5"></div>
-              </div>
+            <div className="rounded-lg bg-white shadow-1 pl-3 pr-2.5 py-2.5 mb-6 flex items-center justify-between">
+              <span className="text-dark font-medium">
+                تعداد کل محصولات: {totalCount}
+              </span>
             </div>
 
-            {/* نمایش محصولات */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-x-7.5 gap-y-9">
               {productsData.map((item) => {
-                // منطق ستاره‌ها برای هر محصول
-                const totalStars = 5;
-                const ratingValue = Number(item.reviews) || 0;
-                const safeFilled = Math.min(Math.max(ratingValue, 0), totalStars);
+                // محاسبه امتیاز ستاره‌ها
+                const rating = Math.min(5, Math.max(0, Number(item.reviews) || 0));
 
                 return (
-                  <div
-                    key={item._id} // استفاده از _id برای key
-                    className="group relative flex flex-col overflow-hidden rounded-lg bg-white shadow-sm transition-all duration-300 hover:shadow-lg dark:border-gray-700 dark:bg-gray-800"
-                  >
-                    {/* بخش تصویر محصول */}
+                  <div key={item._id} className="group relative flex flex-col overflow-hidden rounded-lg bg-white shadow-sm transition-all duration-300 hover:shadow-lg dark:border-gray-700 dark:bg-gray-800">
+
                     <div className="relative flex h-[280px] w-full items-center justify-center overflow-hidden bg-gray-100 dark:bg-gray-700">
                       <Image
                         src={item.imgs?.previews?.[0] || "/images/notImg.png"}
@@ -71,154 +142,117 @@ export default function EditProducts() {
                         className="object-contain transition-transform duration-300 group-hover:scale-105"
                       />
 
-                      {/* دکمه‌های روی تصویر */}
                       <div className="absolute inset-x-0 bottom-4 flex items-center justify-center gap-3">
+                      <button
+  disabled={deletingId === item._id} // غیرفعال کردن دکمه در حال حذف
+  onClick={async () => {
+    const confirm = await Swal.fire({
+      title: 'آیا مطمئن هستید؟',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: 'بله، حذف کن',
+      cancelButtonText: 'انصراف'
+    });
 
-                        {/* دکمه حذف */}
-                        <button
-                          onClick={async () => {
-                            const confirm = await Swal.fire({
-                              title: 'آیا مطمئن هستید؟',
-                              text: 'این محصول بعد از حذف قابل بازیابی نخواهد بود!',
-                              icon: 'warning',
-                              showCancelButton: true,
-                              confirmButtonText: 'بله، حذف کن',
-                              cancelButtonText: 'انصراف',
-                              didOpen: () => {
-                                const confirmBtn = Swal.getConfirmButton();
-                                const cancelBtn = Swal.getCancelButton();
+    if (!confirm.isConfirmed) return;
 
-                                confirmBtn.style.backgroundColor = '#3085d6';
-                                confirmBtn.style.color = '#fff';
-                                cancelBtn.style.backgroundColor = '#d33';
-                                cancelBtn.style.color = '#fff';
+    setDeletingId(item._id); // شروع لودینگ برای این محصول خاص
 
-                                const hoverStyle = document.createElement('style');
-                                hoverStyle.innerHTML = `
-                                  .swal2-confirm:hover { background-color: #256ab3 !important; }
-                                  .swal2-cancel:hover { background-color: #a00 !important; }
-                                `;
-                                document.head.appendChild(hoverStyle);
-                              }
-                            });
+    try {
+      const res = await fetch(`${BASE_URL}${PRODUCTS_URL}/${item._id}`, { method: 'DELETE' });
+      if (!res.ok) throw new Error('حذف محصول ناموفق بود');
 
-                            if (!confirm.isConfirmed) return;
+      await decrementCategoryCount(item.categorie);
 
-                            try {
-                              const res = await fetch(`/api/products/${item._id}`, {
-                                method: 'DELETE',
-                              });
-                              if (!res.ok) throw new Error('حذف محصول ناموفق بود');
-
-                              Swal.fire({
-                                position: "center",
-                                icon: "success",
-                                title: "حذف محصول با موفقیت انجام شد",
-                                showConfirmButton: false,
-                                timer: 1500
-                              });
-
-                              // دریافت مجدد محصولات بعد از حذف
-                              const resolt = await fetch('/api/products');
-                              const data = await resolt.json();
-                              setProductsData(data.data || []);
-                            } catch (err) {
-                              Swal.fire('خطا!', err.message, 'error');
-                            }
-                          }}
-                          aria-label="حذف"
-                          className="flex h-10 w-10 items-center justify-center rounded-full text-white shadow-md
-                          opacity-100 translate-y-0 bg-red lg:opacity-0 lg:translate-y-4
-                          lg:group-hover:opacity-100 lg:group-hover:translate-y-0 transition-all duration-200 delay-100
-                          lg:hover:bg-red-dark dark:bg-gray-700 dark:text-white dark:lg:hover:bg-red-dark"
-                        >
-                          {/* آیکون سطل زباله */}
-                          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="size-5">
-                            <path strokeLinecap="round" strokeLinejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" />
-                          </svg>
-                        </button>
+      Swal.fire({ icon: "success", title: "حذف شد", timer: 1500, showConfirmButton: false });
+      fetchProducts();
+    } catch (err) { 
+      Swal.fire('خطا!', err.message, 'error'); 
+    } finally {
+      setDeletingId(null); // پایان لودینگ
+    }
+  }}
+  className={`flex h-10 w-10 items-center justify-center rounded-full text-white shadow-md transition-all 
+    ${deletingId === item._id ? "bg-gray-400" : "bg-red lg:opacity-0 lg:translate-y-4 lg:group-hover:opacity-100 lg:group-hover:translate-y-0"}`}
+>
+  {deletingId === item._id ? (
+    // لودر چرخشی کوچک
+    <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+  ) : (
+    <TrashIcon className="size-5" />
+  )}
+</button>
 
                         {/* دکمه مشاهده سریع */}
                         <button
-                          onClick={() => openModal()}
-                          aria-label="مشاهده سریع"
-                          className="flex h-10 w-10 items-center justify-center rounded-full text-white shadow-md
-                          opacity-100 translate-y-0 bg-blue lg:opacity-0 lg:translate-y-4
-                          lg:group-hover:opacity-100 lg:group-hover:translate-y-0 transition-all duration-200 delay-200
-                          lg:hover:bg-blue-dark dark:bg-gray-700 dark:text-white dark:lg:hover:bg-blue-dark"
+                          onClick={() => openQuickView(item)}
+                          className="flex h-10 w-10 items-center justify-center rounded-full text-white bg-blue shadow-md lg:opacity-0 lg:translate-y-4 lg:group-hover:opacity-100 lg:group-hover:translate-y-0 transition-all duration-200 delay-200"
                         >
-                          {/* آیکون چشم */}
-                          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="size-5">
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z" />
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
-                          </svg>
+                          <EyeIcon className="size-5" />
                         </button>
 
                         {/* دکمه ویرایش */}
-                        <Link
-                          href={`/panel/editProduct/${item._id}`}
-                          aria-label="ویرایش"
-                          className="flex h-10 w-10 items-center justify-center rounded-full text-white shadow-md
-                          opacity-100 translate-y-0 bg-green lg:opacity-0 lg:translate-y-4
-                          lg:group-hover:opacity-100 lg:group-hover:translate-y-0 transition-all duration-200 delay-300
-                          lg:hover:bg-green-dark dark:bg-gray-700 dark:text-white dark:lg:hover:bg-green-dark"
-                        >
-                          {/* آیکون مداد */}
-                          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="size-5">
-                            <path strokeLinecap="round" strokeLinejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10" />
-                          </svg>
+                        <Link href={`/panel/editProduct/${item._id}`} className="flex h-10 w-10 items-center justify-center rounded-full text-white bg-green shadow-md lg:opacity-0 lg:translate-y-4 lg:group-hover:opacity-100 lg:group-hover:translate-y-0 transition-all duration-200 delay-300">
+                          <PencilSquareIcon className="size-5" />
                         </Link>
                       </div>
                     </div>
 
-                    {/* بخش اطلاعات محصول */}
                     <div className="flex flex-1 flex-col p-4">
-                      {/* ستاره‌ها و امتیاز */}
-                      <div className="mb-3 flex items-center justify-between">
-                        <div className="flex items-center gap-1.5">
-                          <div className="flex items-center gap-1">
-                            <div style={{ display: "flex", gap: "4px" }}>
-                              {[...Array(totalStars)].map((_, i) => {
-                                if (i < Math.floor(safeFilled)) {
-                                  return <Image key={i} src="/images/icons/icon-star.svg" alt="star icon" width={15} height={15} />;
-                                }
-                                if (i === Math.floor(safeFilled) && safeFilled % 1 >= 0.5) {
-                                  return <Image key={i} src="/images/icons/icon-star-half.svg" alt="half star icon" width={15} height={15} />;
-                                }
-                                return (
-                                  <svg key={i} className="fill-gray-4" width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                    <g clipPath="url(#clip0_375_9172)">
-                                      <path d="M16.7906 6.72187L11.7 5.93438L9.39377 1.09688C9.22502 0.759375 8.77502 0.759375 8.60627 1.09688L6.30002 5.9625L1.23752 6.72187C0.871891 6.77812 0.731266 7.25625 1.01252 7.50938L4.69689 11.3063L3.82502 16.6219C3.76877 16.9875 4.13439 17.2969 4.47189 17.0719L9.05627 14.5687L13.6125 17.0719C13.9219 17.2406 14.3156 16.9594 14.2313 16.6219L13.3594 11.3063L17.0438 7.50938C17.2688 7.25625 17.1563 6.77812 16.7906 6.72187Z" fill=""/>
-                                    </g>
-                                    <defs>
-                                      <clipPath id="clip0_375_9172"><rect width="18" height="18" fill="white"/></clipPath>
-                                    </defs>
-                                  </svg>
-                                );
-                              })}
-                            </div>
-                          </div>
-                          <span className="text-custom-sm text-gray-500 dark:text-gray-400">({item.reviews || 0})</span>
-                        </div>
-                        <span className="text-dark-2">(5 نظر)</span>
-                      </div>
-
-                      {/* عنوان محصول */}
-                      <h3 className="mb-2 flex-grow font-medium text-lg text-dark hover:text-blue dark:text-white dark:hover:text-blue-light">
-                        <Link href={`/shop-details/${item.slug}`}>{item.title}</Link>
+                      <h3 className="mb-2 font-medium text-lg text-dark line-clamp-1">
+                        {item.title}
                       </h3>
 
-                      {/* قیمت‌ها */}
-                      <div className="mt-auto flex items-end gap-2">
-                        {(item.hasDiscount && item.discountedPrice && item.discountedPrice > 0) ? (
-                          <>
-                            <span className="font-bold text-xl text-blue dark:text-blue-light">${item.discountedPrice}</span>
-                            <span className="text-md font-medium text-gray-400 line-through dark:text-gray-500">${item.price}</span>
-                          </>
-                        ) : (
-                          <span className="font-bold text-xl text-blue dark:text-blue-light">${item.price}</span>
-                        )}
+                      {/* بخش ستاره ها و نظرات با استفاده از آیکون های پکیج */}
+                      <div className="flex items-center justify-between mb-3">
+
+                        <div className="flex items-center gap-1">
+                          {[0, 1, 2, 3, 4].map((index) =>
+                            index < rating ? (
+                              <StarSolid
+                                key={index}
+                                className="h-4 w-4 sm:h-5 sm:w-5 text-yellow"
+                              />
+                            ) : (
+                              <StarOutline
+                                key={index}
+                                className="h-4 w-4 sm:h-5 sm:w-5 text-yellow"
+                              />
+                            )
+                          )}
+
+                          <span className="ml-1 text-xs sm:text-sm text-gray-600">
+                            {rating}
+                          </span>
+                        </div>
+
+{/* اگه بعدا کامنتی داشتیم میتونیم اضافه کنیم */}
+                        {/* <div className="flex items-center gap-1 text-blue">
+                          <ChatBubbleLeftEllipsisIcon className="h-4 w-4 sm:h-5 sm:w-5" />
+                          <span className="text-xs sm:text-sm">
+                            {item.commentsCount || 0}
+                          </span>
+                        </div> */}
+
                       </div>
+
+                      <div className="mt-auto">
+  {item.hasDiscount ? (
+    <div className="flex items-center gap-2">
+      <span className="text-xl font-bold text-blue">
+        ${item.discountedPrice.toLocaleString()}
+      </span>
+      <span className="text-base text-gray-400 line-through">
+        ${item.price.toLocaleString()}
+      </span>
+    </div>
+  ) : (
+    <span className="text-xl font-bold text-blue">
+      ${item.price.toLocaleString()}
+    </span>
+  )}
+</div>
+
                     </div>
                   </div>
                 );
@@ -227,6 +261,97 @@ export default function EditProducts() {
           </div>
         </div>
       </div>
+
+      {/* --- کامپوننت مودال (کاملاً ریسپانسیو شده) --- */}
+      {isModalOpen && selectedProduct && (
+        <div className="fixed inset-0 z-[99999] bg-black/70 flex items-center justify-center p-4 overflow-y-auto">
+          <div className="w-full max-w-[1100px] rounded-xl shadow-lg bg-white p-4 sm:p-10 relative animate-fade-in my-auto">
+            {/* دکمه بستن */}
+            <button
+              onClick={closeModal}
+              className="absolute top-2 right-2 sm:top-4 sm:right-4 flex items-center justify-center w-10 h-10 rounded-full bg-gray-200 text-dark hover:bg-red hover:text-white transition-all z-10"
+            >
+              <XMarkIcon className="size-6" />
+            </button>
+
+            <div className="flex flex-col lg:flex-row items-center lg:items-start gap-6 lg:gap-10">
+
+              {/* بخش تصاویر مودال - ریسپانسیو شده */}
+              <div className="w-full lg:max-w-[500px] flex flex-col sm:flex-row gap-4">
+                {/* بند انگشتی‌ها (Thumbnails) */}
+                <div className="flex flex-row sm:flex-col gap-3 order-2 sm:order-1 overflow-x-auto pb-2 sm:pb-0">
+                  {selectedProduct.imgs?.thumbnails?.map((img, key) => (
+                    img && (
+                      <button
+                        key={key}
+                        onClick={() => setActivePreview(key)}
+                        className={`w-16 h-16 sm:w-18 sm:h-18 flex-shrink-0 overflow-hidden rounded-lg border-2 transition-all ${activePreview === key ? "border-blue" : "border-transparent bg-gray-100"}`}
+                      >
+                        <Image src={img} alt="thumb" width={70} height={70} className="object-cover h-full w-full" />
+                      </button>
+                    )
+                  ))}
+                </div>
+
+                {/* تصویر اصلی (Preview) */}
+                <div className="flex-1 order-1 sm:order-2 bg-gray-100 rounded-lg border border-gray-300 flex items-center justify-center min-h-[300px] sm:min-h-[400px]">
+                  {selectedProduct.imgs?.previews?.[activePreview] ? (
+                    <Image
+                      src={selectedProduct.imgs.previews[activePreview]}
+                      alt="preview"
+                      width={350}
+                      height={350}
+                      className="object-contain p-2"
+                    />
+                  ) : (
+                    <span className="text-gray-400">تصویری موجود نیست</span>
+                  )}
+                </div>
+              </div>
+
+              {/* بخش اطلاعات محصول */}
+              <div className="flex-1 w-full max-w-[450px]">
+                <div className="flex justify-between items-start mb-4">
+                  <span className="inline-block text-xs font-bold text-white py-1 px-3 bg-green rounded">تخفیف</span>
+                  <span className="text-xs text-gray-400">موجودی انبار: {selectedProduct.count}</span>
+                </div>
+
+                <h3 className="font-bold text-2xl text-dark mb-4">{selectedProduct.title}</h3>
+                <p className="text-gray-600 mb-6 text-sm sm:text-base leading-relaxed">
+                  این محصول از دسته بندی <span className="text-blue font-semibold">{selectedProduct.categorie}</span> می باشد.
+                </p>
+
+                <div className="mb-6">
+                  <h4 className="font-bold text-lg mb-2">قیمت:</h4>
+                  <div className="flex items-center gap-3">
+                    {selectedProduct.hasDiscount ? (
+                      <>
+                        <span className="text-2xl font-bold text-dark">${selectedProduct.discountedPrice.toLocaleString()}</span>
+                        <span className="text-lg text-gray-400 line-through">${selectedProduct.price.toLocaleString()}</span>
+                      </>
+                    ) : (
+                      <span className="text-2xl font-bold text-dark">${selectedProduct.price.toLocaleString()}</span>
+                    )}
+                  </div>
+                </div>
+
+                <div className="flex flex-col sm:flex-row items-center gap-4 mt-8">
+                  {/* بخش تعداد با کنترل موجودی */}
+                  <div className="flex items-center border border-gray-300 rounded-lg bg-white overflow-hidden w-full sm:w-auto justify-between">
+                    <button onClick={handleDecrease} className="px-5 py-2 hover:bg-gray-100 text-xl">-</button>
+                    <span className="px-5 py-2 font-bold border-x border-gray-300">{quantity}</span>
+                    <button onClick={handleIncrease} className="px-5 py-2 hover:bg-gray-100 text-xl">+</button>
+                  </div>
+                  <button className="w-full sm:flex-1 bg-blue text-white px-8 py-3 rounded-lg hover:bg-opacity-90 transition-all font-bold">
+                    افزودن به سبد
+                  </button>
+                </div>
+              </div>
+
+            </div>
+          </div>
+        </div>
+      )}
     </section>
   );
 }

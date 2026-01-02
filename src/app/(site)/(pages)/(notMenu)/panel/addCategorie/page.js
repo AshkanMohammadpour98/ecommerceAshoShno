@@ -17,10 +17,13 @@ export default function AddCategory() {
   const [noImage, setNoImage] = useState(false);
   const [categories, setCategories] = useState([]);
   const [showModal, setShowModal] = useState(false);
+  // URLs
+  const CATEGORYS_URL = process.env.NEXT_PUBLIC_API_CATEGORYS_URL
+  const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL
 
   const fetchCategories = async () => {
     try {
-      const res = await fetch("http://localhost:3000/api/categorys");
+      const res = await fetch(`${BASE_URL}${CATEGORYS_URL}`);
       const data = await res.json();
       setCategories(Array.isArray(data.data) ? data.data : []);
     } catch (error) {
@@ -72,7 +75,7 @@ export default function AddCategory() {
     setLoading(true);
 
     try {
-      const res = await fetch("http://localhost:3000/api/categorys");
+      const res = await fetch(`${BASE_URL}${CATEGORYS_URL}`);
       const categories = await res.json();
       // console.log(categories.data  , "categories.data");
 
@@ -107,7 +110,7 @@ export default function AddCategory() {
         id: Math.random().toString(36).substr(2, 4),
       };
 
-      await fetch("http://localhost:3000/api/categorys", {
+      await fetch(`${BASE_URL}${CATEGORYS_URL}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(newCategory),

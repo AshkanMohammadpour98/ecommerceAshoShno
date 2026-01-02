@@ -9,6 +9,10 @@ import persian_fa from "react-date-object/locales/persian_fa";
 
 export default function AddBlogForm() {
   const router = useRouter();
+  // -----urls
+  const CATEGORYS_URL = process.env.NEXT_PUBLIC_API_CATEGORYS_URL
+  const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL
+  const BLOGS_URL = process.env.NEXT_PUBLIC_API_BLOGS_URL
 
   // 📌 تاریخ امروز با اعداد لاتین
   const initialDate = new DateObject({
@@ -31,7 +35,7 @@ export default function AddBlogForm() {
 
   // گرفتن دسته‌بندی‌ها
   useEffect(() => {
-    fetch("http://localhost:3000/api/categorys")
+    fetch(`${BASE_URL}${CATEGORYS_URL}`)
       .then((res) => res.json())
       .then((data) => setCategories(data.data))
       .catch(() => setCategories([]));
@@ -59,7 +63,7 @@ export default function AddBlogForm() {
     console.log(newBlog + 'new blog');
     
 
-    await fetch("http://localhost:3000/api/blogs", {
+    await fetch(`${BASE_URL}${BLOGS_URL}`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(newBlog),

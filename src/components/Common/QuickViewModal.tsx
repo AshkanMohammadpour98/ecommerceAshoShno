@@ -19,11 +19,16 @@ const QuickViewModal = () => {
   const { openPreviewModal } = usePreviewSlider();
   const [quantity, setQuantity] = useState(1);
 
+  console.log(isModalOpen  , "isModalOpen...");
+  console.log(openPreviewModal  , "openPreviewModal...");
+  console.log(quantity  , "quantity..");
+  
+
   const dispatch = useDispatch<AppDispatch>();
 
   // get the product data
   const product = useAppSelector((state) => state.quickViewReducer.value);
-  console.log(product.reviews + "quickViewR78..");
+  // console.log(product.reviews + "quickViewR78..");
   
   const [activePreview, setActivePreview] = useState(0);
 

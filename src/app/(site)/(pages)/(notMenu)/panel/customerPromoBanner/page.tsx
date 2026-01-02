@@ -35,10 +35,12 @@ type Banner = {
 // ============================================
 // تنظیمات
 // ============================================
-// const API_BASE = "http://localhost:3001";
-const BANNERS_URL = `http://localhost:3000/api/customPromoBenner`;
-const PRODUCTS_URL = `http://localhost:3000/api/products`;
+
 const MAX_BANNERS = 3;
+// URLS
+const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL
+const CUSTOM_PROMO_BENNER_URL = process.env.NEXT_PUBLIC_API_CUSTOM_PROMO_BENNER_URL;
+const PRODUCTS_URL = process.env.NEXT_PUBLIC_API_PRODUCTS_URL;
 
 // رنگ‌های پیشنهادی بک‌گراند برای UI راحت‌تر
 const BG_COLOR_PRESETS = ["#F5F5F7", "#DBF4F3", "#FFECE1"] as const;
@@ -159,7 +161,7 @@ const BannerForm: React.FC<BannerFormProps> = ({
     const fetchProducts = async () => {
       try {
         setProdLoading(true);
-        const res = await fetch(PRODUCTS_URL);
+        const res = await fetch(`${BASE_URL}${PRODUCTS_URL}`);
         const data = await res.json();
         if (Array.isArray(data.data)) setProducts(data.data);
       } catch (e) {
@@ -479,7 +481,7 @@ const CustomerPromoBannerAdmin: React.FC = () => {
   const fetchBanners = async () => {
     try {
       setLoading(true);
-      const res = await fetch(BANNERS_URL);
+      const res = await fetch(`${BASE_URL}${CUSTOM_PROMO_BENNER_URL}`);
       if (!res.ok) throw new Error("Fetch error");
       const data = await res.json();
       // فقط 3 تای اول
@@ -497,7 +499,7 @@ const CustomerPromoBannerAdmin: React.FC = () => {
 
   // ایجاد بنر
   const createBanner = async (b: Banner) => {
-    const res = await fetch(BANNERS_URL, {
+    const res = await fetch(`${BASE_URL}${CUSTOM_PROMO_BENNER_URL}`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(b),
@@ -508,7 +510,7 @@ const CustomerPromoBannerAdmin: React.FC = () => {
 
   // ویرایش بنر
   const updateBanner = async (_id: string | number, b: Banner) => {
-    const res = await fetch(`${BANNERS_URL}/${_id}`, {
+    const res = await fetch(`${BASE_URL}${CUSTOM_PROMO_BENNER_URL}/${_id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(b),
@@ -519,7 +521,7 @@ const CustomerPromoBannerAdmin: React.FC = () => {
 
   // حذف بنر
   const deleteBanner = async (_id: string | number) => {
-    const res = await fetch(`${BANNERS_URL}/${_id}`, {
+    const res = await fetch(`${BASE_URL}${CUSTOM_PROMO_BENNER_URL}/${_id}`, {
       method: "DELETE",
     });
     if (!res.ok) throw new Error("Delete failed");

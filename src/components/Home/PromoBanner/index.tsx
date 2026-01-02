@@ -20,6 +20,10 @@ type PromoBannerData = {
 // داده‌های پیش‌فرض برای زمانی که API خالی است
 const defaultBanners: PromoBannerData[] = [
 ];
+// URLS
+const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL
+const CUSTOM_PROMO_BENNER_URL = process.env.NEXT_PUBLIC_API_CUSTOM_PROMO_BENNER_URL
+
 
 const PromoBanner = () => {
   // state برای نگهداری داده‌های بنرها
@@ -33,7 +37,7 @@ const PromoBanner = () => {
         setLoading(true);
         
         // درخواست به API
-        const response = await fetch('http://localhost:3000/api/customPromoBenner');
+        const response = await fetch(`${BASE_URL}${CUSTOM_PROMO_BENNER_URL}`);
         
         // بررسی موفقیت‌آمیز بودن درخواست
         if (!response.ok) {

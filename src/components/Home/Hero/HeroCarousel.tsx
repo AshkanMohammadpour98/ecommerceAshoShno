@@ -10,11 +10,15 @@ import "swiper/css";
 import Image from "next/image";
 import { useEffect, useState } from "react";
 
+// URLS
+const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL
+const BENNER_HOME_URL = process.env.NEXT_PUBLIC_API_BENNER_HOME_URL
+
 // کامپوننت اسلایدر هدر
 const HeroCarousal = () => {
   const [productsDataBennerHomeData, setProductsDataBennerHomeData] = useState([])
   useEffect(() => {
-    fetch("http://localhost:3000/api/bennerHome")
+    fetch(`${BASE_URL}${BENNER_HOME_URL}`)
       .then((res) => res.json())
       .then((data) => setProductsDataBennerHomeData(data.data))
       .catch(() => setProductsDataBennerHomeData([]));

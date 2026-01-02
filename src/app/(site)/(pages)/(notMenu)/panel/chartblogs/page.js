@@ -15,6 +15,13 @@ import {
  * 💡 تابع پارس تاریخ (ایمن شده)
  * این تابع طوری نوشته شده که اگر فرمت تاریخ خراب بود (مثلا - داشت یا null بود) برنامه کرش نکند.
  */
+
+// urls
+const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL;
+const BLOGS_URL = process.env.NEXT_PUBLIC_API_BLOGS_URL;
+
+
+// تابع پارس تاریخ
 function parseDate(dateStr) {
   if (!dateStr || typeof dateStr !== "string") return null;
 
@@ -108,7 +115,7 @@ export default function ChartBlogs() {
   const [loading, setLoading] = useState(true); // 💡 وضعیت بارگذاری
 
   useEffect(() => {
-    fetch("http://localhost:3000/api/blogs")
+    fetch(`${BASE_URL}${BLOGS_URL}`)
       .then((res) => {
         if (!res.ok) throw new Error("خطا در ارتباط با سرور");
         return res.json();

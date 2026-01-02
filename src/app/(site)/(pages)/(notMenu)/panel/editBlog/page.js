@@ -1,10 +1,14 @@
 // 📄 این صفحه لیست همه مقالات را برای ویرایش (بلاگ) را به صورت شبکه‌ای همراه با صفحه‌بندی نمایش می‌دهد
 import Link from "next/link";
 
+// URLS
+const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL
+const BLOGS_URL = process.env.NEXT_PUBLIC_API_BLOGS_URL;
+
 const EditBlogs = async () => {
 
      // اینجا مستقیم fetch میکنیم → SSR گرفتن دیتای همه مقالات
-   const resBlogs = await fetch("http://localhost:3000/api/blogs", {
+   const resBlogs = await fetch(`${BASE_URL}${BLOGS_URL}`, {
      cache: "no-store", // برای اینکه هر بار رفرش شه (معادل getServerSideProps)
    });
    const blogData = await resBlogs.json();
@@ -18,7 +22,7 @@ const EditBlogs = async () => {
           {/*  لیست مقالات در حالت گرید (شبکه‌ای) */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-y-10 gap-x-7.5">
             {blogData.data.map((blog, key) => (
-              <div key={key} className="shadow-1 bg-white rounded-xl px-4 sm:px-5 pt-5 pb-4 text-right">
+              <div key={blog._id} className="shadow-1 bg-white rounded-xl px-4 sm:px-5 pt-5 pb-4 text-right">
                     {/* لینک تصویر بلاگ */}
                     <Link href="/blogs/blog-details" className="rounded-md overflow-hidden block">
                       <img
@@ -53,12 +57,12 @@ const EditBlogs = async () => {
               
                       {/* عنوان مقاله */}
                       <h2 className="font-medium text-dark text-lg sm:text-xl ease-out duration-200 mb-4 hover:text-blue">
-                        <Link href={`/panel/editBlog/${blog.id}`}>{blog.title}</Link>
+                        <Link href={`/panel/editBlog/${blog._id}`}>{blog.title}</Link>
                       </h2>
               
                       {/* لینک ادامه مطلب */}
                       <Link
-                        href={`/panel/editBlog/${blog.id}`}
+                        href={`/panel/editBlog/${blog._id}`}
                         className="text-sm inline-flex items-center gap-2 py-2 ease-out duration-200 hover:text-blue"
                       >
                         بیشتر

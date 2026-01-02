@@ -15,6 +15,13 @@ import {
  * 💡 تابع کمکی برای تجزیه تاریخ
  * بهبود: حالا اگر جداکننده تاریخ (-) باشد یا فرمت نامعتبر باشد، برنامه کرش نمی‌کند.
  */
+
+// urls
+const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL;
+const PRODUCTS_URL = process.env.NEXT_PUBLIC_API_PRODUCTS_URL;
+
+
+// تابع پارس تاریخ
 function parseDate(dateStr) {
   if (!dateStr || typeof dateStr !== "string") return null;
   
@@ -113,7 +120,7 @@ export default function ChartProducts() {
 
   useEffect(() => {
     // 💡 اصلاح آدرس API به آدرس صحیح
-    fetch("http://localhost:3000/api/products")
+    fetch(`${BASE_URL}${PRODUCTS_URL}`)
       .then((res) => {
         if (!res.ok) throw new Error("خطا در ارتباط با سرور");
         return res.json();

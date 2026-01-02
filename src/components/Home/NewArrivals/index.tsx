@@ -4,7 +4,10 @@ import React, { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import ProductItem from "@/components/Common/ProductItem";
-// import shopData from "@/components/Shop/shopData";
+
+// URLS
+const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL
+const PRODUCTS_URL = process.env.NEXT_PUBLIC_API_PRODUCTS_URL
 
 const NewArrival = () => {
   const [productsData , setProductsData] = useState([])
@@ -12,7 +15,7 @@ const NewArrival = () => {
         useEffect(() => {
         const fetchProducts = async () => {
           try {
-            const res = await fetch("http://localhost:3000/api/products"); 
+            const res = await fetch(`${BASE_URL}${PRODUCTS_URL}`);
             if (!res.ok) throw new Error("خطا در دریافت اطلاعات");
     
             const data = await res.json();

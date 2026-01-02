@@ -1,10 +1,10 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+// import { useRouter } from 'next/navigation';
 
-const CustomSelect = ({ options = [] }) => {
-  const router = useRouter();
+const CustomSelect = ({ options, onChange }) => {
+  // const router = useRouter();
 
   const [isOpen, setIsOpen] = useState(false);
 
@@ -19,22 +19,20 @@ const CustomSelect = ({ options = [] }) => {
   useEffect(() => {
     // اگر options از بیرون تغییر کرد، انتخاب پیش‌فرض رو به اولی ببر
     setSelectedOption(normalized[0] ?? null);
+    
   }, [options]);
-
+  
   const toggleDropdown = () => setIsOpen((v) => !v);
+  
 
-  const handleOptionClick = (option) => {
-    setSelectedOption(option);
-    setIsOpen(false);
-
-    // اسم برای آدرس خوانا + id برای گرفتن امن از API
-    const slug = encodeURIComponent(option.name ?? option.label);
-    const id = option.id ? `?id=${encodeURIComponent(option.id)}` : '';
-
-    router.push(`/shopCategorie/${slug}${id}`);
-  };
+const handleOptionClick = (option) => {
+  setSelectedOption(option);
+  setIsOpen(false);
+  onChange?.(option); // 🔥 فقط اطلاع به والد
+};
 
   useEffect(() => {
+    
     function handleClickOutside(event) {
       if (!event.target.closest('.dropdown-content')) {
         setIsOpen(false);

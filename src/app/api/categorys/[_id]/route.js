@@ -6,27 +6,45 @@ import Categorys from '/models/Categorys';
 
 
 
-// GET /api/categorys/[_id] (گرفتن یک یوزر با ID)
+// GET /api/categorys/[_id] ( و name گرفتن یک یوزر با ID)
+// GET /api/categorys/[_id]
 export async function GET(request, { params }) {
   try {
     await connectDB();
     const { _id } = params;
 
-    if (!isValidObjectId(_id )) {
-      return NextResponse.json({ message: "CategoryID not found " }, { status: 422 });
+    let category = null;
+
+    // 🔹 اگر ObjectId معتبر بود → جستجو با ID
+    if (isValidObjectId(_id)) {
+      category = await Categorys.findById(_id);
     }
 
-    const category = await Categorys.findById(_id);
+    // 🔹 اگر ObjectId نبود یا چیزی پیدا نشد → جستجو با name
     if (!category) {
-      return NextResponse.json({ message: "category not found" }, { status: 404 });
+      category = await Categorys.findOne({
+        name: { $regex: `^${_id}$`, $options: "i" } // insensitive
+      });
+    }
+
+    if (!category) {
+      return NextResponse.json(
+        { message: "category not found" },
+        { status: 404 }
+      );
     }
 
     return NextResponse.json(category, { status: 200 });
+
   } catch (error) {
     console.error(`Error fetching category ${params._id}:`, error);
-    return NextResponse.json({ message: "Server error" }, { status: 500 });
+    return NextResponse.json(
+      { message: "Server error" },
+      { status: 500 }
+    );
   }
 }
+
 
 // DELETE /api/category/[_id] (حذف یک محصول با ID)
 export async function DELETE(request, { params }) {

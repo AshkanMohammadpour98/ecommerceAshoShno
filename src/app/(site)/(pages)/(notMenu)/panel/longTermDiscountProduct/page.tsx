@@ -65,12 +65,19 @@ const DiscountCountdownAdmin = () => {
 
   const formRef = useRef(null);
 
+  // URLS
+  const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL;
+  const USERS_URL = process.env.NEXT_PUBLIC_API_USERS_URL;
+  const PRODUCTS_URL = process.env.NEXT_PUBLIC_API_PRODUCTS_URL;
+  const CATEGORYS_URL = process.env.NEXT_PUBLIC_API_CATEGORYS_URL;
+  const LIMITED_DISCOUNT_URL = process.env.NEXT_PUBLIC_API_LIMITED_DISCOUNT_URL;
+
   /**
    * ۱. دریافت لیست محصولات (آموزش: استفاده از ریسپانس دیتای سفارشی)
    */
   const fetchProducts = async () => {
     try {
-      const res = await fetch("http://localhost:3000/api/products");
+      const res = await fetch(`${BASE_URL}${PRODUCTS_URL}`);
       const result = await res.json();
       setProducts(result.data || result); 
     } catch (err) {
@@ -84,7 +91,7 @@ const DiscountCountdownAdmin = () => {
   const fetchActiveDiscount = async () => {
     setFetching(true);
     try {
-      const res = await fetch("http://localhost:3000/api/limited-discount");
+      const res = await fetch(`${BASE_URL}${LIMITED_DISCOUNT_URL}`);
       const result = await res.json();
 
       if (result.success && result.data.length > 0) {
@@ -95,7 +102,7 @@ const DiscountCountdownAdmin = () => {
         if (foundProduct) {
             setActiveProduct(foundProduct);
         } else {
-            const pRes = await fetch(`http://localhost:3000/api/products/${discount.productId}`);
+            const pRes = await fetch(`${BASE_URL}${PRODUCTS_URL}/${discount.productId}`);
             const pData = await pRes.json();
             setActiveProduct(pData.data || pData);
         }
@@ -165,7 +172,7 @@ const DiscountCountdownAdmin = () => {
       });
       if (!confirm.isConfirmed) return;
     }
-    await fetch(`http://localhost:3000/api/limited-discount?id=${activeDiscount._id}`, { method: "DELETE" });
+    await fetch(`${BASE_URL}${LIMITED_DISCOUNT_URL}?id=${activeDiscount._id}`, { method: "DELETE" });
     if (!silent) {
       setActiveDiscount(null);
       setActiveProduct(null);
@@ -182,7 +189,7 @@ const DiscountCountdownAdmin = () => {
     setLoading(true);
     try {
       if (activeDiscount?._id) await handleDelete(true);
-      const res = await fetch("http://localhost:3000/api/limited-discount", {
+      const res = await fetch(`${BASE_URL}${LIMITED_DISCOUNT_URL}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ productId: selectedProductId, startedAt: startISO, endsAt: endISO, description }),

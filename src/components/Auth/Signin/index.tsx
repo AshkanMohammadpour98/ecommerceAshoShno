@@ -81,8 +81,9 @@ const handleSubmit = async (e) => {
     console.log("🔵 PAYLOAD ارسال به API:", payload);
 
     // ============= ارسال درخواست POST به API =============
-    const res = await fetch("http://localhost:3000/api/users/signin", {
+    const res = await fetch("/api/users/signin", {
       method: "POST",
+       credentials: "include",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),
     });

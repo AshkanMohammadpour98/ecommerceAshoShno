@@ -10,6 +10,11 @@ const IconTrash = () => <svg xmlns="http://www.w3.org/2000/svg" fill="none" view
 const IconPlus = () => <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-4 h-4"><path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" /></svg>;
 const IconLock = () => <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6"><path strokeLinecap="round" strokeLinejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 1 0-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 0 0 2.25-2.25v-6.75a2.25 2.25 0 0 0-2.25-2.25H6.75a2.25 2.25 0 0 0-2.25 2.25v6.75a2.25 2.25 0 0 0 2.25 2.25Z" /></svg>;
 
+// URLs
+const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL;
+const CHAILD_BENNER_HOME_URL = process.env.NEXT_PUBLIC_API_CHAILD_BENNER_HOME_URL;
+const PRODUCTS_URL = process.env.NEXT_PUBLIC_API_PRODUCTS_URL;
+
 const ChildBannerSliderEditor = () => {
   const [bannerItems, setBannerItems] = useState([]);
   const [products, setProducts] = useState([]);
@@ -36,8 +41,8 @@ const ChildBannerSliderEditor = () => {
       try {
         const [bannerRes, productsRes] = await Promise.all([
           // ✅ API Endpoint changed here
-          fetch("http://localhost:3000/api/chaildBennerHome"),
-          fetch("http://localhost:3000/api/products")
+          fetch(`${BASE_URL}${CHAILD_BENNER_HOME_URL}`),
+          fetch(`${BASE_URL}${PRODUCTS_URL}`)
         ]);
         const bannerData = await bannerRes.json();
         const productsData = await productsRes.json();
@@ -126,7 +131,7 @@ const ChildBannerSliderEditor = () => {
 
     setDeletingId(_id);
     try {
-      await fetch(`http://localhost:3000/api/chaildBennerHome/${_id}`, { method: "DELETE" });
+      await fetch(`${BASE_URL}${CHAILD_BENNER_HOME_URL}/${_id}`, { method: "DELETE" });
       setBannerItems(prev => prev.filter(item => item._id !== _id));
     } catch (error) {
       Swal.fire("خطا", "حذف آیتم با مشکل مواجه شد.", "error");
@@ -140,7 +145,7 @@ const ChildBannerSliderEditor = () => {
 
     setAddingId(product._id);
     try {
-      const res = await fetch("http://localhost:3000/api/chaildBennerHome", {
+      const res = await fetch(`${BASE_URL}${CHAILD_BENNER_HOME_URL}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(product),

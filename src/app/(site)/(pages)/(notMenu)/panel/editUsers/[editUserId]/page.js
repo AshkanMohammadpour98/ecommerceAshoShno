@@ -1,8 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import Swal from "sweetalert2";
-import { useParams } from "next/navigation";
-
+import React from "react";
 
 // ============= تاریخ جلالی و ارقام لاتین ============
 import DatePicker from "react-multi-date-picker";
@@ -20,6 +19,11 @@ const toLatinDigits = (val = "") => {
   };
   return String(val).replace(/[۰-۹٠-٩]/g, (d) => map[d] || d);
 };
+// URLs
+const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL;
+const USERS_URL = process.env.NEXT_PUBLIC_API_USERS_URL;
+const PRODUCTS_URL = process.env.NEXT_PUBLIC_API_PRODUCTS_URL;
+const CATEGORYS_URL = process.env.NEXT_PUBLIC_API_CATEGORYS_URL;
 
 // تولید شناسه یکتا برای فاکتور
 const generateInvoiceId = () =>
@@ -36,8 +40,12 @@ const getNowJalaliLatin = () =>
 
 export default function Page({ params }) {
   // ⬇️ تغییر یافته: پارامتر URL حالا _id مونگو است
-  const userId = params.editUserId;
+  // ✅ روش جدید و استاندارد Next.js 15 برای دسترسی به params
+  const unwrappedParams = React.use(params);
+  const userId = unwrappedParams.editUserId;
   const router = useRouter();
+  
+  
 
   // استیت‌ها
   const [formData, setFormData] = useState(null);
@@ -47,10 +55,12 @@ export default function Page({ params }) {
   const [showProductSelector, setShowProductSelector] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
+
+
   // گرفتن اطلاعات کاربر از API
   useEffect(() => {
     // ⬇️ تغییر یافته: آدرس API جدید با _id
-    fetch(`http://localhost:3000/api/users/${userId}`)
+    fetch(`${BASE_URL}${USERS_URL}/${userId}`)
       .then((res) => res.json())
       .then((data) => {
         // نرمال‌سازی داده‌ها + سنکرون کردن فاکتور
@@ -65,8 +75,13 @@ export default function Page({ params }) {
 
         // ⬇️ تغییر یافته: دسترسی مستقیم به email, phone, password, gender, role
         // دیگر نیازی به registerWith نیست
+// console.log(data , 'data...');
+console.log(`${BASE_URL}${USERS_URL}/${userId}`);
 
-        const invId = data.purchaseInvoice?.[0]?.id || generateInvoiceId();
+
+
+
+        const invId = data.purchaseInvoice?.[0]?._id || generateInvoiceId();
         normalized.purchaseInvoice = [
           { id: invId, countProducts: normalized.PurchasedProducts.length },
         ];
@@ -78,19 +93,22 @@ export default function Page({ params }) {
 
   // گرفتن کل محصولات
   useEffect(() => {
-    // ⬇️ تغییر یافته: می‌توانید آدرس API را به localhost:3000 تغییر دهید
-    fetch("http://localhost:3001/products")
+    fetch(`${BASE_URL}${PRODUCTS_URL}`)
       .then((res) => res.json())
-      .then((data) => setAllProducts(data));
+      .then((data) => setAllProducts(data.data));
   }, []);
 
   // گرفتن دسته‌بندی‌ها
-  useEffect(() => {
-    // ⬇️ تغییر یافته: می‌توانید آدرس API را به localhost:3000 تغییر دهید
-    fetch("http://localhost:3001/categories")
-      .then((res) => res.json())
-      .then((data) => setCategories(data.map((c) => c.name)));
+ useEffect(() => {
+  fetch(`${BASE_URL}${CATEGORYS_URL}`)
+    .then((res) => res.json())
+    .then((data) => {
+      // دیتا در data.data است
+      const items = data.data || [];
+      setCategories(items.map((c) => c.name));
+    });
   }, []);
+ 
 
   // تغییر فیلدهای فرم
   const handleChange = (e) => {
@@ -106,9 +124,9 @@ export default function Page({ params }) {
     setFormData((prev) =>
       prev.SuggestedCategories.includes(category)
         ? {
-            ...prev,
-            SuggestedCategories: prev.SuggestedCategories.filter((c) => c !== category),
-          }
+          ...prev,
+          SuggestedCategories: prev.SuggestedCategories.filter((c) => c !== category),
+        }
         : { ...prev, SuggestedCategories: [...prev.SuggestedCategories, category] }
     );
   };
@@ -116,15 +134,15 @@ export default function Page({ params }) {
   // اضافه/حذف محصول + تاریخ خرید + فاکتور
   const handleProductToggle = (product) => {
     setFormData((prev) => {
-      const exists = prev.PurchasedProducts.find((p) => p.id === product.id);
-      const invId = prev.purchaseInvoice?.[0]?.id || generateInvoiceId();
+const exists = prev.PurchasedProducts.find((p) => p._id === product._id);
+      const invId = prev.purchaseInvoice?.[0]?._id || generateInvoiceId();
 
       if (exists) {
-        const updatedProducts = prev.PurchasedProducts.filter((p) => p.id !== product.id);
+        const updatedProducts = prev.PurchasedProducts.filter((p) => p._id !== product._id);
         return {
           ...prev,
           PurchasedProducts: updatedProducts,
-          purchaseInvoice: [{ id: invId, countProducts: updatedProducts.length }],
+          purchaseInvoice: [{ _id: invId, countProducts: updatedProducts.length }],
         };
       } else {
         const newItem = {
@@ -135,37 +153,39 @@ export default function Page({ params }) {
         return {
           ...prev,
           PurchasedProducts: updatedProducts,
-          purchaseInvoice: [{ id: invId, countProducts: updatedProducts.length }],
+          purchaseInvoice: [{ _id: invId, countProducts: updatedProducts.length }],
         };
       }
     });
   };
 
   // تغییر تاریخ خرید هر محصول
-  const handleProductDateChange = (id, dateObjOrNull) => {
+  const handleProductDateChange = (_id, dateObjOrNull) => {
     setFormData((prev) => {
       const formatted = dateObjOrNull ? toLatinDigits(dateObjOrNull.format("YYYY/MM/DD")) : "";
       const updated = prev.PurchasedProducts.map((p) =>
-        p.id === id ? { ...p, dateSlase: formatted } : p
+        p._id === _id ? { ...p, dateSlase: formatted } : p
       );
       return { ...prev, PurchasedProducts: updated };
     });
   };
 
   // تغییر قیمت قابل‌ویرایش
-  const handleEditablePriceChange = (id, value, hasDiscount) => {
-    setFormData((prev) => {
-      const updated = prev.PurchasedProducts.map((p) =>
-        p.id === id
-          ? {
-              ...p,
-              [hasDiscount ? "discountedPrice" : "price"]: Number(value) || 0,
-            }
-          : p
-      );
-      return { ...prev, PurchasedProducts: updated };
-    });
-  };
+// تغییر قیمت قابل‌ویرایش
+const handleEditablePriceChange = (_id, value, hasDiscount) => {
+  setFormData((prev) => {
+    const updated = prev.PurchasedProducts.map((p) =>
+      // تغییر یافت: استفاده از _id برای مقایسه
+      p._id === _id
+        ? {
+            ...p,
+            [hasDiscount ? "discountedPrice" : "price"]: Number(value) || 0,
+          }
+        : p
+    );
+    return { ...prev, PurchasedProducts: updated };
+  });
+};
 
   // ارسال ویرایش
   const handleSubmit = async (e) => {
@@ -173,7 +193,7 @@ export default function Page({ params }) {
 
     // ⬇️ تغییر یافته: ساختار جدید payload بدون registerWith
     // email, phone, password, gender, role مستقیم در سطح ریشه هستند
-    const invId = formData.purchaseInvoice?.[0]?.id || generateInvoiceId();
+    const invId = formData.purchaseInvoice?.[0]?._id || generateInvoiceId();
 
     const payload = {
       // ⬇️ تغییر یافته: ارسال _id برای شناسایی در بکند (اختیاری، چون از URL می‌خواند)
@@ -206,7 +226,7 @@ export default function Page({ params }) {
       console.log("📤 Payload ارسالی:", payload);
 
       // ⬇️ تغییر یافته: آدرس API جدید با _id
-      const res = await fetch(`http://localhost:3000/api/users/${userId}`, {
+      const res = await fetch(`${BASE_URL}${USERS_URL}/${userId}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
@@ -271,11 +291,10 @@ export default function Page({ params }) {
               <button
                 type="button"
                 onClick={() => setFormData((prev) => ({ ...prev, gender: "male" }))}
-                className={`inline-flex items-center gap-2 px-4 py-2 rounded-lg border text-sm transition ${
-                  formData.gender === "male"
+                className={`inline-flex items-center gap-2 px-4 py-2 rounded-lg border text-sm transition ${formData.gender === "male"
                     ? "bg-blue text-white border-blue"
                     : "bg-gray-1 border-gray-3 text-dark hover:bg-gray-2"
-                }`}
+                  }`}
               >
                 <UserIcon className="w-4 h-4" />
                 مرد
@@ -283,11 +302,10 @@ export default function Page({ params }) {
               <button
                 type="button"
                 onClick={() => setFormData((prev) => ({ ...prev, gender: "female" }))}
-                className={`inline-flex items-center gap-2 px-4 py-2 rounded-lg border text-sm transition ${
-                  formData.gender === "female"
+                className={`inline-flex items-center gap-2 px-4 py-2 rounded-lg border text-sm transition ${formData.gender === "female"
                     ? "bg-blue text-white border-blue"
                     : "bg-gray-1 border-gray-3 text-dark hover:bg-gray-2"
-                }`}
+                  }`}
               >
                 <UserIcon className="w-4 h-4" />
                 زن
@@ -302,11 +320,10 @@ export default function Page({ params }) {
               <button
                 type="button"
                 onClick={() => setFormData((prev) => ({ ...prev, role: "user" }))}
-                className={`inline-flex items-center gap-2 px-4 py-2 rounded-lg border text-sm transition ${
-                  formData.role === "user"
+                className={`inline-flex items-center gap-2 px-4 py-2 rounded-lg border text-sm transition ${formData.role === "user"
                     ? "bg-green text-white border-green"
                     : "bg-gray-1 border-gray-3 text-dark hover:bg-gray-2"
-                }`}
+                  }`}
               >
                 <UserIcon className="w-4 h-4" />
                 کاربر عادی
@@ -314,11 +331,10 @@ export default function Page({ params }) {
               <button
                 type="button"
                 onClick={() => setFormData((prev) => ({ ...prev, role: "admin" }))}
-                className={`inline-flex items-center gap-2 px-4 py-2 rounded-lg border text-sm transition ${
-                  formData.role === "admin"
+                className={`inline-flex items-center gap-2 px-4 py-2 rounded-lg border text-sm transition ${formData.role === "admin"
                     ? "bg-red text-white border-red"
                     : "bg-gray-1 border-gray-3 text-dark hover:bg-gray-2"
-                }`}
+                  }`}
               >
                 <ShieldCheckIcon className="w-4 h-4" />
                 مدیر
@@ -412,11 +428,10 @@ export default function Page({ params }) {
                 type="button"
                 key={cat}
                 onClick={() => handleCategoryChange(cat)}
-                className={`px-3 py-1 rounded-full border text-sm transition ${
-                  formData.SuggestedCategories.includes(cat)
+                className={`px-3 py-1 rounded-full border text-sm transition ${formData.SuggestedCategories.includes(cat)
                     ? "bg-blue text-white border-blue"
                     : "bg-gray-1 border-gray-3 text-dark"
-                }`}
+                  }`}
               >
                 {cat}
               </button>
@@ -452,7 +467,7 @@ export default function Page({ params }) {
           <div className="space-y-3">
             {formData.PurchasedProducts.map((product) => (
               <div
-                key={product.id}
+                key={product._id}
                 className="p-3 border border-gray-3 rounded-md flex flex-col gap-3 bg-gray-1"
               >
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
@@ -475,7 +490,7 @@ export default function Page({ params }) {
                       type="number"
                       value={product.hasDiscount ? product.discountedPrice ?? 0 : product.price ?? 0}
                       onChange={(e) =>
-                        handleEditablePriceChange(product.id, e.target.value, product.hasDiscount)
+                        handleEditablePriceChange(product._id, e.target.value, product.hasDiscount)
                       }
                       className="w-28 px-2 py-1 border border-gray-3 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue focus:border-blue text-dark placeholder:body"
                     />
@@ -495,7 +510,7 @@ export default function Page({ params }) {
                         ? new DateObject({ date: product.dateSlase, calendar: persian })
                         : ""
                     }
-                    onChange={(date) => handleProductDateChange(product.id, date)}
+                    onChange={(date) => handleProductDateChange(product._id, date)}
                     placeholder="YYYY/MM/DD"
                   />
                   {product.dateSlase && (
@@ -521,14 +536,13 @@ export default function Page({ params }) {
           {showProductSelector && (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 mt-4">
               {allProducts.map((product) => {
-                const isSelected = formData.PurchasedProducts.find((p) => p.id === product.id);
+                const isSelected = formData.PurchasedProducts.find((p) => p._id === product._id);
                 return (
                   <div
-                    key={product.id}
+                    key={product._id}
                     onClick={() => handleProductToggle(product)}
-                    className={`p-3 border border-gray-3 rounded-md cursor-pointer transition ${
-                      isSelected ? "bg-blue text-white" : "bg-white"
-                    }`}
+                    className={`p-3 border border-gray-3 rounded-md cursor-pointer transition ${isSelected ? "bg-blue text-white" : "bg-white"
+                      }`}
                   >
                     <p className="font-medium text-sm">{product.title}</p>
                     <p className="text-xs">قیمت: {product.price}$</p>

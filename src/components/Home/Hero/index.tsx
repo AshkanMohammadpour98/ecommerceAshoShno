@@ -4,11 +4,16 @@ import HeroCarousel from "./HeroCarousel";
 import HeroFeature from "./HeroFeature";
 import Image from "next/image";
 
+
 // کامپوننت اصلی هدر سایت
+// URLS
+const CHAILD_BENNER_HOME_URL = process.env.NEXT_PUBLIC_API_CHAILD_BENNER_HOME_URL
+const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL
+
 const Hero = () => {
   const [productsDataBennerChildHomeData, setProductsDataBennerChildHomeData] = useState([])
   useEffect(() => {
-    fetch("http://localhost:3000/api/chaildBennerHome")
+    fetch(`${BASE_URL}${CHAILD_BENNER_HOME_URL}`)
       .then((res) => res.json())
       .then((data) => setProductsDataBennerChildHomeData(data.data))
       .catch(() => setProductsDataBennerChildHomeData([]));

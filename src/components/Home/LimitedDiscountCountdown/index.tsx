@@ -36,6 +36,12 @@ const CounDown = () => {
   // تغییر مهم: timeProgress را به استیت تبدیل کردیم تا بتوانیم هر ثانیه آپدیتش کنیم
   const [timeProgress, setTimeProgress] = useState(0);
 
+// URLS
+const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL
+const LIMITED_DISCOUNT_URL = process.env.NEXT_PUBLIC_API_LIMITED_DISCOUNT_URL
+const PRODUCTS_URL = process.env.NEXT_PUBLIC_API_PRODUCTS_URL
+
+
   // ============================================
   // دریافت داده‌ها از API
   // ============================================
@@ -48,7 +54,7 @@ const CounDown = () => {
 
       try {
         const discountRes = await fetch(
-          "http://localhost:3000/api/limited-discount",
+          `${BASE_URL}${LIMITED_DISCOUNT_URL}`,
           { cache: "no-store" }
         );
         if (!discountRes.ok) throw new Error("discount fetch error");
@@ -68,7 +74,7 @@ const CounDown = () => {
         const activeDiscount = discountData[0];
 
         const productRes = await fetch(
-          `http://localhost:3000/api/products/${activeDiscount.productId}`,
+          `${BASE_URL}${PRODUCTS_URL}/${activeDiscount.productId}`,
           { cache: "no-store" }
         );
         

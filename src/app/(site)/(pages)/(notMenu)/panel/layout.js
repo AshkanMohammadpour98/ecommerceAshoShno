@@ -12,12 +12,17 @@ export default function PanelLayout({ children }) {
   const [user, setUser] = useState(null);
   const [errorType, setErrorType] = useState(null); // 'auth' یا 'role'
   const router = useRouter();
+  // --------URLS-------
+  const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL
+  const AUTH_ME_URL = process.env.NEXT_PUBLIC_API_AUTH_ME_URL
 
   useEffect(() => {
-    fetch("/api/auth/me")
+    fetch(AUTH_ME_URL, {
+      credentials: "include"
+    })
       .then(async (res) => {
         const data = await res.json();
-        
+
         if (res.status === 401) {
           // توکن نامعتبر یا موجود نیست
           router.replace("/signin");
@@ -37,15 +42,15 @@ export default function PanelLayout({ children }) {
       <div className="flex h-screen flex-col items-center justify-center bg-gray-50 p-6 text-center">
         <div className="bg-white p-10 rounded-3xl shadow-2xl max-w-md w-full border border-red-100">
           <div className="text-red-500 mb-4">
-             <svg className="w-20 h-20 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-             </svg>
+            <svg className="w-20 h-20 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+            </svg>
           </div>
           <h2 className="text-2xl font-bold text-gray-800 mb-2">دسترسی محدود شده</h2>
           <p className="text-gray-600 mb-8">
             حساب کاربری شما سطح دسترسی لازم (admin) برای ورود به این بخش را ندارد.
           </p>
-          <button 
+          <button
             onClick={() => router.push("/")}
             className="w-full bg-[#232936] text-white py-3 rounded-xl font-bold hover:bg-gray-800 transition shadow-lg"
           >

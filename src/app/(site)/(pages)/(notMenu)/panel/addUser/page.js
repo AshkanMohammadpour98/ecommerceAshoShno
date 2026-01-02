@@ -21,7 +21,7 @@ import {
 const generateInvoiceId = () =>
   Math.random().toString(36).slice(2, 8) + Date.now().toString(36).slice(-4);
 
-// تبدیل ارقام فارسی/عربی به لاتین
+// تبدیل ارقام فارسی/عربی به لاتین برای ذخیره در دیتابیس
 const toEnglishDigits = (s = "") =>
   String(s)
     .replace(/[۰-۹]/g, (c) => String(c.charCodeAt(0) - 1776))
@@ -37,6 +37,11 @@ const getNowJalali = () =>
 const onlyDigitsEnglish = (val = "") => toEnglishDigits(val).replace(/\D/g, "");
 
 // ===================================================
+// URL ها مطابق با ساختار پروژه شما
+const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || "";
+const USERS_API = "/api/users"; // روت اصلی برای POST
+const CATEGORIES_URL = process.env.NEXT_PUBLIC_API_CATEGORIES_URL || "/api/categories";
+const PRODUCTS_URL = process.env.NEXT_PUBLIC_API_PRODUCTS_URL || "/api/products";
 
 export default function AddUserForm() {
   const router = useRouter();
@@ -48,14 +53,12 @@ export default function AddUserForm() {
     id: Date.now().toString(),
     name: "",
     lastName: "",
-    // ✅ تغیر داده شد: اضافه شدن فیلد جنسیت با مقدار پیش‌فرض
     gender: "male",
-    // ✅ تغیر داده شد: اضافه شدن فیلد نقش با مقدار پیش‌فرض
     role: "user",
     phone: "",
     email: "",
     password: "",
-    dateLogin: "",
+    dateLogin: "", // در هندلر handleSubmit اگر خالی باشد مقداردهی می‌شود
     address: "",
     img: "",
     SuggestedCategories: [],
@@ -67,31 +70,47 @@ export default function AddUserForm() {
   const [enableProducts, setEnableProducts] = useState(false);
   const [allProducts, setAllProducts] = useState([]);
   const [loadingProducts, setLoadingProducts] = useState(false);
-  const [categories, setCategories] = useState([]); // فقط name
+  const [categories, setCategories] = useState([]); // لیست نام دسته‌ها
   const [imagePreview, setImagePreview] = useState("");
 
   // --------------------- افکت‌ها ---------------------
-  useEffect(() => {
-    // گرفتن دسته‌بندی‌ها
-    fetch("http://localhost:3001/categories")
-      .then((resCate) => resCate.json())
-      .then((dataCate) => setCategories((dataCate || []).map((c) => c.name)))
-      .catch(() => setCategories([]));
-  }, []);
+// --------------------- افکت‌ها ---------------------
+useEffect(() => {
+  // گرفتن دسته‌بندی‌ها   
+  fetch(`${BASE_URL}/api/categorys`)
+    .then((res) => res.json())
+    .then((result) => {
+      // چون دیتا به صورت { success: true, data: [...] } است:
+      if (result.success && Array.isArray(result.data)) {
+        const categoryNames = result.data.map((c) => c.name);
+        setCategories(categoryNames);
+      } else {
+        console.warn("ساختار دیتای دسته‌بندی معتبر نیست", result);
+      }
+    })
+    .catch((err) => {
+      console.error("خطا در بارگذاری دسته‌ها:", err);
+      // مقادیر پیش‌فرض برای اینکه فرم خالی نماند
+      setCategories(["Desktop", "Laptop", "Mobile"]); 
+    });
+}, []);
 
   useEffect(() => {
     // گرفتن محصولات فقط وقتی لازم شد
     if (!enableProducts) return;
     setLoadingProducts(true);
-    fetch("http://localhost:3001/products")
+    fetch(`${BASE_URL}${PRODUCTS_URL}`)
       .then((res) => res.json())
-      .then((data) => setAllProducts(data || []))
+      .then((data) => {
+        // ⭐ نکته آموزشی: طبق دیتای ارسالی شما محصولات در data.data هستند
+        setAllProducts(data.data || []);
+      })
       .catch(() => setAllProducts([]))
       .finally(() => setLoadingProducts(false));
   }, [enableProducts]);
 
   useEffect(() => {
-    // پاک‌سازی blob URL قبلی
+    // پاک‌سازی blob URL قبلی برای جلوگیری از نشت حافظه
     return () => {
       if (imagePreview) URL.revokeObjectURL(imagePreview);
     };
@@ -113,9 +132,9 @@ export default function AddUserForm() {
     setFormData((prev) =>
       prev.SuggestedCategories.includes(categoryName)
         ? {
-          ...prev,
-          SuggestedCategories: prev.SuggestedCategories.filter((c) => c !== categoryName),
-        }
+            ...prev,
+            SuggestedCategories: prev.SuggestedCategories.filter((c) => c !== categoryName),
+          }
         : { ...prev, SuggestedCategories: [...prev.SuggestedCategories, categoryName] }
     );
   };
@@ -137,7 +156,6 @@ export default function AddUserForm() {
           ...prev.PurchasedProducts,
           {
             ...product,
-            // تاریخ فروش برابر تاریخ امروز است
             dateSlase: getNowJalali(), 
           },
         ];
@@ -154,7 +172,6 @@ export default function AddUserForm() {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    // پاک‌سازی آدرس قبلی
     if (imagePreview) URL.revokeObjectURL(imagePreview);
 
     const url = URL.createObjectURL(file);
@@ -170,10 +187,10 @@ export default function AddUserForm() {
 
   // --------------------- اعتبارسنجی ---------------------
   const validate = () => {
-    if (!formData.name.trim()) return { ok: false, msg: "نام الزامی است" };
-    if (!formData.lastName.trim()) return { ok: false, msg: "نام خانوادگی الزامی است" };
-    if (formData.password.length < 6)
-      return { ok: false, msg: "رمز عبور باید حداقل ۶ کاراکتر باشد" };
+    if (!formData.name.trim() || formData.name.length < 3) return { ok: false, msg: "نام باید حداقل ۳ کاراکتر باشد" };
+    if (!formData.lastName.trim() || formData.lastName.length < 3) return { ok: false, msg: "نام خانوادگی حداقل ۳ کاراکتر" };
+    if (formData.password.length < 6 || formData.password.length > 20)
+      return { ok: false, msg: "رمز عبور باید بین ۶ تا ۲۰ کاراکتر باشد" };
 
     if (registerMethod === "phone") {
       const phone = onlyDigitsEnglish(formData.phone);
@@ -181,14 +198,13 @@ export default function AddUserForm() {
       if (!(phone.length === 11 && phone.startsWith("09")))
         return { ok: false, msg: "شماره تلفن نامعتبر است (مثال: 09123456789)" };
     } else {
-      if (!formData.email.trim() || !formData.email.includes("@"))
-        return { ok: false, msg: "ایمیل نامعتبر است" };
+      const regexEmail = /^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$/;
+      if (!formData.email.trim() || !regexEmail.test(formData.email))
+        return { ok: false, msg: "ایمیل وارد شده معتبر نیست" };
     }
 
     return { ok: true };
   };
-
-  // ✅ تغیر داده شد: تابع buildRegisterWith حذف شد چون در دیتای جدید نیازی به آن نیست
 
   // --------------------- ارسال ---------------------
   const handleSubmit = async (e) => {
@@ -203,30 +219,25 @@ export default function AddUserForm() {
         timer: 2000, 
         timerProgressBar: true, 
         showConfirmButton: false,
-        showCancelButton: false,
-        showCloseButton: false
       });
       return;
     }
 
     const purchaseCount = formData.PurchasedProducts.length;
-
-    // مقدار نهایی phone/email
     const phoneFinal = registerMethod === "phone" ? onlyDigitsEnglish(formData.phone) : "";
     const emailFinal = registerMethod === "email" ? formData.email : "";
 
-    // ✅ تغیر داده شد: ساختار payload طبق نمونه دیتای جدید تنظیم شد
+    // ساخت بدنه نهایی هماهنگ با اسکیما و API
     const payload = {
       id: formData.id,
-      name: formData.name,
-      lastName: formData.lastName,
-      gender: formData.gender, // اضافه شد
-      role: formData.role,     // اضافه شد
+      name: formData.name.trim(),
+      lastName: formData.lastName.trim(),
+      gender: formData.gender,
+      role: formData.role,
       dateLogin: formData.dateLogin ? toEnglishDigits(formData.dateLogin) : getNowJalali(),
       phone: phoneFinal,
       email: emailFinal,
-      password: formData.password, // اضافه شد به روت
-      // registerWith: حذف شد
+      password: formData.password,
       SuggestedCategories: formData.SuggestedCategories,
       PurchasedProducts: (formData.PurchasedProducts || []).map((p) => ({
         ...p,
@@ -234,41 +245,49 @@ export default function AddUserForm() {
       })),
       purchaseInvoice: [{ id: generateInvoiceId(), countProducts: purchaseCount }],
       img: formData.img || "", 
-      address: formData.address || "ادرس وجود ندارد", 
+      address: formData.address || "آدرس وجود ندارد", 
     };
 
     try {
-      console.log("Payload to send:", payload);
+      // ⭐ مرحله ۱: بررسی وجود کاربر از طریق روت اختصاصی check
+      const checkRes = await fetch(`${BASE_URL}/api/users/check`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: payload.email, phone: payload.phone }),
+      });
+      const checkData = await checkRes.json();
       
-      const res = await fetch("http://localhost:3000/api/users", {
+      if (checkData.exists) {
+        Swal.fire({ icon: "warning", title: "تکراری", text: "کاربری با این ایمیل یا شماره قبلاً ثبت شده است" });
+        return;
+      }
+
+      // ⭐ مرحله ۲: ارسال درخواست POST به روت /api/users
+      const res = await fetch(`${BASE_URL}${USERS_API}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
 
-      if (res.ok) {
+      const result = await res.json();
+
+      if (res.ok && result.success) {
         Swal.fire({
           icon: "success",
           title: "موفقیت!",
-          text: "کاربر با موفقیت اضافه شد ✅",
+          text: "کاربر جدید با موفقیت ایجاد شد ✅",
           timer: 2000, 
           timerProgressBar: true, 
           showConfirmButton: false,
-          showCancelButton: false,
-          showCloseButton: false
         });
 
-        // ریست فرم
-        if (imagePreview) URL.revokeObjectURL(imagePreview);
-        setImagePreview("");
-        setEnableProducts(false);
-        setRegisterMethod("phone");
+        // ریست فرم به حالت اولیه
         setFormData({
           id: Date.now().toString(),
           name: "",
           lastName: "",
-          gender: "male", // ریست مقدار پیش‌فرض
-          role: "user",   // ریست مقدار پیش‌فرض
+          gender: "male",
+          role: "user",
           phone: "",
           email: "",
           password: "",
@@ -279,23 +298,15 @@ export default function AddUserForm() {
           PurchasedProducts: [],
           purchaseInvoice: [{ id: generateInvoiceId(), countProducts: 0 }],
         });
+        setImagePreview("");
+        setEnableProducts(false);
 
         router.push("/panel/editUsers");
       } else {
-        Swal.fire({
-          icon: "error",
-          title: "خطا!",
-          text: "خطا در ارسال داده ❌",
-          confirmButtonColor: "#F23030",
-        });
+        Swal.fire({ icon: "error", title: "خطا!", text: result.error || "خطا در ثبت کاربر ❌" });
       }
     } catch (error) {
-      Swal.fire({
-        icon: "warning",
-        title: "مشکل شبکه!",
-        text: "ارتباط با سرور برقرار نشد ⚡",
-        confirmButtonColor: "#F59E0B",
-      });
+      Swal.fire({ icon: "warning", title: "مشکل شبکه!", text: "ارتباط با سرور برقرار نشد ⚡" });
     }
   };
 
@@ -308,8 +319,8 @@ export default function AddUserForm() {
         {/* آواتار + انتخاب تصویر (اختیاری) */}
         <div className="flex flex-col sm:flex-row sm:items-center gap-4">
           <div className="w-16 h-16 rounded-full border border-gray-3 flex items-center justify-center bg-gray-1 overflow-hidden">
-            {formData.img ? (
-              <img src={formData.img || null} alt="پیش‌نمایش" className="w-full h-full object-cover" />
+            {imagePreview ? (
+              <img src={imagePreview} alt="پیش‌نمایش" className="w-full h-full object-cover" />
             ) : (
               <UserCircleIcon className="w-10 h-10 text-blue" />
             )}
@@ -325,7 +336,7 @@ export default function AddUserForm() {
             </label>
             <input id="avatar" type="file" accept="image/*" className="hidden" onChange={handleImageChange} />
 
-            {formData.img && (
+            {imagePreview && (
               <button
                 type="button"
                 onClick={clearImage}
@@ -366,7 +377,7 @@ export default function AddUserForm() {
           </div>
         </div>
 
-        {/* ✅ تغیر داده شد: اضافه شدن فیلدهای جنسیت و نقش */}
+        {/* فیلدهای جنسیت و نقش (طبق اسکیما جدید) */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <label className="block text-sm font-medium text-dark mb-1">جنسیت</label>
@@ -402,10 +413,11 @@ export default function AddUserForm() {
             <button
               type="button"
               onClick={() => setRegisterMethod("phone")}
-              className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full border text-sm transition ${registerMethod === "phone"
+              className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full border text-sm transition ${
+                registerMethod === "phone"
                   ? "bg-blue text-white border-blue"
                   : "bg-gray-1 border-gray-3 text-dark hover:bg-gray-2"
-                }`}
+              }`}
             >
               <DevicePhoneMobileIcon className="w-4 h-4" />
               موبایل
@@ -413,10 +425,11 @@ export default function AddUserForm() {
             <button
               type="button"
               onClick={() => setRegisterMethod("email")}
-              className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full border text-sm transition ${registerMethod === "email"
+              className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full border text-sm transition ${
+                registerMethod === "email"
                   ? "bg-blue text-white border-blue"
                   : "bg-gray-1 border-gray-3 text-dark hover:bg-gray-2"
-                }`}
+              }`}
             >
               <EnvelopeIcon className="w-4 h-4" />
               ایمیل
@@ -480,9 +493,9 @@ export default function AddUserForm() {
           </div>
         </div>
 
-        {/* تاریخ ثبت‌نام */}
+        {/* تاریخ ثبت‌نام (DatePicker) */}
         <div>
-          <label className="block text-sm font-medium text-dark mb-1">تاریخ ثبت‌نام</label>
+          <label className="block text-sm font-medium text-dark mb-1">تاریخ ثبت‌نام (اختیاری)</label>
           <DatePicker
             calendar={persian}
             locale={persian_fa}
@@ -504,6 +517,7 @@ export default function AddUserForm() {
               }
             }}
             placeholder="تاریخ را انتخاب کنید"
+            inputClass="w-full rounded-md border border-gray-3 px-3 py-2 text-dark focus:outline-none focus:ring-2 focus:ring-blue"
           />
           {formData.dateLogin && (
             <p className="mt-2 text-xs text-gray-5">تاریخ انتخاب‌شده: {formData.dateLogin}</p>
@@ -525,17 +539,18 @@ export default function AddUserForm() {
 
         {/* دسته‌بندی‌های پیشنهادی */}
         <div>
-          <label className="block text-sm font-medium text-dark mb-2">دسته‌بندی‌های پیشنهادی</label>
+          <label className="block text-sm font-medium text-dark mb-2">دسته‌بندی‌های پیشنهادی (علاقه‌مندی‌ها)</label>
           <div className="flex flex-wrap gap-2">
             {categories.map((cat) => (
               <button
                 type="button"
                 key={cat}
                 onClick={() => handleCategoryChange(cat)}
-                className={`px-3 py-1 rounded-full border text-sm transition ${formData.SuggestedCategories.includes(cat)
+                className={`px-3 py-1 rounded-full border text-sm transition ${
+                  formData.SuggestedCategories.includes(cat)
                     ? "bg-blue text-white border-blue"
                     : "bg-gray-1 border-gray-3 text-dark hover:bg-gray-2"
-                  }`}
+                }`}
               >
                 {cat}
               </button>
@@ -557,7 +572,7 @@ export default function AddUserForm() {
           </label>
         </div>
 
-        {/* بخش محصولات */}
+        {/* بخش محصولات داینامیک */}
         {enableProducts && (
           <div className="rounded-md border border-gray-3 p-4 bg-gray-1 space-y-3">
             <div className="flex items-center justify-between">
@@ -570,16 +585,17 @@ export default function AddUserForm() {
             {loadingProducts ? (
               <p className="text-gray-6 text-sm">در حال بارگذاری محصولات...</p>
             ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 max-h-60 overflow-y-auto p-2">
                 {allProducts.map((product) => {
                   const isSelected = formData.PurchasedProducts.find((p) => p.id === product.id);
                   return (
                     <div
                       key={product.id}
-                      className={`p-3 border rounded-md cursor-pointer transition ${isSelected
+                      className={`p-3 border rounded-md cursor-pointer transition ${
+                        isSelected
                           ? "bg-blue text-white border-blue"
                           : "bg-white border-gray-3 hover:bg-gray-2"
-                        }`}
+                      }`}
                       onClick={() => handleProductToggle(product)}
                     >
                       <p className="font-medium text-sm">{product.title}</p>
@@ -599,9 +615,9 @@ export default function AddUserForm() {
 
         <button
           type="submit"
-          className="w-full py-2 rounded-lg bg-green text-white font-semibold hover:bg-green-dark transition"
+          className="w-full py-3 rounded-lg bg-green text-white font-semibold hover:bg-green-dark transition shadow-md"
         >
-          ذخیره کاربر
+          ذخیره و ثبت نهایی کاربر
         </button>
       </form>
     </div>

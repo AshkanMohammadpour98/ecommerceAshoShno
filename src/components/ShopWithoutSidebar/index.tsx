@@ -7,21 +7,26 @@ import SingleListItem from "../Shop/SingleListItem";
 import CustomSelect from "../ShopWithSidebar/CustomSelect";
 import InfiniteScroll from "react-infinite-scroll-component";
 
+// URLS
+const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL
+const PRODUCTS_URL = process.env.NEXT_PUBLIC_API_PRODUCTS_URL
+
 const ShopWithoutSidebar = () => {
   const [productStyle, setProductStyle] = useState("grid"); // حالت نمایش (grid یا list)
   const [productsData, setProductsData] = useState([]); // همه محصولات
   const [visibleProducts, setVisibleProducts] = useState([]); // محصولات قابل نمایش در صفحه
+  const [selectedOption, setSelectedOption] = useState(null);
 
   // گرفتن اطلاعات محصولات از API
   useEffect(() => {
     const fetchProducts = async () => {
       try {
-        const res = await fetch("http://localhost:3001/products");
+        const res = await fetch(`${BASE_URL}${PRODUCTS_URL}`);
         if (!res.ok) throw new Error("خطا در دریافت اطلاعات");
 
         const data = await res.json();
-        setProductsData(data); // ذخیره همه داده‌ها
-        setVisibleProducts(data.slice(0, 10)); // فقط 10 محصول اول نمایش داده میشه
+        setProductsData(data.data); // ذخیره همه داده‌ها
+        setVisibleProducts(data.data.slice(0, 10)); // فقط 10 محصول اول نمایش داده میشه
       } catch (err) {
         console.error(err);
         setProductsData([]); // اگر خطا بود، state خالی بمونه

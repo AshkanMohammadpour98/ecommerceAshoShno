@@ -204,7 +204,7 @@ const ProductItem = ({ item }: { item: Product }) => {
             <span className="text-dark">${item.discountedPrice}</span>
           </>
         ) : (
-          <span className="text-dark">${item.price}</span>
+          <span className="text-dark">${item.price.toLocaleString()}</span>
         )}
       </span>
     </div>

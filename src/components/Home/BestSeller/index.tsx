@@ -3,12 +3,15 @@ import React, { useEffect, useState } from "react";
 import SingleItem from "./SingleItem";
 import Image from "next/image";
 import Link from "next/link";
-// import shopData from "@/components/Shop/shopData";
+
+// URLS
+const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL
+const PRODUCTS_URL = process.env.NEXT_PUBLIC_API_PRODUCTS_URL
 
 const BestSeller = () => {
     const [products, setProducts] = useState([]);
     useEffect(() => {
-    fetch("http://localhost:3000/api/products")
+    fetch(`${BASE_URL}${PRODUCTS_URL}`)
       .then((res) => res.json())
       .then((data) => setProducts(data.data))
       .catch((err) => console.error("خطا در دریافت محصولات:", err));

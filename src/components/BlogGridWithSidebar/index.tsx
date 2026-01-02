@@ -9,10 +9,13 @@ import SearchForm from "../Blog/SearchForm";
 import LatestPosts from "../Blog/LatestPosts";
 import LatestProducts from "../Blog/LatestProducts";
 import Categories from "../Blog/Categories";
-// import shopData from "../Shop/shopData";
-// import { productsData } from "@/app/api/products/route";
-// import { tags } from "@/app/api/tags/route"
-// import {categories} from "@/app/api/categories/route"
+
+// URLS
+const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL
+const BLOGS_URL = process.env.NEXT_PUBLIC_API_BLOGS_URL
+const PRODUCTS_URL = process.env.NEXT_PUBLIC_API_PRODUCTS_URL
+const CATEGORIES_URL = process.env.NEXT_PUBLIC_API_CATEGORIES_URL
+const TAGS_URL = process.env.NEXT_PUBLIC_API_TAGS_URL
 
 const BlogGridWithSidebar = async () => {
   // ✅ تعریف دسته‌بندی‌ها (نام‌ها انگلیسی باقی می‌مانند)
@@ -39,7 +42,7 @@ const BlogGridWithSidebar = async () => {
 
   // اینجا مستقیم fetch میکنیم → SSR
     // اینجا مستقیم fetch میکنیم → SSR
-  const resBlogs = await fetch("http://localhost:3000/api/blogs", {
+  const resBlogs = await fetch(`${BASE_URL}${BLOGS_URL}`, {
     cache: "no-store", // برای اینکه هر بار رفرش شه (معادل getServerSideProps)
   });
   const blogData = await resBlogs.json(); // داده‌ها به‌طور خودکار پارس می‌شوند
@@ -48,7 +51,7 @@ const BlogGridWithSidebar = async () => {
   
   
   // اینجا مستقیم fetch میکنیم → SSR
-  const resProducts = await fetch("http://localhost:3000/api/products", {
+  const resProducts = await fetch(`${BASE_URL}${PRODUCTS_URL}`, {
     cache: "no-store", // برای اینکه هر بار رفرش شه (معادل getServerSideProps)
   });
   const productsData = await resProducts.json();
@@ -56,7 +59,7 @@ const BlogGridWithSidebar = async () => {
 
 
   // اینجا مستقیم fetch میکنیم → SSR
-  const resCategories = await fetch("http://localhost:3000/api/categorys", {
+  const resCategories = await fetch(`${BASE_URL}${CATEGORIES_URL}`, {
     cache: "no-store", // برای اینکه هر بار رفرش شه (معادل getServerSideProps)
   });
   const categories = await resCategories.json();
@@ -64,7 +67,7 @@ const BlogGridWithSidebar = async () => {
 
 
     // اینجا مستقیم fetch میکنیم → SSR
-  const resTags = await fetch("http://localhost:3000/api/tags", {
+  const resTags = await fetch(`${BASE_URL}${TAGS_URL}`, {
     cache: "no-store", // برای اینکه هر بار رفرش شه (معادل getServerSideProps)
   });
   const tags = await resTags.json();

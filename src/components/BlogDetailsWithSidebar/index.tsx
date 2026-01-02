@@ -7,17 +7,20 @@ import LatestProducts from "../Blog/LatestProducts";
 import Image from "next/image";
 // import { productsData } from "@/app/api/products/route";
 
-
+// URLS
+const PRODUCTS_URL = process.env.NEXT_PUBLIC_API_PRODUCTS_URL
+const BLOGS_URL = process.env.NEXT_PUBLIC_API_BLOGS_URL
+const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL
 
 const BlogDetailsWithSidebar = async () => {
   // اینجا مستقیم fetch میکنیم → SSR
-  const resBlogs = await fetch("http://localhost:3000/api/blogs", {
+  const resBlogs = await fetch(`${BASE_URL}${BLOGS_URL}`, {
     cache: "no-store", // برای اینکه هر بار رفرش شه (معادل getServerSideProps)
   });
   const blogData = await resBlogs.json();
 
   // اینجا مستقیم fetch میکنیم → SSR
-  const resProducts = await fetch("http://localhost:3000/api/products", {
+  const resProducts = await fetch(`${BASE_URL}${PRODUCTS_URL}`, {
     cache: "no-store", // برای اینکه هر بار رفرش شه (معادل getServerSideProps)
   });
   const productsData = await resProducts.json();

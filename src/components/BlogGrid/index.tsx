@@ -5,9 +5,13 @@ import Breadcrumb from "../Common/Breadcrumb";
 // import blogData from "./blogData";
 import BlogItem from "../Blog/BlogItem";
 
+// URLS
+const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL
+const BLOGS_URL = process.env.NEXT_PUBLIC_API_BLOGS_URL
+
 const BlogGrid = async () => {
    // اینجا مستقیم fetch میکنیم → SSR
-  const resBlogs = await fetch("http://localhost:3000/api/blogs", {
+  const resBlogs = await fetch(`${BASE_URL}${BLOGS_URL}`, {
     cache: "no-store", // برای اینکه هر بار رفرش شه (معادل getServerSideProps)
   });
   const blogData = await resBlogs.json();

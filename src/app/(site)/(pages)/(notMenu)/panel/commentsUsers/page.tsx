@@ -12,8 +12,9 @@ import {
 } from "@heroicons/react/24/outline";
 
 // اگر در محیط‌های مختلف اجرا می‌کنی، بهتره از env استفاده کنی
-const API_URL =
-  process.env.NEXT_PUBLIC_COMMENTS_API_URL || "http://localhost:3000/api/comments";
+const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL;
+const COMMENTS_URL = process.env.NEXT_PUBLIC_API_COMMENTS_URL;
+
 
 type CommentItem = {
   id?: number | string; // برای ویرایش/حذف ضروری است
@@ -47,7 +48,7 @@ const CommentsPage: React.FC = () => {
   setLoading(true);
   setErr(null);
   try {
-    const res = await fetch(API_URL, { cache: "no-store" });
+    const res = await fetch(`${BASE_URL}${COMMENTS_URL}`, { cache: "no-store" });
     if (!res.ok) throw new Error(`خطای سرور: ${res.status}`);
 
     const json = await res.json();
@@ -112,7 +113,7 @@ const CommentsPage: React.FC = () => {
   );
 
   try {
-    const res = await fetch(`${API_URL}/${payload.id}`, {
+    const res = await fetch(`${BASE_URL}${COMMENTS_URL}/${payload.id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -146,7 +147,7 @@ const CommentsPage: React.FC = () => {
   setData((d) => d.filter((x) => x.id !== deleting.id));
 
   try {
-    const res = await fetch(`${API_URL}/${deleting.id}`, {
+    const res = await fetch(`${BASE_URL}${COMMENTS_URL}/${deleting.id}`, {
       method: "DELETE",
     });
     if (!res.ok) throw new Error(`حذف ناموفق: ${res.status}`);

@@ -1,44 +1,47 @@
 "use client";
-import React, { createContext, useContext, useState, ReactNode } from "react";
+import React, { createContext, useContext, useState, ReactNode, useEffect, useCallback } from "react";
 
-// 🔹 تعریف نوع کانتکست
+// 🔹 تعریف ساختار داده‌ای کانتکست
 interface CartModalContextType {
   isCartModalOpen: boolean;
   openCartModal: () => void;
   closeCartModal: () => void;
+  toggleCartModal: () => void;
 }
 
-// 🔹 ایجاد کانتکست با مقدار اولیه undefined
-const CartModalContext = createContext<CartModalContextType | undefined>(
-  undefined
-);
+const CartModalContext = createContext<CartModalContextType | undefined>(undefined);
 
-// 🔹 hook برای دسترسی آسان به کانتکست
 export const useCartModalContext = () => {
   const context = useContext(CartModalContext);
   if (!context) {
-    throw new Error(
-      "useCartModalContext must be used within a CartModalProvider"
-    );
+    throw new Error("useCartModalContext must be used within a CartModalProvider");
   }
   return context;
 };
 
-// 🔹 تایپ props برای Provider
-interface CartModalProviderProps {
-  children: ReactNode;
-}
-
-// 🔹 کامپوننت Provider
-export const CartModalProvider = ({ children }: CartModalProviderProps) => {
+export const CartModalProvider = ({ children }: { children: ReactNode }) => {
   const [isCartModalOpen, setIsCartModalOpen] = useState(false);
 
-  const openCartModal = () => setIsCartModalOpen(true);
-  const closeCartModal = () => setIsCartModalOpen(false);
+  // استفاده از useCallback برای جلوگیری از رندرهای بیهوده و تداخل منطقی
+  const openCartModal = useCallback(() => setIsCartModalOpen(true), []);
+  const closeCartModal = useCallback(() => setIsCartModalOpen(false), []);
+  const toggleCartModal = useCallback(() => {
+    setIsCartModalOpen((prev) => !prev);
+  }, []);
+
+  // 🔹 قفل کردن اسکرول بدنه سایت هنگام باز بودن سبد خرید برای UX بهتر
+  useEffect(() => {
+    if (isCartModalOpen) {
+      document.body.style.overflow = "hidden";
+      document.body.style.paddingRight = "0px"; // جلوگیری از پرش صفحه در ویندوز
+    } else {
+      document.body.style.overflow = "unset";
+    }
+  }, [isCartModalOpen]);
 
   return (
     <CartModalContext.Provider
-      value={{ isCartModalOpen, openCartModal, closeCartModal }}
+      value={{ isCartModalOpen, openCartModal, closeCartModal, toggleCartModal }}
     >
       {children}
     </CartModalContext.Provider>

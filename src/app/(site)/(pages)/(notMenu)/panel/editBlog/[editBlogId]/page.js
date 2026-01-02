@@ -8,8 +8,19 @@ import DateObject from "react-date-object";
 import persian from "react-date-object/calendars/persian";
 import persian_fa from "react-date-object/locales/persian_fa";
 
+
+// URLS
+const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL
+const BLOGS_URL = process.env.NEXT_PUBLIC_API_BLOGS_URL;
+const CATEGORYS_URL = process.env.NEXT_PUBLIC_API_CATEGORYS_URL
+
 export default function EditBlogForm({ params }) {
-  const blogId = params.editBlogId;
+
+  const unwrappedParams = React.use(params);
+  const blogId = unwrappedParams.editBlogId; // دقیقاً همنام با پوشه [editBlogId]
+  console.log(blogId , 'blogID...');
+  
+  
   const router = useRouter();
 
   const [blogData, setBlogData] = useState(null);
@@ -25,14 +36,15 @@ export default function EditBlogForm({ params }) {
 
   // ✅ گرفتن دیتای بلاگ و دسته‌بندی‌ها
   useEffect(() => {
-    fetch(`http://localhost:3001/blogData/${blogId}`)
+    fetch(`${BASE_URL}${BLOGS_URL}/${blogId}`)
       .then((res) => res.json())
       .then((data) => {
         setBlogData(data);
+        
 
         // ست کردن تاریخ پیش‌فرض DatePicker
-        if (data && data.date) {
-          const enDate = faToEnNumbers(data.date); // "1404/07/02"
+        if (data.date) {
+          const enDate = faToEnNumbers(data.date); 
           const [year, month, day] = enDate.split("/").map(Number);
 
           const defaultDate = new DateObject({
@@ -49,10 +61,13 @@ export default function EditBlogForm({ params }) {
       })
       .catch(() => setBlogData(null));
 
-    fetch("http://localhost:3001/categories")
+    fetch(`${BASE_URL}${CATEGORYS_URL}`)
       .then((res) => res.json())
-      .then((data) => setCategories(data))
+      .then((data) => setCategories(data.data))
       .catch(() => setCategories([]));
+
+      console.log(blogData , categories , 'blog data ,... , categories...');
+      
   }, [blogId]);
 
   if (!blogData) {
@@ -69,7 +84,7 @@ export default function EditBlogForm({ params }) {
     const file = e.target.files[0];
     if (file) {
       const imgURL = URL.createObjectURL(file);
-      setBlogData({ ...blogData, img: imgURL });
+      setBlogData({ ...blogData, img: imgURL  });
     }
   };
 
@@ -93,7 +108,7 @@ export default function EditBlogForm({ params }) {
     const updatedBlog = { ...blogData, date: formattedDate };
 
     try {
-      const res = await fetch(`http://localhost:3001/blogData/${blogId}`, {
+      const res = await fetch(`${BASE_URL}${BLOGS_URL}/${blogId}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(updatedBlog),

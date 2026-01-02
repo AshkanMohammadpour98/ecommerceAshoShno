@@ -1,3 +1,5 @@
+// shopCategoris/[categorieId]
+
 "use client";
 
 import React, { useState, useEffect, useCallback } from "react";
@@ -14,6 +16,13 @@ import PriceDropdown from "@/components/ShopWithSidebar/PriceDropdown";
 import SingleGridItem from "@/components/Shop/SingleGridItem";
 import SingleListItem from "@/components/Shop/SingleListItem";
 
+// URLS
+const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL
+const PRODUCTS_URL = process.env.NEXT_PUBLIC_API_PRODUCTS_URL
+const CATEGORYS_URL = process.env.NEXT_PUBLIC_API_CATEGORYS_URL
+const OPTIONS_URL = process.env.NEXT_PUBLIC_API_OPTIONS_URL
+const GENDERS_URL = process.env.NEXT_PUBLIC_API_GENDERS_URL
+
 const ShopWithSidebar = () => {
   // -----------------------------
   // 🧠 state ها
@@ -21,6 +30,7 @@ const ShopWithSidebar = () => {
   const [productStyle, setProductStyle] = useState("grid"); // حالت نمایش: گرید یا لیست
   const [productSidebar, setProductSidebar] = useState(false); // باز و بسته شدن سایدبار
   const [stickyMenu, setStickyMenu] = useState(false); // چسبندگی منو بالا هنگام اسکرول
+  const [selectedOption, setSelectedOption] = useState(null);
 
   // داده‌ها از سرور گرفته می‌شوند
   const [productsData, setProductsData] = useState([]);
@@ -48,6 +58,8 @@ const ShopWithSidebar = () => {
   // 📜 چسباندن منو در هنگام اسکرول
   // -----------------------------
   useEffect(() => {
+
+
     const handleScroll = () => setStickyMenu(window.scrollY >= 80);
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
@@ -67,16 +79,15 @@ const ShopWithSidebar = () => {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [productSidebar]);
 
-  // -----------------------------
-  // 🔄 دریافت داده از JSON Server
-  // -----------------------------
+
+
   const fetchProducts = useCallback(async () => {
     try {
       const urls = [
-        "http://localhost:3001/products",
-        "http://localhost:3001/categories",
-        "http://localhost:3001/genders",
-        "http://localhost:3001/options",
+        `${BASE_URL}${PRODUCTS_URL}`,
+        `${BASE_URL}${CATEGORYS_URL}`,
+        `${BASE_URL}${GENDERS_URL}`,
+        `${BASE_URL}${OPTIONS_URL}`,
       ];
 
       const [resProducts, resCategories, resGenders, resOptions] =
@@ -93,10 +104,10 @@ const ShopWithSidebar = () => {
         resOptions.json(),
       ]);
 
-      setProductsData(products);
-      setCategories(categoriesData);
-      setGenders(gendersData);
-      setOptions(optionsData);
+      setProductsData(products.data);
+      setCategories(categoriesData.data);
+      setGenders(gendersData.data);
+      setOptions(optionsData.data);
     } catch (err) {
       console.error("❌ خطا:", err);
       setProductsData([]);
@@ -104,6 +115,7 @@ const ShopWithSidebar = () => {
       setGenders([]);
       setOptions([]);
     }
+
   }, []);
 
   // اجرای تابع دریافت داده در شروع
@@ -114,15 +126,57 @@ const ShopWithSidebar = () => {
   // -----------------------------
   // 🔍 فیلتر کردن محصولات بر اساس دسته‌بندی
   // -----------------------------
-  useEffect(() => {
-    if (!decodedCategorieId) {
-      setFilteredProducts(productsData);
-      return;
-    }
-    setFilteredProducts(
-      productsData.filter((item) => item.categorie === decodedCategorieId)
+useEffect(() => {
+  let result = [...productsData];
+
+  // 1️⃣ فیلتر دسته‌بندی
+  if (decodedCategorieId) {
+    result = result.filter(
+      (item) => item.categorie === decodedCategorieId
     );
-  }, [productsData, decodedCategorieId]);
+  }
+  const persianDateToNumber = (date) => {
+  if (!date) return 0;
+  return Number(date.replaceAll("/", ""));
+};
+
+
+  // 2️⃣ sort / filter
+  if (selectedOption) {
+    switch (selectedOption.value) {
+      case "0": // جدیدها
+        result.sort((a, b) =>
+          persianDateToNumber(b.date) - persianDateToNumber(a.date)
+        );
+        break;
+
+      case "1": // پرفروش‌ها
+        result.sort((a, b) => (b.reviews ?? 0) - (a.reviews ?? 0));
+        break;
+
+      case "2": // قدیمی‌ها
+        result.sort((a, b) =>
+          persianDateToNumber(a.date) - persianDateToNumber(b.date)
+        );
+        break;
+
+      case "3": // در حال اتمام
+        result = result.filter((item) => (item.count ?? 0) <= 5);
+        break;
+
+      default:
+        break;
+    }
+  }
+
+  setFilteredProducts(result);
+}, [productsData, decodedCategorieId, selectedOption]);
+
+  // console.log(options , 'option custom selet header...');
+
+  const handleOptionChange = (option) => {
+    setSelectedOption(option);
+  };
 
   // -----------------------------
   // 🧱 نمایش خروجی
@@ -142,21 +196,19 @@ const ShopWithSidebar = () => {
             {/* ----------------------------- */}
             <aside
               className={`sidebar-content fixed xl:z-1 z-9999 left-0 top-0 xl:translate-x-0 xl:static max-w-[310px] xl:max-w-[270px] w-full ease-out duration-200 
-                ${
-                  productSidebar
-                    ? "translate-x-0 bg-white p-5 h-screen overflow-y-auto"
-                    : "-translate-x-full"
+                ${productSidebar
+                  ? "translate-x-0 bg-white p-5 h-screen overflow-y-auto"
+                  : "-translate-x-full"
                 }`}
             >
               {/* دکمه باز/بسته شدن در موبایل */}
               <button
                 onClick={() => setProductSidebar(!productSidebar)}
                 aria-label="toggle sidebar"
-                className={`xl:hidden absolute -right-12.5 sm:-right-8 flex items-center justify-center w-8 h-8 rounded-md bg-white shadow-1 ${
-                  stickyMenu
+                className={`xl:hidden absolute -right-12.5 sm:-right-8 flex items-center justify-center w-8 h-8 rounded-md bg-white shadow-1 ${stickyMenu
                     ? "lg:top-20 sm:top-34.5 top-35"
                     : "lg:top-24 sm:top-39 top-37"
-                }`}
+                  }`}
               >
                 <svg width="24" height="24" fill="currentColor">
                   <path d="M4 6h16M4 12h16M4 18h16" />
@@ -177,7 +229,6 @@ const ShopWithSidebar = () => {
                         پاک کردن همه
                       </button>
                     </div>
-
                     <CategoryDropdown categories={categories} />
                     <GenderDropdown genders={genders} />
                     <SizeDropdown />
@@ -195,7 +246,11 @@ const ShopWithSidebar = () => {
               {/* نوار بالای محصولات */}
               {filteredProducts.length > 0 && (
                 <div className="rounded-lg bg-white shadow-1 pl-3 pr-2.5 py-2.5 mb-6 flex items-center justify-between">
-                  <CustomSelect options={options} />
+                  <CustomSelect
+                    options={options}
+                    onChange={handleOptionChange}
+                  />
+
                   <p>
                     نمایش{" "}
                     <span className="text-dark">
@@ -208,11 +263,10 @@ const ShopWithSidebar = () => {
                     {/* حالت گرید */}
                     <button
                       onClick={() => setProductStyle("grid")}
-                      className={`${
-                        productStyle === "grid"
+                      className={`${productStyle === "grid"
                           ? "bg-blue border-blue text-white"
                           : "text-dark bg-gray-1 border-gray-3"
-                      } flex items-center justify-center w-10.5 h-9 rounded-[5px] border`}
+                        } flex items-center justify-center w-10.5 h-9 rounded-[5px] border`}
                     >
                       <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
                         <rect x="1" y="1" width="6" height="6" stroke="currentColor" strokeWidth="1.5" />
@@ -225,11 +279,10 @@ const ShopWithSidebar = () => {
                     {/* حالت لیست */}
                     <button
                       onClick={() => setProductStyle("list")}
-                      className={`${
-                        productStyle === "list"
+                      className={`${productStyle === "list"
                           ? "bg-blue border-blue text-white"
                           : "text-dark bg-gray-1 border-gray-3"
-                      } flex items-center justify-center w-10.5 h-9 rounded-[5px] border`}
+                        } flex items-center justify-center w-10.5 h-9 rounded-[5px] border`}
                     >
                       <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
                         <line x1="1" y1="4" x2="17" y2="4" stroke="currentColor" strokeWidth="1.5" />
@@ -243,11 +296,10 @@ const ShopWithSidebar = () => {
 
               {/* 🧱 لیست محصولات */}
               <div
-                className={`${
-                  productStyle === "grid" && filteredProducts.length > 0
+                className={`${productStyle === "grid" && filteredProducts.length > 0
                     ? "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-7.5 gap-y-9"
                     : "flex flex-col gap-7.5"
-                }`}
+                  }`}
               >
                 {Array.isArray(filteredProducts) && filteredProducts.length > 0 ? (
                   filteredProducts.map((item) =>

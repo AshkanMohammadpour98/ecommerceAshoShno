@@ -52,7 +52,7 @@ const SingleGridItem = ({ item }) => {
       <div className="relative overflow-hidden flex items-center justify-center rounded-lg bg-white shadow-1 min-h-[270px] mb-4">
         {/* نمایش تصویر محصول */}
         <Image
-          src={item?.imgs?.previews?.[0] || "/images/default-product.png"}
+          src={item?.imgs?.previews?.[0] || "/images/notImg.png"}
           alt={item.title || "product image"}
           width={250}
           height={250}

@@ -9,6 +9,10 @@ import {
   selectDiscount,
 } from "@/redux/features/cart-slice";
 
+// URLS
+const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL
+const DISCOUNT_CODES_URL = process.env.NEXT_PUBLIC_API_DISCOUNT_CODES_URL
+
 const Discount = () => {
   const dispatch = useAppDispatch();
   const appliedCoupon = useAppSelector(selectAppliedCoupon);
@@ -36,8 +40,8 @@ const Discount = () => {
     try {
       const code = couponCode.trim().toUpperCase();
       console.log(code , "code discountCode");
-      
-      const res = await fetch(`http://localhost:3000/api/discountCodes?discountCode=${code}`);
+
+      const res = await fetch(`${BASE_URL}${DISCOUNT_CODES_URL}?discountCode=${code}`);
 
       if (!res.ok) throw new Error("خطا در دریافت اطلاعات از سرور");
 

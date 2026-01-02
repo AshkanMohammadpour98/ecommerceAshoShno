@@ -18,9 +18,37 @@ const ShopWithSidebar = () => {
   const [productSidebar, setProductSidebar] = useState(false);
   const [stickyMenu, setStickyMenu] = useState(false);
   const [productsData, setProductsData] = useState([]);
-  const [categories , setCategories] = useState([])
-  const [genders , setGenders] = useState([])
-    const [visibleProducts, setVisibleProducts] = useState([]); // محصولات قابل نمایش در صفحه
+  const [categories, setCategories] = useState([])
+  const [genders, setGenders] = useState([])
+  const [visibleProducts, setVisibleProducts] = useState([]); // محصولات قابل نمایش در صفحه
+  const [selectedCategories, setSelectedCategories] = useState([]);
+  const [options, setOptions] = useState([]);
+  const [selectedOption, setSelectedOption] = useState(null);
+
+  // 📌 وقتی گزینه‌ای از CustomSelect انتخاب شد، این تابع فراخوانی می‌شود
+const handleOptionChange = (option) => {
+  setSelectedOption(option); // ذخیره گزینه انتخاب شده
+  // مرتب‌سازی محصولات بر اساس گزینه
+  const sortedProducts = sortProducts(productsData, option.value);
+  // نمایش فقط ۱۰ محصول اول در ابتدا
+  setVisibleProducts(sortedProducts.slice(0, 10));
+};
+// 📌 هر وقت دسته بندی، option یا داده محصولات تغییر کرد، visibleProducts به روز می‌شود
+useEffect(() => {
+  // ابتدا فیلتر بر اساس دسته بندی
+  const filtered = selectedCategories.length === 0
+    ? productsData
+    : productsData.filter(product =>
+        selectedCategories.some(cat => cat.name === product.categorie)
+      );
+
+  // سپس مرتب سازی بر اساس گزینه انتخاب شده
+  const sorted = selectedOption ? sortProducts(filtered, selectedOption.value) : filtered;
+
+  // فقط ۱۰ محصول اول نمایش داده می‌شود
+  setVisibleProducts(sorted.slice(0, 10));
+}, [selectedOption, selectedCategories, productsData]);
+
 
   const handleStickyMenu = () => {
     if (window.scrollY >= 80) {
@@ -30,11 +58,26 @@ const ShopWithSidebar = () => {
     }
   };
 
-  const options = [
-    { label: "جدید  ها", value: "0" },
-    { label: "پرفروش  ها", value: "1" },
-    { label: "قدیمی ها", value: "2" },
-  ];
+  useEffect(() => {
+    const fetchOptions = async () => {
+      try {
+        const res = await fetch("http://localhost:3000/api/options");
+        const data = await res.json();
+
+        if (data.success) {
+          setOptions(data.data);
+          setSelectedOption(data.data[0]); // پیش‌فرض
+        }
+      } catch (error) {
+        console.error("Error fetching options:", error);
+      }
+    };
+
+    fetchOptions();
+  }, []);
+  console.log(options);
+
+
 
   useEffect(() => {
     window.addEventListener("scroll", handleStickyMenu);
@@ -55,25 +98,25 @@ const ShopWithSidebar = () => {
     };
 
   });
-    useEffect(() => {
+  useEffect(() => {
     const fetchProducts = async () => {
       try {
-        const res = await fetch("http://localhost:3001/products"); 
+        const res = await fetch("http://localhost:3000/api/products");
         if (!res.ok) throw new Error("خطا در دریافت اطلاعات");
 
         const data = await res.json();
-        setProductsData(data); // ذخیره داده‌ها در state
-         setVisibleProducts(data.slice(0, 10)); // فقط 10 محصول اول نمایش داده میشه
+        setProductsData(data.data); // ذخیره داده‌ها در state
+        setVisibleProducts(data.data.slice(0, 10)); // فقط 10 محصول اول نمایش داده میشه
 
-        const resCategories = await fetch("http://localhost:3001/categories"); 
+        const resCategories = await fetch("http://localhost:3000/api/categorys");
         if (!resCategories.ok) throw new Error("خطا در دریافت اطلاعات دسته بندی ها");
-        const dataCategories  = await resCategories.json();
-        setCategories(dataCategories)
+        const dataCategories = await resCategories.json();
+        setCategories(dataCategories.data)
 
-        const resGenders = await fetch("http://localhost:3001/genders"); 
+        const resGenders = await fetch("http://localhost:3000/api/genders");
         if (!resGenders.ok) throw new Error("خطا در دریافت اطلاعات جنسیت ها  ");
-        const dataGenders  = await resGenders.json();
-        setGenders(dataGenders)
+        const dataGenders = await resGenders.json();
+        setGenders(dataGenders.data)
 
 
       } catch (err) {
@@ -88,14 +131,74 @@ const ShopWithSidebar = () => {
   }, []); // فقط یک بار وقتی کامپوننت mount میشه اجرا میشه
   // console.log(productsData);
 
-   // تابع برای لود کردن محصولات بیشتر در InfiniteScroll
+
+// 📌 تابع sortProducts: محصولات را بر اساس گزینه انتخابی مرتب می‌کند
+// optionValue: مقدار value از گزینه‌های CustomSelect
+const sortProducts = (products, optionValue) => {
+  const sorted = [...products]; // کپی از آرایه محصولات تا آرایه اصلی تغییر نکند
+
+  switch(optionValue) {
+    case "0": // جدیدها - مرتب‌سازی بر اساس تاریخ جدیدترین
+      sorted.sort((a, b) => {
+        const [ay, am, ad] = a.date.split("/").map(Number);
+        const [by, bm, bd] = b.date.split("/").map(Number);
+        const dateA = new Date(ay, am - 1, ad);
+        const dateB = new Date(by, bm - 1, bd);
+        return dateB - dateA; // جدیدترین بالا
+      });
+      break;
+
+    case "1": // پرفروش‌ها - مرتب‌سازی بر اساس تعداد نظرات (reviews)
+      sorted.sort((a, b) => b.reviews - a.reviews);
+      break;
+
+    case "2": // قدیمی‌ها - مرتب‌سازی بر اساس تاریخ قدیمی‌ترین
+      sorted.sort((a, b) => {
+        const [ay, am, ad] = a.date.split("/").map(Number);
+        const [by, bm, bd] = b.date.split("/").map(Number);
+        const dateA = new Date(ay, am - 1, ad);
+        const dateB = new Date(by, bm - 1, bd);
+        return dateA - dateB; // قدیمی‌ترین بالا
+      });
+      break;
+
+    case "3": // درحال اتمام - مرتب‌سازی بر اساس موجودی کمتر
+      sorted.sort((a, b) => a.count - b.count);
+      break;
+
+    default:
+      break;
+  }
+
+  return sorted;
+};
+
+
+  // اگه دسته بندی هایی داشتیم  فیلتری انجام بشه  و محصولات  اون فیلتر دستبه بندی بیان  
+  const filteredProducts =
+    selectedCategories.length === 0
+      ? productsData
+      : productsData.filter((product) =>
+        selectedCategories.some(
+          (category) => category.name === product.categorie
+        )
+      );
+
+
+  // تابع برای لود کردن محصولات بیشتر در InfiniteScroll
   const fetchMoreData = () => {
-    const nextProducts = productsData.slice(
+    const nextProducts = filteredProducts.slice(
       visibleProducts.length,
       visibleProducts.length + 10
     );
-    setVisibleProducts([...visibleProducts, ...nextProducts]);
+
+    setVisibleProducts((prev) => [...prev, ...nextProducts]);
   };
+
+  // selectedCategories یه ارایه هست که دسته بندی های انتخاب شده رو میده
+  console.log(selectedCategories);
+  console.log(productsData);
+
 
   return (
     <>
@@ -109,16 +212,16 @@ const ShopWithSidebar = () => {
             {/* <!-- Sidebar Start --> */}
             <div
               className={`sidebar-content fixed xl:z-1 z-9999 left-0 top-0 xl:translate-x-0 xl:static max-w-[310px] xl:max-w-[270px] w-full ease-out duration-200 ${productSidebar
-                  ? "translate-x-0 bg-white p-5 h-screen overflow-y-auto"
-                  : "-translate-x-full"
+                ? "translate-x-0 bg-white p-5 h-screen overflow-y-auto"
+                : "-translate-x-full"
                 }`}
             >
               <button
                 onClick={() => setProductSidebar(!productSidebar)}
                 aria-label="button for product sidebar toggle"
                 className={`xl:hidden absolute -right-12.5 sm:-right-8 flex items-center justify-center w-8 h-8 rounded-md bg-white shadow-1 ${stickyMenu
-                    ? "lg:top-20 sm:top-34.5 top-35"
-                    : "lg:top-24 sm:top-39 top-37"
+                  ? "lg:top-20 sm:top-34.5 top-35"
+                  : "lg:top-24 sm:top-39 top-37"
                   }`}
               >
                 <svg
@@ -155,7 +258,10 @@ const ShopWithSidebar = () => {
                   </div>
 
                   {/* <!-- category box --> */}
-                  <CategoryDropdown categories={categories} />
+                  <CategoryDropdown categories={categories}
+                    selectedCategories={selectedCategories}
+                    setSelectedCategories={setSelectedCategories}
+                  />
 
                   {/* <!-- gender box --> */}
                   <GenderDropdown genders={genders} />
@@ -179,7 +285,12 @@ const ShopWithSidebar = () => {
                 <div className="flex items-center justify-between">
                   {/* <!-- top bar left --> */}
                   <div className="flex flex-wrap items-center gap-4">
-                    <CustomSelect options={options} />
+                    <CustomSelect
+                      options={options}
+                      selectedOption={selectedOption}
+                      setSelectedOption={setSelectedOption}
+                      onChange={(option) => setSelectedOption(option)}
+                    />
 
                     <p>
                       نمایش <span className="text-dark">9 از 50</span>{" "}
@@ -193,8 +304,8 @@ const ShopWithSidebar = () => {
                       onClick={() => setProductStyle("grid")}
                       aria-label="button for product grid tab"
                       className={`${productStyle === "grid"
-                          ? "bg-blue border-blue text-white"
-                          : "text-dark bg-gray-1 border-gray-3"
+                        ? "bg-blue border-blue text-white"
+                        : "text-dark bg-gray-1 border-gray-3"
                         } flex items-center justify-center w-10.5 h-9 rounded-[5px] border ease-out duration-200 hover:bg-blue hover:border-blue hover:text-white`}
                     >
                       <svg
@@ -236,8 +347,8 @@ const ShopWithSidebar = () => {
                       onClick={() => setProductStyle("list")}
                       aria-label="button for product list tab"
                       className={`${productStyle === "list"
-                          ? "bg-blue border-blue text-white"
-                          : "text-dark bg-gray-1 border-gray-3"
+                        ? "bg-blue border-blue text-white"
+                        : "text-dark bg-gray-1 border-gray-3"
                         } flex items-center justify-center w-10.5 h-9 rounded-[5px] border ease-out duration-200 hover:bg-blue hover:border-blue hover:text-white`}
                     >
                       <svg
@@ -267,19 +378,19 @@ const ShopWithSidebar = () => {
               </div>
 
               {/* <!-- Products Grid Tab Content Start --> */}
-               {/* بخش محصولات با اسکرول بی‌نهایت */}
+              {/* بخش محصولات با اسکرول بی‌نهایت */}
               <InfiniteScroll
                 dataLength={visibleProducts.length} // تعداد محصولاتی که لود شده
                 next={fetchMoreData} // تابع برای لود بیشتر
-                hasMore={visibleProducts.length < productsData.length} // بررسی اینکه آیا محصول بیشتری وجود دارد
+                hasMore={visibleProducts.length < filteredProducts.length} // بررسی اینکه آیا محصول بیشتری وجود دارد
                 loader={
                   <h4 className="text-center text-blue-600 font-medium animate-pulse py-4">
-                     در حال بارگذاری...
+                    در حال بارگذاری...
                   </h4>
                 }
                 endMessage={
                   <p className="text-center text-green-600 font-semibold py-4 border-t border-gray-200 mt-6">
-                     همه محصولات نمایش داده شدند
+                    همه محصولات نمایش داده شدند
                   </p>
                 }
               >
@@ -298,127 +409,8 @@ const ShopWithSidebar = () => {
                   )}
                 </div>
               </InfiniteScroll>
-              {/* <!-- Products Grid Tab Content End --> */}
-
-              {/* <!-- Products Pagination Start --> */}
-              {/* <div className="flex justify-center mt-15">
-                <div className="bg-white shadow-1 rounded-md p-2">
-                  <ul className="flex items-center">
-                    <li>
-                      <button
-                        id="paginationLeft"
-                        aria-label="button for pagination left"
-                        type="button"
-                        disabled
-                        className="flex items-center justify-center w-8 h-9 ease-out duration-200 rounded-[3px disabled:text-gray-4"
-                      >
-                        <svg
-                          className="fill-current"
-                          width="18"
-                          height="18"
-                          viewBox="0 0 18 18"
-                          fill="none"
-                          xmlns="http://www.w3.org/2000/svg"
-                        >
-                          <path
-                            d="M12.1782 16.1156C12.0095 16.1156 11.8407 16.0594 11.7282 15.9187L5.37197 9.45C5.11885 9.19687 5.11885 8.80312 5.37197 8.55L11.7282 2.08125C11.9813 1.82812 12.3751 1.82812 12.6282 2.08125C12.8813 2.33437 12.8813 2.72812 12.6282 2.98125L6.72197 9L12.6563 15.0187C12.9095 15.2719 12.9095 15.6656 12.6563 15.9187C12.4876 16.0312 12.347 16.1156 12.1782 16.1156Z"
-                            fill=""
-                          />
-                        </svg>
-                      </button>
-                    </li>
-
-                    <li>
-                      <a
-                        href="#"
-                        className="flex py-1.5 px-3.5 duration-200 rounded-[3px] bg-blue text-white hover:text-white hover:bg-blue"
-                      >
-                        1
-                      </a>
-                    </li>
-
-                    <li>
-                      <a
-                        href="#"
-                        className="flex py-1.5 px-3.5 duration-200 rounded-[3px] hover:text-white hover:bg-blue"
-                      >
-                        2
-                      </a>
-                    </li>
-
-                    <li>
-                      <a
-                        href="#"
-                        className="flex py-1.5 px-3.5 duration-200 rounded-[3px] hover:text-white hover:bg-blue"
-                      >
-                        3
-                      </a>
-                    </li>
-
-                    <li>
-                      <a
-                        href="#"
-                        className="flex py-1.5 px-3.5 duration-200 rounded-[3px] hover:text-white hover:bg-blue"
-                      >
-                        4
-                      </a>
-                    </li>
-
-                    <li>
-                      <a
-                        href="#"
-                        className="flex py-1.5 px-3.5 duration-200 rounded-[3px] hover:text-white hover:bg-blue"
-                      >
-                        5
-                      </a>
-                    </li>
-
-                    <li>
-                      <a
-                        href="#"
-                        className="flex py-1.5 px-3.5 duration-200 rounded-[3px] hover:text-white hover:bg-blue"
-                      >
-                        ...
-                      </a>
-                    </li>
-
-                    <li>
-                      <a
-                        href="#"
-                        className="flex py-1.5 px-3.5 duration-200 rounded-[3px] hover:text-white hover:bg-blue"
-                      >
-                        10
-                      </a>
-                    </li>
-
-                    <li>
-                      <button
-                        id="paginationLeft"
-                        aria-label="button for pagination left"
-                        type="button"
-                        className="flex items-center justify-center w-8 h-9 ease-out duration-200 rounded-[3px] hover:text-white hover:bg-blue disabled:text-gray-4"
-                      >
-                        <svg
-                          className="fill-current"
-                          width="18"
-                          height="18"
-                          viewBox="0 0 18 18"
-                          fill="none"
-                          xmlns="http://www.w3.org/2000/svg"
-                        >
-                          <path
-                            d="M5.82197 16.1156C5.65322 16.1156 5.5126 16.0594 5.37197 15.9469C5.11885 15.6937 5.11885 15.3 5.37197 15.0469L11.2782 9L5.37197 2.98125C5.11885 2.72812 5.11885 2.33437 5.37197 2.08125C5.6251 1.82812 6.01885 1.82812 6.27197 2.08125L12.6282 8.55C12.8813 8.80312 12.8813 9.19687 12.6282 9.45L6.27197 15.9187C6.15947 16.0312 5.99072 16.1156 5.82197 16.1156Z"
-                            fill=""
-                          />
-                        </svg>
-                      </button>
-                    </li>
-                  </ul>
-                </div>
-              </div> */}
-              {/* <!-- Products Pagination End --> */}
             </div>
-            {/* // <!-- Content End --> */}
+
           </div>
         </div>
       </section>

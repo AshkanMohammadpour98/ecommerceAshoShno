@@ -2,396 +2,322 @@
 
 import React, { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
-import CustomSelect from "./CustomSelect";
-import { menuData } from "./menuData";
-import Dropdown from "./Dropdown";
+import Image from "next/image";
+import { usePathname, useRouter } from "next/navigation";
 import { useAppSelector } from "@/redux/store";
 import { useSelector } from "react-redux";
 import { selectTotalPrice } from "@/redux/features/cart-slice";
 import { useCartModalContext } from "@/app/context/CartSidebarModalContext";
-import Image from "next/image";
-import { usePathname } from "next/navigation";
+import { menuData } from "./menuData";
+import Swal from "sweetalert2";
+import toast from "react-hot-toast";
 
-// Heroicons (outline) یکدست
 import {
-  UserCircleIcon,
+  UserIcon,
+  ArrowLeftOnRectangleIcon,
   ShoppingCartIcon,
   MagnifyingGlassIcon,
-  PhoneIcon,
-  EyeIcon,
-  HeartIcon,
+  Bars3Icon,
+  XMarkIcon,
+  ChevronDownIcon,
+  UserCircleIcon,
+  Squares2X2Icon,
 } from "@heroicons/react/24/outline";
+// URLS
+const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL
+const CATEGORYS_URL = process.env.NEXT_PUBLIC_API_CATEGORYS_URL
 
-// نام کوکی
-const AUTH_COOKIE_NAME = "token";
-
-// خواندن کوکی
-function readCookie(name) {
-  if (typeof document === "undefined") return null;
-  const cookie = document.cookie.split("; ").find((c) => c.startsWith(`${name}=`));
-  return cookie ? cookie.split("=")[1] : null;
-}
-
-// پارس امن JSON
-function safeParseJSON(str) {
-  if (!str) return null;
-  try {
-    return JSON.parse(decodeURIComponent(str));
-  } catch {
-    try {
-      return JSON.parse(str);
-    } catch {
-      return null;
-    }
-  }
-}
 
 const Header = () => {
-  const [searchQuery, setSearchQuery] = useState("");
-  const [navigationOpen, setNavigationOpen] = useState(false);
   const [stickyMenu, setStickyMenu] = useState(false);
-  const { openCartModal } = useCartModalContext();
-  const [options, setOptions] = useState([]);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [activeSubmenu, setActiveSubmenu] = useState<number | null>(null);
+  const [catMenuOpen, setCatMenuOpen] = useState(false);
+  const [categories, setCategories] = useState<any[]>([]);
 
+  const [authChecked, setAuthChecked] = useState(false);
+  const [currentUser, setCurrentUser] = useState<any>(null);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+
+  const pathname = usePathname();
+  const router = useRouter();
+
+  const { isCartModalOpen, toggleCartModal } = useCartModalContext();
   const product = useAppSelector((state) => state.cartReducer.items);
   const totalPrice = useSelector(selectTotalPrice);
 
-  // وضعیت احراز هویت کاربر
-  const [authChecked, setAuthChecked] = useState(false);
-  const [currentUser, setCurrentUser] = useState(null);
-
-  const pathname = usePathname();
-
-  const handleOpenCartModal = () => {
-    openCartModal();
-  };
-
-  // Sticky menu
-  const handleStickyMenu = () => {
-    setStickyMenu(window.scrollY >= 80);
-  };
-
-  // بارگذاری دسته‌بندی‌ها
-  useEffect(() => {
-    fetch("http://localhost:3001/categories")
-      .then((res) => res.json())
-      .then((data) => setOptions(Array.isArray(data) ? data : []))
-      .catch(() => setOptions([]));
+  // دریافت دسته‌بندی‌ها از API
+  const fetchCategories = useCallback(async () => {
+    try {
+      const res = await fetch(`${BASE_URL}${CATEGORYS_URL}`);
+      const result = await res.json();
+      if (result.success) setCategories(result.data);
+    } catch (error) { console.error(error); }
   }, []);
 
-  // لیسنر اسکرول
-  useEffect(() => {
-    window.addEventListener("scroll", handleStickyMenu);
-    return () => window.removeEventListener("scroll", handleStickyMenu);
-  }, []);
+  // بررسی وضعیت لاگین
+const checkAuth = useCallback(async () => {
+    try {
+      const res = await fetch("/api/auth/me", { cache: "no-store" });
+      const data = await res.json();
 
-  // تابع مشترک: چک کردن کوکی + اعتبارسنجی از API
-  const checkAuth = useCallback(() => {
-    const raw = readCookie(AUTH_COOKIE_NAME);
-    const authData = safeParseJSON(raw); // { id, password, rool }
-
-    if (!authData?.id || !authData?.password) {
-      setCurrentUser(null);
+      // حالت اول: کاربر ادمین است (آبجکت user وجود دارد)
+      if (res.ok && data.user) {
+        setIsLoggedIn(true);
+        setCurrentUser(data.user);
+      } 
+      // حالت دوم: کاربر لاگین کرده اما ادمین نیست (role: "user" در بدنه دیتا برمی‌گردد)
+      else if (data.role === "user") {
+        setIsLoggedIn(true);
+        // چون در این حالت API دیتای کامل کاربر را نمی‌دهد، یک نام پیش‌فرض می‌گذاریم
+        setCurrentUser({ name: "کاربر عادی", role: "user" });
+      } 
+      // حالت سوم: توکن یافت نشد یا خطا (کاربر لاگین نیست)
+      else {
+        setIsLoggedIn(false);
+        setCurrentUser(null);
+      }
+    } catch (error) {
+      console.error("خطا در تایید هویت:", error);
+      setIsLoggedIn(false);
+    } finally {
       setAuthChecked(true);
-      return;
     }
-
-    fetch(`http://localhost:3001/usersData/${encodeURIComponent(authData.id)}`, {
-      cache: "no-store",
-    })
-      .then((res) => {
-        if (!res.ok) throw new Error("User not found");
-        return res.json();
-      })
-      .then((userData) => {
-        const serverPassword = Array.isArray(userData?.registerWith)
-          ? userData.registerWith.find((item) => item?.password)?.password
-          : undefined;
-
-        if (serverPassword && serverPassword === authData.password) {
-          setCurrentUser(userData); // کاربر معتبر
-        } else {
-          setCurrentUser(null); // پسورد ناسازگار
-        }
-      })
-      .catch(() => setCurrentUser(null))
-      .finally(() => setAuthChecked(true));
   }, []);
 
-  // 1) چک دوباره Auth روی تغییر مسیر
   useEffect(() => {
     checkAuth();
-  }, [pathname, checkAuth]);
+    fetchCategories();
+  }, [pathname, checkAuth, fetchCategories]);
 
-  // 2) گوش دادن به رویداد سفارشی، فوکوس تب، BroadcastChannel و storage (sync بین تب‌ها)
   useEffect(() => {
-    const onAuthChanged = () => checkAuth();
-    window.addEventListener("auth:changed", onAuthChanged);
-    window.addEventListener("focus", onAuthChanged);
+    const handleScroll = () => setStickyMenu(window.scrollY >= 80);
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
 
-    // Sync بین تب‌ها با storage event
-    const onStorage = (e) => {
-      if (e.key === "auth:broadcast") checkAuth();
-    };
-    window.addEventListener("storage", onStorage);
+  // هندل کردن خروج با SweetAlert2
+  const handleLogout = async () => {
+    const result = await Swal.fire({
+      title: "خروج از حساب",
+      text: "آیا برای خروج از حساب کاربری اطمینان دارید؟",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#3b82f6",
+      cancelButtonColor: "#ef4444",
+      confirmButtonText: "بله، خارج شو",
+      cancelButtonText: "انصراف",
+      reverseButtons: true
+    });
 
-    // BroadcastChannel بین تب‌ها
-    let bc = null;
-    try {
-      if ("BroadcastChannel" in window) {
-        bc = new BroadcastChannel("auth");
-        bc.onmessage = () => checkAuth();
+    if (result.isConfirmed) {
+      const res = await fetch("/api/auth/logout");
+      if (res.ok) {
+        setIsLoggedIn(false);
+        setCurrentUser(null);
+        toast.success("با موفقیت خارج شدید");
+        setMobileMenuOpen(false);
+        router.push("/");
+        router.refresh();
       }
-    } catch {}
-
-    return () => {
-      window.removeEventListener("auth:changed", onAuthChanged);
-      window.removeEventListener("focus", onAuthChanged);
-      window.removeEventListener("storage", onStorage);
-      if (bc) bc.close();
-    };
-  }, [checkAuth]);
-
-  const isAuthed = authChecked && !!currentUser;
+    }
+  };
 
   return (
-    <header
-      className={`fixed left-0 top-0 w-full z-50 bg-white transition-all ease-in-out duration-300 ${
-        stickyMenu && "shadow"
-      }`}
-    >
-      <div className="max-w-[1170px] mx-auto px-4 sm:px-7.5 xl:px-0">
-        {/* header top start */}
-        <div
-          className={`flex flex-col lg:flex-row gap-5 items-end lg:items-center xl:justify-between ease-out duration-200 ${
-            stickyMenu ? "py-4" : "py-6"
-          }`}
-        >
-          {/* header top left */}
-          <div className="xl:w-auto flex-col sm:flex-row w-full flex sm:justify-between sm:items-center gap-5 sm:gap-10">
-            <Link className="flex-shrink-0" href="/">
-              <Image
-                src="/images/logo/logoAsoShno.png"
-                alt="Logo"
-                width={219}
-                height={36}
-                priority
-              />
+    <header className={`fixed left-0 top-0 w-full z-[9999] bg-white transition-all duration-300 ${stickyMenu ? "shadow-md" : ""}`}>
+      
+      {/* ردیف اصلی: لوگو و ابزارهای کناری */}
+      <div className="max-w-[1170px] mx-auto px-4">
+        <div className={`flex items-center justify-between transition-all ${stickyMenu ? "py-3" : "py-5"}`}>
+          
+          <div className="flex items-center gap-4">
+            <button className="lg:hidden text-dark" onClick={() => setMobileMenuOpen(true)}>
+              <Bars3Icon className="w-8 h-8" />
+            </button>
+            <Link href="/">
+              <Image src="/images/logo/logoAsoShno.png" alt="آسو شنو" width={140} height={40} className="w-auto h-10" />
             </Link>
+          </div>
 
-            <div className="max-w-[475px] w-full">
-              <form>
-                <div className="flex items-center">
-                  <CustomSelect options={options} />
-
-                  <div className="relative max-w-[333px] sm:min-w-[333px] w-full">
-                    {/* divider */}
-                    <span className="absolute left-0 top-1/2 -translate-y-1/2 inline-block w-px h-5.5 bg-gray-4"></span>
-
-                    <input
-                      onChange={(e) => setSearchQuery(e.target.value)}
-                      value={searchQuery}
-                      type="search"
-                      name="search"
-                      id="search"
-                      placeholder="دنبال چی میگردی؟"
-                      autoComplete="off"
-                      className="custom-search w-full rounded-r-[5px] bg-gray-1 !border-l-0 border border-gray-3 py-2.5 pl-4 pr-10 outline-none ease-in duration-200"
-                    />
-
-                    <button
-                      id="search-btn"
-                      aria-label="جستجو"
-                      className="flex items-center justify-center absolute right-3 top-1/2 -translate-y-1/2 ease-in duration-200 hover:text-blue"
-                      type="button"
-                    >
-                      <MagnifyingGlassIcon className="w-5 h-5 text-dark hover:text-blue" />
-                    </button>
-                  </div>
-                </div>
-              </form>
+          {/* سرچ باکس دسکتاپ */}
+          <div className="hidden lg:flex flex-1 max-w-[450px] mx-10">
+            <div className="relative w-full group">
+              <input type="text" placeholder="جستجو در محصولات..." className="w-full bg-gray-1 border border-gray-3 rounded-full py-2.5 pr-4 pl-12 text-sm focus:border-blue outline-none transition-all" />
+              <MagnifyingGlassIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-4 group-focus-within:text-blue" />
             </div>
           </div>
 
-          {/* header top right */}
-          <div className="flex w-full lg:w-auto items-center gap-7.5">
-            <div className="hidden xl:flex items-center gap-3.5">
-              {/* پشتیبانی */}
-              <PhoneIcon className="w-6 h-6 text-blue" />
-              <div>
-                <span className="block text-2xs text-dark-4 uppercase">24/7 پشتیبانی</span>
-                <p className="font-medium text-custom-sm text-dark">(+444) 462-3477</p>
+          <div className="flex items-center gap-3 lg:gap-5">
+            {/* پروفایل دسکتاپ با استایل Pill مورد علاقه شما */}
+            <div className="hidden sm:flex items-center">
+  {!authChecked ? (
+    // در حال بررسی وضعیت توکن (اسکلتون یا لودینگ کوچک)
+    <div className="w-24 h-8 bg-gray-2 animate-pulse rounded-full" />
+  ) : isLoggedIn ? (
+    // کاربر لاگین است (چه ادمین چه یوزر)
+    <div className="flex items-center gap-3 bg-gray-1 p-1 pr-4 rounded-full border border-gray-2 shadow-sm">
+      <span className="text-xs font-bold text-dark">{currentUser?.name}</span>
+      <Link href="/my-account">
+        <UserCircleIcon className="w-8 h-8 text-blue hover:scale-110 transition-transform" />
+      </Link>
+      <button onClick={handleLogout} className="p-1.5 text-gray-400 hover:text-red transition-colors">
+        <ArrowLeftOnRectangleIcon className="w-6 h-6" />
+      </button>
+    </div>
+  ) : (
+    // کاربر اصلاً لاگین نکرده است
+    <Link href="/signin" className="flex items-center gap-2 bg-gray-1 px-4 py-2 rounded-full border border-gray-2 text-sm font-bold text-dark hover:text-blue transition-all">
+      <UserIcon className="w-5 h-5" />
+      <span>ورود | عضویت</span>
+    </Link>
+  )}
+</div>
+
+            {/* دکمه سبد خرید */}
+            <button 
+              id="cart-button" 
+              onClick={(e) => { e.stopPropagation(); toggleCartModal(); }}
+              className={`cart-button-header relative flex items-center gap-2 p-2.5 lg:px-5 rounded-full transition-all ${isCartModalOpen ? 'bg-blue text-white shadow-lg' : 'bg-dark text-white hover:bg-blue'}`}
+            >
+              <ShoppingCartIcon className="w-6 h-6" />
+              <div className="hidden lg:block text-right">
+                <p className="text-[10px] opacity-80 leading-none">سبد خرید</p>
+                <p className="text-sm font-bold mt-0.5">{totalPrice.toLocaleString()} ت</p>
               </div>
-            </div>
-
-            {/* divider */}
-            <span className="hidden xl:block w-px h-7.5 bg-gray-4"></span>
-
-            <div className="flex w-full lg:w-auto justify-between items-center gap-5">
-              <div className="flex items-center gap-5">
-                {/* حساب کاربری */}
-                {authChecked ? (
-                  currentUser ? (
-                    <Link href={`/my-account/${currentUser.id}`} className="flex items-center gap-2.5">
-                      {currentUser?.img ? (
-                        <img
-                          src={currentUser.img}
-                          alt={`${currentUser.name} ${currentUser.lastName ?? ""}`}
-                          className="w-7 h-7 sm:w-8 sm:h-8 md:w-9 md:h-9 rounded-full object-cover"
-                        />
-                      ) : (
-                        <UserCircleIcon className="w-7 h-7 sm:w-8 sm:h-8 md:w-9 md:h-9 text-blue" />
-                      )}
-                      <div>
-                        <span className="block text-2xs text-dark-4 uppercase">پنل</span>
-                        <p className="font-medium text-custom-sm text-dark">
-                          {currentUser?.name ?? "حساب من"}
-                        </p>
-                      </div>
-                    </Link>
-                  ) : (
-                    <Link href="/signin" className="flex items-center gap-2.5">
-                      <UserCircleIcon className="w-7 h-7 sm:w-8 sm:h-8 md:w-9 md:h-9 text-blue" />
-                      <div>
-                        <span className="block text-2xs text-dark-4 uppercase">حساب</span>
-                        <p className="font-medium text-custom-sm text-dark">ورود / ثبت‌نام</p>
-                      </div>
-                    </Link>
-                  )
-                ) : (
-                  // لودینگ کوتاه
-                  <div className="flex items-center gap-2.5">
-                    <div className="rounded-full bg-gray-3 w-7 h-7 sm:w-8 sm:h-8 md:w-9 md:h-9 animate-pulse"></div>
-                    <div className="h-3 w-20 bg-gray-3 rounded animate-pulse"></div>
-                  </div>
-                )}
-
-                {/* سبد خرید: فقط وقتی کاربر لاگین است نمایش بده */}
-                {isAuthed && (
-                  <button
-                    onClick={handleOpenCartModal}
-                    className="flex items-center gap-2.5 hover:text-blue"
-                    aria-label="سبد خرید"
-                  >
-                    <span className="inline-block relative">
-                      <ShoppingCartIcon className="w-7 h-7 sm:w-8 sm:h-8 md:w-9 md:h-9 text-blue" />
-                      <span className="flex items-center justify-center font-medium text-2xs absolute -right-2 -top-2.5 bg-blue w-4.5 h-4.5 rounded-full text-white">
-                        {product.length}
-                      </span>
-                    </span>
-                    <div className="text-right">
-                      <span className="block text-2xs text-dark-4 uppercase">سبد خرید</span>
-                      <p className="font-medium text-custom-sm text-dark">تومان{totalPrice}</p>
-                    </div>
-                  </button>
-                )}
-              </div>
-
-              {/* Hamburger Toggle BTN */}
-              <button
-                id="Toggle"
-                aria-label="Toggler"
-                className="xl:hidden block"
-                onClick={() => setNavigationOpen(!navigationOpen)}
-              >
-                <span className="block relative cursor-pointer w-5.5 h-5.5">
-                  <span className="du-block absolute right-0 w-full h-full">
-                    <span
-                      className={`block bg-dark rounded-sm w-0 h-0.5 my-1 duration-200 ${
-                        !navigationOpen && "!w-full delay-300"
-                      }`}
-                    ></span>
-                    <span
-                      className={`block bg-dark rounded-sm w-0 h-0.5 my-1 duration-200 ${
-                        !navigationOpen && "!w-full delay-400"
-                      }`}
-                    ></span>
-                    <span
-                      className={`block bg-dark rounded-sm w-0 h-0.5 my-1 duration-200 ${
-                        !navigationOpen && "!w-full delay-500"
-                      }`}
-                    ></span>
-                  </span>
-                  <span className="block absolute right-0 w-full h-full rotate-45">
-                    <span
-                      className={`block bg-dark rounded-sm duration-200 absolute left-2.5 top-0 w-0.5 h-full ${
-                        !navigationOpen && "!h-0"
-                      }`}
-                    ></span>
-                    <span
-                      className={`block bg-dark rounded-sm duration-200 absolute left-0 top-2.5 w-full h-0.5 ${
-                        !navigationOpen && "!h-0"
-                      }`}
-                    ></span>
-                  </span>
-                </span>
-              </button>
-            </div>
+              <span className="absolute -top-1 -right-1 bg-blue text-white text-[10px] w-5 h-5 flex items-center justify-center rounded-full border-2 border-white font-bold">
+                {product.length}
+              </span>
+            </button>
           </div>
         </div>
-        {/* header top end */}
       </div>
 
-      <div className="border-t border-gray-3">
-        <div className="max-w-[1170px] mx-auto px-4 sm:px-7.5 xl:px-0">
-          <div className="flex items-center justify-between">
-            {/* Main Nav */}
-            <div
-              className={`w-[288px] absolute right-4 top-full xl:static xl:w-auto h-0 xl:h-auto invisible xl:visible xl:flex items-center justify-between ${
-                navigationOpen &&
-                `!visible bg-white shadow-lg border border-gray-3 !h-auto max-h-[400px] overflow-y-scroll rounded-md p-5`
-              }`}
-            >
-              <nav>
-                <ul className="flex xl:items-center flex-col xl:flex-row gap-5 xl:gap-6">
-                  {menuData.map((menuItem, i) =>
-                    menuItem.submenu ? (
-                      <Dropdown key={i} menuItem={menuItem} stickyMenu={stickyMenu} />
-                    ) : (
-                      <li
-                        key={i}
-                        className="group relative before:w-0 before:h-[3px] before:bg-blue before:absolute before:left-0 before:top-0 before:rounded-b-[3px] before:ease-out before:duration-200 hover:before:w-full"
-                      >
-                        <Link
-                          href={menuItem.path}
-                          className={`hover:text-blue text-custom-sm font-medium text-dark flex ${
-                            stickyMenu ? "xl:py-4" : "xl:py-6"
-                          }`}
-                        >
-                          {menuItem.title}
-                        </Link>
-                      </li>
-                    )
+      {/* نوار منو دسکتاپ */}
+      <div className="hidden lg:block border-t border-gray-3 bg-white">
+        <div className="max-w-[1170px] mx-auto px-4 flex items-center justify-between">
+            <nav className="flex items-center gap-8">
+              {/* بخش دسته‌بندی کالاها */}
+              <div className="relative border-l border-gray-3 ml-2 pl-8 py-4">
+                <button 
+                  onMouseEnter={() => setCatMenuOpen(true)}
+                  onMouseLeave={() => setCatMenuOpen(false)}
+                  className="flex items-center gap-2 text-dark font-bold text-sm hover:text-blue"
+                >
+                  <Squares2X2Icon className="w-5 h-5 text-blue" />
+                  دسته‌بندی‌ها
+                  <ChevronDownIcon className={`w-4 h-4 transition-transform ${catMenuOpen ? "rotate-180" : ""}`} />
+                </button>
+                <div 
+                  onMouseEnter={() => setCatMenuOpen(true)}
+                  onMouseLeave={() => setCatMenuOpen(false)}
+                  className={`absolute top-full right-0 w-64 bg-white shadow-2xl border-t-2 border-blue transition-all z-999 ${catMenuOpen ? "opacity-100 visible translate-y-0" : "opacity-0 invisible translate-y-4"}`}
+                >
+                  <ul className="py-2">
+                    {categories.map((cat) => (
+                      <li key={cat._id}><Link href={`/category/${cat.slug || cat._id}`} className="block px-6 py-3 text-sm text-dark hover:bg-gray-1 hover:text-blue font-bold">{cat.title || cat.name}</Link></li>
+                    ))}
+                  </ul>
+                </div>
+              </div>
+
+              {/* منوهای اصلی */}
+              {menuData.map((item, index) => (
+                <div key={index} className="relative group py-4">
+                  <Link href={item.path} className={`flex items-center gap-1 text-sm font-bold transition-all ${pathname === item.path ? "text-blue" : "text-dark hover:text-blue"}`}>
+                    {item.title}
+                    {item.submenu && <ChevronDownIcon className="w-3.5 h-3.5 opacity-50 group-hover:rotate-180 transition-transform" />}
+                  </Link>
+                  {item.submenu && (
+                    <div className="absolute top-full right-0 w-52 bg-white shadow-xl border-t-2 border-blue opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 translate-y-3 group-hover:translate-y-0 z-999">
+                      <ul className="py-2">
+                        {item.submenu.map((sub: any, i: number) => (
+                          <li key={i}><Link href={sub.path} className="block px-5 py-2.5 text-xs font-bold text-dark hover:bg-gray-1 hover:text-blue">{sub.title}</Link></li>
+                        ))}
+                      </ul>
+                    </div>
                   )}
-                  
-                </ul>
-              </nav>
+                </div>
+              ))}
+            </nav>
+        </div>
+      </div>
+
+      {/* 📱 منوی موبایل (طراحی Pill-Style برای پروفایل) */}
+      <div className={`fixed inset-0 bg-dark/60 backdrop-blur-sm z-[100000] lg:hidden transition-all ${mobileMenuOpen ? "opacity-100 visible" : "opacity-0 invisible"}`} onClick={() => setMobileMenuOpen(false)} />
+      <div className={`fixed top-0 right-0 h-full w-[310px] bg-white z-[100001] lg:hidden transition-all duration-400 ease-in-out ${mobileMenuOpen ? "translate-x-0" : "translate-x-full"}`}>
+        <div className="flex flex-col h-full">
+          
+          <div className="p-6 bg-gray-50 border-b border-gray-200">
+            <div className="flex justify-between items-center mb-6">
+               <Image src="/images/logo/logoAsoShno.png" alt="Logo" width={100} height={30} />
+               <XMarkIcon className="w-8 h-8 text-dark p-1 bg-white rounded-full shadow-sm" onClick={() => setMobileMenuOpen(false)} />
             </div>
 
-            {/* Nav Right نمونه */}
-            <div className="hidden xl:block">
-              <ul className="flex items-center gap-5.5">
-                <li className="py-4">
-                  <a
-                    href="#"
-                    className="flex items-center gap-1.5 font-medium text-custom-sm text-dark hover:text-blue"
-                  >
-                    <EyeIcon className="w-5 h-5 text-dark" />
-                    اخیرا مشاهده شده
-                  </a>
-                </li>
-                <li className="py-4">
-                  <Link
-                    href="/wishlist"
-                    className="flex items-center gap-1.5 font-medium text-custom-sm text-dark hover:text-blue"
-                  >
-                    <HeartIcon className="w-5 h-5 text-dark" />
-                    لیست علاقه‌مندی‌ها
+            {/* پروفایل موبایل با استایل Pill مشابه دسکتاپ */}
+            <div className="mb-6">
+              {isLoggedIn ? (
+                <div className="flex items-center justify-between bg-white p-2 pr-4 rounded-full border border-gray-200 shadow-sm">
+                  <Link href="/my-account" className="flex items-center gap-3" onClick={() => setMobileMenuOpen(false)}>
+                    <div className="flex flex-col text-right">
+                      <span className="text-xs font-bold text-dark">{currentUser?.name}</span>
+                      <span className="text-[9px] text-blue">پنل کاربری</span>
+                    </div>
+                    <UserCircleIcon className="w-10 h-10 text-blue" />
                   </Link>
-                </li>
-              </ul>
+                  <button onClick={handleLogout} className="p-2.5 bg-red/10 text-red rounded-full">
+                    <ArrowLeftOnRectangleIcon className="w-5 h-5" />
+                  </button>
+                </div>
+              ) : (
+                <Link href="/signin" onClick={() => setMobileMenuOpen(false)} className="flex items-center justify-center gap-3 bg-dark text-white p-3.5 rounded-full font-bold text-sm shadow-lg shadow-dark/20">
+                  <UserIcon className="w-5 h-5" />
+                  ورود یا عضویت در سایت
+                </Link>
+              )}
             </div>
-            {/* Nav Right End */}
+
+            {/* سرچ باکس موبایل */}
+            <div className="relative">
+              <input type="text" placeholder="چی لازم داری؟ جستجو کن..." className="w-full bg-white border border-gray-200 rounded-full py-3 pr-5 pl-12 text-xs outline-none focus:border-blue shadow-inner" />
+              <MagnifyingGlassIcon className="absolute left-4 top-3 w-5 h-5 text-gray-400" />
+            </div>
+          </div>
+
+          {/* محتوای منوی موبایل */}
+          <div className="flex-1 overflow-y-auto p-6">
+            <p className="text-blue font-bold text-[11px] mb-4 flex items-center gap-2">
+              <Squares2X2Icon className="w-5 h-5" /> دسته‌بندی محصولات
+            </p>
+            <div className="grid grid-cols-2 gap-2 mb-8">
+              {categories.map((cat) => (
+                <Link key={cat._id} href={`/category/${cat.slug || cat._id}`} className="bg-gray-1 p-3 rounded-xl text-[10px] text-center font-bold text-dark border border-gray-2" onClick={() => setMobileMenuOpen(false)}>
+                  {cat.title || cat.name}
+                </Link>
+              ))}
+            </div>
+
+            <nav className="space-y-2">
+              {menuData.map((item, index) => (
+                <div key={index} className="border-b border-gray-50 last:border-0 pb-1">
+                  <div 
+                    className={`flex items-center justify-between p-3 rounded-xl text-sm font-bold ${pathname === item.path ? 'text-blue bg-blue/5' : 'text-dark'}`}
+                    onClick={() => item.submenu && setActiveSubmenu(activeSubmenu === index ? null : index)}
+                  >
+                    <Link href={item.path} onClick={() => !item.submenu && setMobileMenuOpen(false)}>{item.title}</Link>
+                    {item.submenu && <ChevronDownIcon className={`w-4 h-4 transition-transform ${activeSubmenu === index ? 'rotate-180' : 'opacity-20'}`} />}
+                  </div>
+                  {item.submenu && activeSubmenu === index && (
+                    <div className="pr-4 py-2 flex flex-col gap-3">
+                      {item.submenu.map((sub: any, i: number) => (
+                        <Link key={i} href={sub.path} onClick={() => setMobileMenuOpen(false)} className="text-xs text-gray-500 font-bold hover:text-blue pr-3 border-r-2 border-gray-100">
+                          {sub.title}
+                        </Link>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              ))}
+            </nav>
           </div>
         </div>
       </div>

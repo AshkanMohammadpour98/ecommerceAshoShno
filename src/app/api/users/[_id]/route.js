@@ -11,7 +11,7 @@ import { NextResponse } from 'next/server';
 export async function GET(request, { params }) {
   try {
     await connectDB();
-    const { _id } = params;
+    const { _id } = await params;
 
     if (!isValidObjectId(_id )) {
       return NextResponse.json({ message: "UserID not found " }, { status: 422 });
@@ -33,7 +33,7 @@ export async function GET(request, { params }) {
 export async function DELETE(request, { params }) {
   try {
     await connectDB();
-    const { _id } = params;
+    const { _id } = await params;
 
     if (!isValidObjectId(_id)) {
       return NextResponse.json({ message: 'Invalid user ID' }, { status: 400 });
@@ -56,7 +56,7 @@ export async function DELETE(request, { params }) {
 export async function PUT(request, { params }) {
   try {
     await connectDB();
-    const { _id } = params;
+    const { _id } = await params;
     const body = await request.json();
 
     if (!isValidObjectId(_id)) {

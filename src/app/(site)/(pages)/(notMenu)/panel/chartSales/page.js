@@ -17,6 +17,11 @@ import {
  * 💡 تابع پارس تاریخ (ایمن و مقاوم)
  * این تابع تاریخ‌های شمسی را تجزیه می‌کند و اگر فرمت خراب باشد، null برمی‌گرداند.
  */
+// urls
+const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL;
+const USERS_URL = process.env.NEXT_PUBLIC_API_USERS_URL;
+
+// تابع پارس تاریخ
 function parseDate(dateStr) {
   if (!dateStr || typeof dateStr !== "string") return null;
   const parts = dateStr.match(/(\d+)/g);
@@ -138,7 +143,7 @@ export default function ChartSales() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch("http://localhost:3000/api/users")
+    fetch(`${BASE_URL}${USERS_URL}`)
       .then((res) => {
         if (!res.ok) throw new Error("خطا در شبکه");
         return res.json();

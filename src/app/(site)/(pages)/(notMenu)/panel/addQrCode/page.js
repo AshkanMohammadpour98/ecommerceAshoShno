@@ -18,10 +18,14 @@ import DatePicker from "react-multi-date-picker";
 import persian from "react-date-object/calendars/persian";
 import persian_fa from "react-date-object/locales/persian_fa";
 
-const API_BASE = "http://localhost:3000/api/products";
+// URLS
+const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL;
+const PRODUCTS_URL = process.env.NEXT_PUBLIC_API_PRODUCTS_URL;
 
 /* ابزار: تاریخ شمسی با اعداد لاتین به فرم "YYYY/MM/DD" */
 function getJalaliLatinDate(date = new Date()) {
+
+  // تبدیل تاریخ به فرمت "YYYY/MM/DD"
   try {
     const fmt = new Intl.DateTimeFormat("fa-IR-u-ca-persian-nu-latn", {
       year: "numeric",
@@ -214,7 +218,7 @@ export default function QrCodeCreator() {
       setLoadingProducts(true);
       setLoadError("");
       try {
-        const res = await fetch(API_BASE);
+        const res = await fetch(`${BASE_URL}${PRODUCTS_URL}`);
         if (!res.ok) throw new Error("خطا در دریافت لیست محصولات");
         const data = await res.json();
         setProducts(Array.isArray(data.data) ? data.data : []);
@@ -287,7 +291,7 @@ export default function QrCodeCreator() {
       };
 
       // 4. ارسال داده جدید به سرور
-      const res = await fetch(`${API_BASE}/${product._id}`, {
+      const res = await fetch(`${BASE_URL}${PRODUCTS_URL}/${product._id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ QRDatas: newQrData }),

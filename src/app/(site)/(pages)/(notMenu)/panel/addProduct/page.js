@@ -9,26 +9,32 @@ import persian_fa from "react-date-object/locales/persian_fa";
 
 export default function AddProductForm() {
   const [formData, setFormData] = useState({
-  title: "",
-  reviews: "",
-  price: "",
-  discountedPrice: "",
-  hasDiscount: false,
-  categorie: "",
-  content: "",
-  date: "", // افزودن فیلد تاریخ
-  imgs: {
-    thumbnails: ["", ""],
-    previews: ["", ""],
-  },
-});
+    title: "",
+    reviews: "",
+    price: "",
+    discountedPrice: "",
+    hasDiscount: false,
+    categorie: "",
+    content: "",
+    date: "",
+    count: 1, // 🟢 تعداد اولیه محصول (پیش‌فرض 1)
+    imgs: {
+      thumbnails: [null, null], // 🟢 ذخیره File واقعی (نه blob)
+      previews: [null, null],
+    },
+  });
 
   const [id] = useState(() => String(Date.now()));
   const router = useRouter();
   const [categories, setCategories] = useState([]);
 
+  // URLs
+  const CATEGORYS_URL = process.env.NEXT_PUBLIC_API_CATEGORYS_URL;
+  const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL;
+  const PRODUCTS_URL = process.env.NEXT_PUBLIC_API_PRODUCTS_URL;
+
   useEffect(() => {
-    fetch("http://localhost:3000/api/categorys")
+    fetch(`${BASE_URL}${CATEGORYS_URL}`)
       .then((res) => res.json())
       .then((data) => setCategories(data.data))
       .catch(() => setCategories([]));
@@ -43,15 +49,15 @@ export default function AddProductForm() {
     }));
   };
 
-  // 📌 آپلود تصاویر (نمایش با لینک کوتاه Blob)
+  // 📌 آپلود تصاویر
+  // اینجا به‌جای blob، خود File ذخیره می‌شود
   const handleImageChange = (e, type, index) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    const objectUrl = URL.createObjectURL(file);
     setFormData((prev) => {
       const newImgs = { ...prev.imgs };
-      newImgs[type][index] = objectUrl;
+      newImgs[type][index] = file; // 🟢 ذخیره File
       return { ...prev, imgs: newImgs };
     });
   };
@@ -60,10 +66,18 @@ export default function AddProductForm() {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    const { title, price, reviews, content, categorie, imgs } = formData;
+    const {
+      title,
+      price,
+      reviews,
+      content,
+      categorie,
+      imgs,
+      date,
+    } = formData;
 
     // ولیدیشن
-    if (!title || !price || !reviews || !content || !categorie) {
+    if (!title || !price || !reviews || !content || !categorie || !date) {
       Swal.fire({
         icon: "warning",
         title: "لطفا همه فیلدها را پر کنید",
@@ -83,22 +97,47 @@ export default function AddProductForm() {
     }
 
     try {
+      // 🟢 استفاده از FormData برای ارسال فایل
+      const form = new FormData();
+
+      form.append("id", id);
+      form.append("title", formData.title);
+      form.append("content", formData.content);
+      form.append("categorie", formData.categorie);
+      form.append("date", formData.date);
+      form.append("price", formData.price);
+      form.append("reviews", formData.reviews);
+      form.append("count", formData.count); // 🟢 ارسال count
+      form.append("hasDiscount", formData.hasDiscount);
+      form.append(
+        "discountedPrice",
+        formData.hasDiscount ? formData.discountedPrice : ""
+      );
+
+      // 🟢 ارسال تصاویر
+      formData.imgs.thumbnails.forEach((file) =>
+        form.append("thumbnails", file)
+      );
+      formData.imgs.previews.forEach((file) =>
+        form.append("previews", file)
+      );
+
       // 1️⃣ ذخیره محصول
-      const resProduct = await fetch("http://localhost:3000/api/products", {
+      const resProduct = await fetch(`${BASE_URL}${PRODUCTS_URL}`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...formData, id }),
+        body: form, // ❗ بدون Content-Type
       });
 
       if (!resProduct.ok) throw new Error("افزودن محصول انجام نشد");
 
-      // 2️⃣ افزایش محصولات دسته‌بندی
+      // 2️⃣ افزایش تعداد محصولات دسته‌بندی
       const selectedCategory = categories.find(
         (cat) => cat.name === formData.categorie
       );
+
       if (selectedCategory) {
-        const resCategory = await fetch(
-          `http://localhost:3000/api/categorys/${selectedCategory._id}`,
+        await fetch(
+          `${BASE_URL}${CATEGORYS_URL}/${selectedCategory._id}`,
           {
             method: "PATCH",
             headers: { "Content-Type": "application/json" },
@@ -107,8 +146,6 @@ export default function AddProductForm() {
             }),
           }
         );
-        if (!resCategory.ok)
-          throw new Error("بروزرسانی دسته‌بندی انجام نشد");
       }
 
       // پیام موفقیت
@@ -128,7 +165,9 @@ export default function AddProductForm() {
         hasDiscount: false,
         categorie: "",
         content: "",
-        imgs: { thumbnails: ["", ""], previews: ["", ""] },
+        date: "",
+        count: 1,
+        imgs: { thumbnails: [null, null], previews: [null, null] },
       });
 
       router.push("/panel/editProduct");
@@ -162,7 +201,6 @@ export default function AddProductForm() {
           onChange={handleChange}
           required
           className="w-full mt-1 border rounded-xl px-4 py-2"
-          placeholder="مثلاً iPhone 14 Plus"
         />
       </div>
 
@@ -177,31 +215,41 @@ export default function AddProductForm() {
           onChange={handleChange}
           required
           className="w-full mt-1 border rounded-xl px-4 py-2 min-h-[100px]"
-          placeholder="یک توضیح درباره ویژگی‌های محصول وارد کنید..."
-        ></textarea>
+        />
       </div>
 
-{/* امتیاز */}
-<div>
-  <label className="block text-sm font-semibold text-gray-600">
-    Reviews (امتیاز)
-  </label>
-  <input
-    type="number"
-    name="reviews"
-    value={formData.reviews}
-    onChange={(e) => {
-      const value = Math.min(Math.max(Number(e.target.value), 0), 5); // محدود بین 0 تا 5
-      setFormData((prev) => ({ ...prev, reviews: value }));
-    }}
-    min="0"
-    max="5"
-    step="0.1"
-    required
-    className="w-full mt-1 border rounded-xl px-4 py-2"
-    placeholder="از 0 تا 5"
-  />
-</div>
+      {/* امتیاز */}
+      <div>
+        <label className="block text-sm font-semibold text-gray-600">
+          Reviews (امتیاز)
+        </label>
+        <input
+          type="number"
+          name="reviews"
+          value={formData.reviews}
+          onChange={handleChange}
+          min="0"
+          max="5"
+          step="0.1"
+          required
+          className="w-full mt-1 border rounded-xl px-4 py-2"
+        />
+      </div>
+
+      {/* تعداد */}
+      <div>
+        <label className="block text-sm font-semibold text-gray-600">
+          تعداد محصول
+        </label>
+        <input
+          type="number"
+          name="count"
+          value={formData.count}
+          onChange={handleChange}
+          min="1"
+          className="w-full mt-1 border rounded-xl px-4 py-2"
+        />
+      </div>
 
       {/* قیمت + تخفیف */}
       <div>
@@ -224,9 +272,10 @@ export default function AddProductForm() {
             name="hasDiscount"
             checked={formData.hasDiscount}
             onChange={handleChange}
-            className="h-4 w-4 text-blue-600"
           />
-          <label className="ml-2 text-sm text-gray-700">دارای تخفیف</label>
+          <label className="ml-2 text-sm text-gray-700">
+            دارای تخفیف
+          </label>
         </div>
 
         {formData.hasDiscount && (
@@ -236,114 +285,68 @@ export default function AddProductForm() {
             value={formData.discountedPrice}
             onChange={handleChange}
             min="0"
-            placeholder="قیمت با تخفیف"
             className="w-full mt-2 border rounded-xl px-4 py-2"
           />
         )}
       </div>
-{/* تاریخ محصول */}
-<div>
-  <label className="block text-sm font-semibold text-gray-600 mb-2">
-    تاریخ افزودن محصول
-  </label>
-  <DatePicker
-    calendar={persian}
-    locale={persian_fa}
-    value={formData.date}
-    onChange={(dateObj) => {
-      // تبدیل اعداد فارسی به لاتین
-      const toEnglishDigits = (str) =>
-        str.replace(/[\u06F0-\u06F9]/g, (d) => "۰۱۲۳۴۵۶۷۸۹".indexOf(d));
-      
-      const formattedDate = toEnglishDigits(dateObj?.format("YYYY/MM/DD"));
-      setFormData((prev) => ({ ...prev, date: formattedDate }));
-    }}
-    inputClass="w-full border rounded-xl px-4 py-2 text-center"
-    placeholder="انتخاب تاریخ (مثلاً 1404/02/02)"
-  />
-</div>
+
+      {/* تاریخ */}
+      <DatePicker
+        calendar={persian}
+        locale={persian_fa}
+        value={formData.date}
+        onChange={(d) =>
+          setFormData((p) => ({ ...p, date: d?.format("YYYY/MM/DD") }))
+        }
+        inputClass="w-full border rounded-xl px-4 py-2 text-center"
+      />
 
       {/* دسته بندی */}
-      <div>
-        <label className="block text-sm font-semibold text-gray-600 mb-2">
-          انتخاب دسته بندی
-        </label>
-        <select
-          name="categorie"
-          value={formData.categorie}
-          onChange={handleChange}
-          required
-          className="border rounded-xl px-4 py-2"
-        >
-          <option value="">-- انتخاب کنید --</option>
-          {categories.map((item) => (
-            <option key={item._id} value={item.name}>
-              {item.name}
-            </option>
-          ))}
-        </select>
-      </div>
+      <select
+        name="categorie"
+        value={formData.categorie}
+        onChange={handleChange}
+        className="border rounded-xl px-4 py-2"
+      >
+        <option value="">-- انتخاب کنید --</option>
+        {categories.map((item) => (
+          <option key={item._id} value={item.name}>
+            {item.name}
+          </option>
+        ))}
+      </select>
 
-      {/* Thumbnails */}
-      <div>
-        <label className="block text-sm font-semibold text-gray-600 mb-2">
-          تصاویر کوچک (Thumbnails)
-        </label>
-        <div className="grid grid-cols-2 gap-4">
-          {formData.imgs.thumbnails.map((thumb, i) => (
-            <div key={i} className="border-2 border-dashed rounded-xl p-4 flex flex-col items-center">
-              {thumb ? (
-                <img
-                  src={thumb || null}
-                  alt="thumb"
-                  className="w-24 h-24 object-cover rounded mb-2"
+      {/* تصاویر */}
+      {["thumbnails", "previews"].map((type) => (
+        <div key={type}>
+          <div className="grid grid-cols-2 gap-4">
+            {formData.imgs[type].map((file, i) => (
+              <div
+                key={i}
+                className="border-2 border-dashed rounded-xl p-4 flex flex-col items-center"
+              >
+                {file && (
+                  <img
+                    src={URL.createObjectURL(file)}
+                    className="w-24 h-24 object-cover mb-2"
+                  />
+                )}
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) =>
+                    handleImageChange(e, type, i)
+                  }
                 />
-              ) : (
-                <span className="text-gray-400 text-sm mb-2">انتخاب عکس {i + 1}</span>
-              )}
-              <input
-                type="file"
-                accept="image/*"
-                required={!thumb}
-                onChange={(e) => handleImageChange(e, "thumbnails", i)}
-              />
-            </div>
-          ))}
+              </div>
+            ))}
+          </div>
         </div>
-      </div>
+      ))}
 
-      {/* Previews */}
-      <div>
-        <label className="block text-sm font-semibold text-gray-600 mb-2">
-          تصاویر اصلی (Previews)
-        </label>
-        <div className="grid grid-cols-2 gap-4">
-          {formData.imgs.previews.map((prev, i) => (
-            <div key={i} className="border-2 border-dashed rounded-xl p-4 flex flex-col items-center">
-              {prev ? (
-                <img
-                  src={prev || null }
-                  alt="preview"
-                  className="w-32 h-32 object-cover rounded mb-2"
-                />
-              ) : (
-                <span className="text-gray-400 text-sm mb-2">انتخاب عکس {i + 1}</span>
-              )}
-              <input
-                type="file"
-                accept="image/*"
-                required={!prev}
-                onChange={(e) => handleImageChange(e, "previews", i)}
-              />
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* دکمه ثبت */}
       <button
         type="submit"
-        className="w-full bg-[#232936] text-white py-3 rounded-xl font-semibold hover:bg-blue-700 transition"
+        className="w-full bg-[#232936] text-white py-3 rounded-xl font-semibold"
       >
         ذخیره محصول
       </button>

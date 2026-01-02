@@ -19,9 +19,9 @@ type Testimonial = {
   id?: string | number;
 };
 
-const API_URL =
-  process.env.NEXT_PUBLIC_COMMENTS_API_URL ||
-  "http://localhost:3000/api/comments"; 
+// URLS
+const COMMENTS_URL = process.env.NEXT_PUBLIC_API_COMMENTS_URL
+const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL
 
 const Testimonials = () => {
   const sliderRef = useRef<any>(null);
@@ -36,7 +36,7 @@ const Testimonials = () => {
 
     const controller = new AbortController();
     try {
-      const res = await fetch(API_URL, {
+      const res = await fetch(`${BASE_URL}${COMMENTS_URL}`, {
         signal: controller.signal,
         // cache: "no-store", // اگر می‌خوای همیشه تازه بگیره
       });

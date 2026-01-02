@@ -10,6 +10,12 @@ import {
   XMarkIcon,
 } from "@heroicons/react/24/outline";
 
+// URLS
+const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL;
+// const BANNER_ITEMS_URL = process.env.NEXT_PUBLIC_API_BANNER_ITEMS_URL;
+const PRODUCTS_URL = process.env.NEXT_PUBLIC_API_PRODUCTS_URL;
+const BENNER_HOME_URL = process.env.NEXT_PUBLIC_API_BENNER_HOME_URL;
+
 const BannerSliderEditor = () => {
   /* ======================= State ======================= */
   const [bannerItems, setBannerItems] = useState([]);
@@ -62,7 +68,7 @@ const BannerSliderEditor = () => {
   // دریافت بنرها
   const fetchBannerData = async () => {
     try {
-      const res = await fetch("http://localhost:3000/api/bennerHome");
+      const res = await fetch(`${BASE_URL}${BENNER_HOME_URL}`);
       const data = await res.json();
       setBannerItems(data.data || []);
     } catch {
@@ -75,7 +81,7 @@ const BannerSliderEditor = () => {
   // دریافت محصولات
   const fetchProducts = async () => {
     try {
-      const res = await fetch("http://localhost:3000/api/products");
+      const res = await fetch(`${BASE_URL}${PRODUCTS_URL}`);
       const data = await res.json();
       setProducts(data.data || []);
     } catch {
@@ -161,10 +167,9 @@ const BannerSliderEditor = () => {
     try {
       setDeletingId(_id);
 
-      const res = await fetch(
-        `http://localhost:3000/api/bennerHome/${_id}`,
-        { method: "DELETE" }
-      );
+      const res = await fetch(`${BASE_URL}${BENNER_HOME_URL}/${_id}`, {
+        method: "DELETE"
+      });
 
       if (!res.ok) throw new Error();
 
@@ -194,7 +199,7 @@ const BannerSliderEditor = () => {
         descriptionBenner: tempDescriptions[product._id] || "", 
       };
 
-      const res = await fetch("http://localhost:3000/api/bennerHome", {
+      const res = await fetch(`${BASE_URL}${BENNER_HOME_URL}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),

@@ -4,6 +4,12 @@ import { useEffect, useState, useRef } from "react";
 import Swal from "sweetalert2";
 
 export default function CategoriesManager() {
+
+  // URLs
+  const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL
+  const PRODUCTS_URL = process.env.NEXT_PUBLIC_API_PRODUCTS_URL
+  const CATEGORYS_URL = process.env.NEXT_PUBLIC_API_CATEGORYS_URL
+
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(false);
 
@@ -26,7 +32,7 @@ export default function CategoriesManager() {
   // fetch categories
   const fetchCategories = async () => {
     try {
-      const res = await fetch("http://localhost:3000/api/categorys");
+      const res = await fetch(`${BASE_URL}${CATEGORYS_URL}`);
       if (!res.ok) throw new Error("Cannot fetch categories");
       const data = await res.json();
       setCategories(data.data);
@@ -65,7 +71,7 @@ export default function CategoriesManager() {
     if (!confirm.isConfirmed) return;
 
     try {
-      const res = await fetch(`http://localhost:3000/api/categorys/${cat._id}`, {
+      const res = await fetch(`${BASE_URL}${CATEGORYS_URL}/${cat._id}`, {
         method: "DELETE",
       });
       if (!res.ok) throw new Error("delete failed");
@@ -151,7 +157,7 @@ export default function CategoriesManager() {
 
     try {
       // fetch categories for duplicate check
-      const resAll = await fetch("http://localhost:3000/api/categorys");
+      const resAll = await fetch(`${BASE_URL}${CATEGORYS_URL}`);
       const allCats = await resAll.json();
 
       // duplicate name check (exclude current editing _id)
@@ -173,7 +179,7 @@ export default function CategoriesManager() {
       };
 
       // send PUT (یا PATCH بسته به API)
-      const res = await fetch(`http://localhost:3000/api/categorys/${editModal._id}`, {
+      const res = await fetch(`${BASE_URL}${CATEGORYS_URL}/${editModal._id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(updated),

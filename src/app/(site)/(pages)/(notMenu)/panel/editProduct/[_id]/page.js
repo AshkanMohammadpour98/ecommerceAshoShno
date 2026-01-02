@@ -1,310 +1,252 @@
 "use client";
 
-import { useState, useEffect, use } from "react"; // 1. اضافه کردن use و اصلاح تایپو useEffect
-import Swal from "sweetalert2";
+import { useState, useEffect, use } from "react"; 
 import { useRouter } from "next/navigation";
+import Swal from "sweetalert2";
 
 export default function EditProductId({ params }) {
-  // 2. باز کردن params با استفاده از use (مخصوص Next.js 15)
-  const resolvedParams = use(params);
-  const _id = resolvedParams._id;
-
-  const [categories, setCategories] = useState([]);
-  const [formData, setFormData] = useState(null);
+  const resolvedParams = use(params); 
+  const _id = resolvedParams._id; // استفاده از _id (طبق دستورات قبلی شما)
   const router = useRouter();
 
-  // دریافت اطلاعات محصول و دسته‌بندی‌ها
-  // دریافت اطلاعات محصول و دسته‌بندی‌ها
+  const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || "";
+  const PRODUCTS_URL = process.env.NEXT_PUBLIC_API_PRODUCTS_URL;
+  const CATEGORYS_URL = process.env.NEXT_PUBLIC_API_CATEGORYS_URL;
+
+  const [categories, setCategories] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [originalCategory, setOriginalCategory] = useState("");
+
+  const [formData, setFormData] = useState({
+    title: "",
+    reviews: 0,
+    price: 0,
+    discountedPrice: 0,
+    hasDiscount: false,
+    categorie: "",
+    imgs: { thumbnails: [], previews: [] }, 
+    files: { thumbnails: [null, null], previews: [null, null] }, 
+  });
+
   useEffect(() => {
     const fetchData = async () => {
-      // استفاده از use برای باز کردن params در ابتدای کامپوننت انجام شده است
       if (!_id) return;
-
       try {
         const [productRes, categoryRes] = await Promise.all([
-          fetch(`/api/products/${_id}`),
-          fetch("/api/categorys")
+          fetch(`${BASE_URL}${PRODUCTS_URL}/${_id}`),
+          fetch(`${BASE_URL}${CATEGORYS_URL}`)
         ]);
 
         if (!productRes.ok) throw new Error("خطا در دریافت محصول");
-        
-        const productJson = await productRes.json(); // کل جیسون دریافتی: { data: {...} }
-        
+
+        const productJson = await productRes.json();
         const categoryJson = await categoryRes.json();
+        const actualData = productJson.data || productJson;
 
-        // اصلاح مهم: دسترسی به دیتای داخل آبجکت data
-        // اگر API شما { data: {...} } برمی‌گرداند، باید productJson.data را ست کنید
-        const actualProductData = productJson.data || productJson; 
-        console.log(productJson.data , "دیتای محصول دریافتی...");
+        setFormData(prev => ({
+          ...prev,
+          ...actualData,
+          imgs: {
+            thumbnails: actualData.imgs?.thumbnails || [null, null],
+            previews: actualData.imgs?.previews || [null, null],
+          },
+          files: { thumbnails: [null, null], previews: [null, null] },
+        }));
 
-        setFormData(productJson.data);
+        setOriginalCategory(actualData.categorie);
         setCategories(categoryJson.data || []);
-        
-      } catch (error) {
-        console.error("Error:", error);
-        Swal.fire("خطا", "در دریافت اطلاعات مشکلی پیش آمد", "error");
+        setLoading(false);
+      } catch (err) {
+        console.error(err);
+        Swal.fire("خطا", "اطلاعات محصول یافت نشد", "error");
+        setLoading(false);
       }
     };
-
     fetchData();
   }, [_id]);
 
-  if (!formData) return <p className="text-center mt-10">در حال بارگذاری...</p>;
+  // --- اضافه کردن بخش Cleanup برای مدیریت حافظه تصاویر ---
+  useEffect(() => {
+    return () => {
+      // این بخش موقع خروج از صفحه، آدرس‌های موقت عکس‌ها را از رم پاک می‌کند
+      [...formData.files.thumbnails, ...formData.files.previews].forEach(file => {
+        if (file) URL.revokeObjectURL(URL.createObjectURL(file));
+      });
+    };
+  }, [formData.files]);
 
-  // تغییر ورودی‌ها
-  const handleChange = (e) => {
-    const { name, value, type, checked } = e.target;
+  // تابع کمکی برای آپدیت تعداد محصولات
+  const updateCategoryCount = async (categoryName, increment) => {
+    const category = categories.find(cat => cat.name === categoryName);
+    if (!category) return;
 
-    if (name === "hasDiscount") {
-      setFormData((prev) => ({
-        ...prev,
-        hasDiscount: checked,
-        discountedPrice: checked ? prev.discountedPrice : 0,
-      }));
-    } else {
-      setFormData((prev) => ({
-        ...prev,
-        [name]: type === "checkbox" ? checked : value,
-      }));
-    }
+    return fetch(`${BASE_URL}${CATEGORYS_URL}/${category._id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ 
+        products: (category.products || 0) + increment,
+        id: category.id // حفظ فیلد id در بدنه طبق دستور شما
+      }),
+    });
   };
-  console.log("form data : " + formData);
-  
 
-  // ⚠️ نکته مهم درباره عکس‌ها (در توضیحات پایین بخوانید)
+  const handleChange = e => {
+    const { name, value, type, checked } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: type === "checkbox" ? checked : value,
+    }));
+  };
+
   const handleImageChange = (e, type, index) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    // اینجا فقط پیش‌نمایش لوکال می‌سازیم
-    const imageUrl = URL.createObjectURL(file);
-
-    setFormData((prev) => {
-      const newImgs = { ...prev.imgs };
-      // کپی آرایه برای جلوگیری از تغییر مستقیم state
-      const newArray = [...newImgs[type]];
-      newArray[index] = imageUrl; 
-      
-      return { 
-        ...prev, 
-        imgs: {
-            ...newImgs,
-            [type]: newArray
-        }
-      };
+    setFormData(prev => {
+      const newFiles = { ...prev.files };
+      newFiles[type][index] = file;
+      return { ...prev, files: newFiles };
     });
   };
 
-  // ثبت تغییرات
-  const handleSubmit = async (e) => {
+  const handleSubmit = async e => {
     e.preventDefault();
-
-    if (!formData.title.trim() || !formData.price) {
-      Swal.fire({
-        title: "خطا",
-        text: "لطفاً فیلدهای الزامی را پر کنید ❌",
-        icon: "error",
-      });
-      return;
-    }
-
-    const product = {
-      ...formData,
-      reviews: Number(formData.reviews),
-      price: Number(formData.price),
-      discountedPrice: Number(formData.discountedPrice),
-      hasDiscount: !!formData.discountedPrice, // تبدیل مطمئن به boolean
-    };
+    setIsSubmitting(true);
 
     try {
-      const res = await fetch(`http://localhost:3000/api/products/${_id}`, {
+      const data = new FormData();
+      data.append("title", formData.title);
+      data.append("reviews", formData.reviews);
+      data.append("price", formData.price);
+      data.append("hasDiscount", formData.hasDiscount);
+      data.append("discountedPrice", formData.hasDiscount ? formData.discountedPrice : 0);
+      data.append("categorie", formData.categorie);
+
+      formData.files.thumbnails.forEach((file, i) => {
+        if (file) data.append(`thumb_${i}`, file);
+      });
+      formData.files.previews.forEach((file, i) => {
+        if (file) data.append(`prev_${i}`, file);
+      });
+
+      const res = await fetch(`${BASE_URL}${PRODUCTS_URL}/${_id}`, {
         method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(product),
+        body: data,
       });
 
       if (res.ok) {
-        Swal.fire({
-          position: "center",
-          icon: "success",
-          title: "ویرایش با موفقیت انجام شد",
-          showConfirmButton: false,
-          timer: 1500,
-        });
-        router.push("/panel/editProduct"); // ریدایرکت به صفحه لیست
-        router.refresh(); // رفرش برای دیدن اطلاعات جدید
+        // --- بهینه‌سازی (Optimistic UI): آپدیت همزمان هر دو دسته‌بندی ---
+        if (formData.categorie !== originalCategory) {
+          await Promise.all([
+            updateCategoryCount(originalCategory, -1),
+            updateCategoryCount(formData.categorie, 1)
+          ]);
+        }
+
+        Swal.fire({ icon: "success", title: "تغییرات با موفقیت ذخیره شد", timer: 1500, showConfirmButton: false });
+        router.push("/panel/editProduct");
       } else {
-        Swal.fire("خطا", "ویرایش محصول انجام نشد ❌", "error");
+        throw new Error("خطا در آپدیت");
       }
-    } catch (error) {
-      console.error("مشکل در ارسال:", error);
+    } catch (err) {
+      Swal.fire("خطا", "عملیات ناموفق بود", "error");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
+  if (loading) return <div className="text-center py-20">در حال بارگذاری...</div>;
+
   return (
-    <form
-      onSubmit={handleSubmit}
-      className="w-full mx-auto bg-white shadow-xl rounded-2xl p-8 space-y-6 mb-20"
-    >
-      <h2 className="text-center text-2xl font-bold text-gray-700 border-b pb-2">
-        ویرایش محصول: {formData.title}
-      </h2>
+    <form onSubmit={handleSubmit} className="w-full mx-auto bg-white shadow-xl rounded-2xl p-8 space-y-6 mb-20">
+      <h2 className="text-center text-2xl font-bold text-gray-700 border-b pb-4">ویرایش محصول</h2>
 
-      {/* عنوان */}
-      <div>
-        <label className="block text-sm font-semibold text-gray-600">
-          عنوان محصول
-        </label>
-        <input
-          type="text"
-          name="title"
-          value={formData.title}
-          onChange={handleChange}
-          className="w-full mt-1 border rounded-xl px-4 py-2 focus:ring-2 focus:ring-blue-400 outline-none"
-        />
-      </div>
-
-      {/* Reviews */}
-      <div>
-        <label className="block text-sm font-semibold text-gray-600">
-          امتیاز (Reviews)
-        </label>
-        <input
-          type="number"
-          name="reviews"
-          value={formData.reviews}
-          onChange={handleChange}
-          className="w-full mt-1 border rounded-xl px-4 py-2 focus:ring-2 focus:ring-blue-400 outline-none"
-        />
-      </div>
-
-      {/* قیمت و تخفیف */}
-      <div className="bg-gray-50 p-4 rounded-xl border">
-        <label className="block text-sm font-semibold text-gray-600">قیمت اصلی</label>
-        <input
-          type="number"
-          name="price"
-          value={formData.price}
-          onChange={handleChange}
-          className="w-full mt-1 border rounded-xl px-4 py-2 focus:ring-2 focus:ring-blue-400 outline-none"
-        />
-
-        <div className="flex items-center mt-4 mb-2">
-          <input
-            type="checkbox"
-            name="hasDiscount"
-            id="hasDiscount"
-            checked={!!formData.hasDiscount}
-            onChange={handleChange}
-            className="h-5 w-5 text-blue-600 cursor-pointer"
-          />
-          <label htmlFor="hasDiscount" className="mr-2 text-sm text-gray-700 cursor-pointer select-none">افزودن تخفیف</label>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div>
+          <label className="block text-sm font-semibold text-gray-600">عنوان محصول</label>
+          <input type="text" name="title" value={formData.title} onChange={handleChange} className="w-full mt-1 border rounded-xl px-4 py-2 outline-none focus:border-blue" />
         </div>
+        <div>
+          <label className="block text-sm font-semibold text-gray-600">دسته‌بندی</label>
+          <select name="categorie" value={formData.categorie} onChange={handleChange} className="w-full mt-1 border rounded-xl px-4 py-2 outline-none">
+            {categories.map(cat => <option key={cat._id} value={cat.name}>{cat.name}</option>)}
+          </select>
+        </div>
+      </div>
 
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div>
+          <label className="block text-sm font-semibold text-gray-600">قیمت اصلی</label>
+          <input type="number" name="price" value={formData.price} onChange={handleChange} className="w-full mt-1 border rounded-xl px-4 py-2 outline-none" />
+        </div>
+        <div className="flex flex-col justify-center">
+          <label className="flex items-center gap-2 cursor-pointer mt-5">
+            <input type="checkbox" name="hasDiscount" checked={formData.hasDiscount} onChange={handleChange} />
+            <span className="text-sm font-semibold text-gray-600">دارای تخفیف؟</span>
+          </label>
+        </div>
         {formData.hasDiscount && (
           <div>
-             <label className="block text-sm font-semibold text-green-600">قیمت با تخفیف</label>
-            <input
-                type="number"
-                name="discountedPrice"
-                value={formData.discountedPrice}
-                onChange={handleChange}
-                className="w-full mt-1 border border-green-300 rounded-xl px-4 py-2 focus:ring-2 focus:ring-green-400 outline-none"
-            />
+            <label className="block text-sm font-semibold text-gray-600">قیمت با تخفیف</label>
+            <input type="number" name="discountedPrice" value={formData.discountedPrice} onChange={handleChange} className="w-full mt-1 border rounded-xl px-4 py-2 border-green-500 outline-none" />
           </div>
         )}
       </div>
 
-      {/* دسته‌بندی */}
+      {/* بخش تصاویر اصلی */}
       <div>
-        <label className="block text-sm font-semibold text-gray-600 mb-2">
-          دسته‌بندی:
-        </label>
-        <select
-          name="category" // دقت کنید نام فیلد در دیتابیس چیست (categorie یا category)
-          value={formData.category || formData.categorie || ""}
-          onChange={handleChange}
-          className="w-full border rounded-xl px-4 py-2 focus:ring-2 focus:ring-blue-400 outline-none bg-white"
-        >
-          <option value="">انتخاب کنید...</option>
-          {categories.map((item, index) => (
-            <option key={index} value={item.name}>
-              {item.name}
-            </option>
-          ))}
-        </select>
-      </div>
-
-      {/* Thumbnails */}
-      <div>
-        <label className="block text-sm font-semibold text-gray-600 mb-2">
-          تصاویر کوچک (Thumbnails)
-        </label>
+        <h3 className="text-sm font-bold text-gray-700 mb-3 uppercase tracking-wider">تصاویر اصلی (Previews)</h3>
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-          {formData.imgs?.thumbnails?.map((thumb, i) => (
-            <div
-              key={i}
-              className="border-2 border-dashed border-gray-300 rounded-xl p-2 flex flex-col items-center justify-center hover:border-blue-400 transition"
-            >
-              {thumb ? (
-                <img
-                  src={thumb}
-                  alt="thumb"
-                  className="w-20 h-20 object-contain rounded-lg mb-2"
-                />
-              ) : (
-                <span className="text-xs text-gray-400 mb-2">خالی</span>
-              )}
-              <input
-                type="file"
-                accept="image/*"
-                onChange={(e) => handleImageChange(e, "thumbnails", i)}
-                className="text-xs w-full max-w-[150px]"
+          {formData.imgs.previews.map((imgUrl, i) => (
+            <div key={i} className="relative group border-2 border-dashed rounded-xl p-2 flex flex-col items-center bg-gray-50">
+              <img 
+                src={formData.files.previews[i] ? URL.createObjectURL(formData.files.previews[i]) : `${BASE_URL}${imgUrl}`} 
+                className="w-full h-32 object-contain rounded-lg mb-2" 
+                alt="preview"
               />
+              <input type="file" onChange={(e) => handleImageChange(e, "previews", i)} className="text-[10px] w-full cursor-pointer" />
             </div>
           ))}
         </div>
       </div>
 
-      {/* Previews */}
+      {/* بخش تصاویر کوچک */}
       <div>
-        <label className="block text-sm font-semibold text-gray-600 mb-2">
-          تصاویر اصلی (Previews)
-        </label>
+        <h3 className="text-sm font-bold text-gray-700 mb-3 uppercase tracking-wider">تصاویر کوچک (Thumbnails)</h3>
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-          {formData.imgs?.previews?.map((prev, i) => (
-            <div
-              key={i}
-              className="border-2 border-dashed border-gray-300 rounded-xl p-2 flex flex-col items-center justify-center hover:border-blue-400 transition"
-            >
-              {prev ? (
-                <img
-                  src={prev}
-                  alt="preview"
-                  className="w-24 h-24 object-contain rounded-lg mb-2"
-                />
-              ) : (
-                <span className="text-xs text-gray-400 mb-2">خالی</span>
-              )}
-              <input
-                type="file"
-                accept="image/*"
-                onChange={(e) => handleImageChange(e, "previews", i)}
-                className="text-xs w-full max-w-[150px]"
+          {formData.imgs.thumbnails.map((imgUrl, i) => (
+            <div key={i} className="relative group border-2 border-dashed rounded-xl p-2 flex flex-col items-center bg-gray-50">
+              <img 
+                src={formData.files.thumbnails[i] ? URL.createObjectURL(formData.files.thumbnails[i]) : `${BASE_URL}${imgUrl}`} 
+                className="w-full h-24 object-contain rounded-lg mb-2" 
+                alt="thumbnail"
               />
+              <input type="file" onChange={(e) => handleImageChange(e, "thumbnails", i)} className="text-[10px] w-full cursor-pointer" />
             </div>
           ))}
         </div>
       </div>
 
-      {/* دکمه ذخیره */}
-      <button
-        type="submit"
-        className="w-full bg-blue-dark text-white py-3 rounded-xl font-semibold hover:bg-blue-700 transition shadow-lg mt-6"
-      >
-        ذخیره تغییرات
-      </button>
-
+     <button 
+  type="submit" 
+  disabled={isSubmitting} 
+  className={`w-full py-4 rounded-xl font-bold transition-all shadow-lg flex items-center justify-center gap-3 
+    ${isSubmitting 
+      ? "bg-gray-600 cursor-not-allowed text-[#232936] opacity-90" // استایل زمان سابمیت: خاکستری تیره برای وضوح در بک‌گراند سفید
+      : "bg-[#232936] hover:bg-black text-white active:scale-95" // استایل حالت عادی
+    }`}
+>
+  {isSubmitting ? (
+    <>
+      {/* لودر چرخشی با ضخامت بیشتر برای دید بهتر */}
+      <div className="w-5 h-5 border-3 border-white border-t-transparent rounded-full animate-spin"></div>
+      <span>در حال ثبت تغییرات...</span>
+    </>
+  ) : (
+    "بروزرسانی نهایی محصول"
+  )}
+</button>
     </form>
   );
 }

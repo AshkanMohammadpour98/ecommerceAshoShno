@@ -1,20 +1,4 @@
-//  const categories = [
-//     { name: "Desktop", products: 10 },
-//     { name: "Laptop", products: 12 },
-//     { name: "Monitor", products: 30 },
-//     { name: "UPS", products: 23 },
-//     { name: "Phone", products: 10 },
-//     { name: "Watch", products: 13 },
-//     { name: "Mouse", products: 4 },
-//     { name: "Ipad", products: 2 },
-//     { name: "Modem", products: 4 },
-//   ];
-//   export async function GET() {
-//     return Response.json(categories)
-//   }
-
-//              ----------------------------------------
-
+// /api/categorys/
 
 import Categorys from '/models/Categorys'
 import connectDB from '/utils/ConnectDB'
@@ -25,16 +9,16 @@ export async function GET(request) {
   try {
     await connectDB()
 
-    let user = null
+    let categories = null
 
-    // ⭐ اگر هیچ فیلتری ارسال نشده، همه کاربران را برگردان
-    user = await Categorys.find()
+    // ⭐ اگر هیچ فیلتری ارسال نشده، همه دسبته بندی ها را برگردان
+    categories = await Categorys.find()
 
 
     return Response.json({
       success: true,
-      count: user.length,
-      data: user
+      count: categories.length,
+      data: categories
     })
 
   } catch (error) {
@@ -47,7 +31,7 @@ export async function GET(request) {
 }
 
 
-// POST - ساخت یوزر جدید
+// POST - ساخت دسبته بندی جدید
 export async function POST(request) {
 
   try {

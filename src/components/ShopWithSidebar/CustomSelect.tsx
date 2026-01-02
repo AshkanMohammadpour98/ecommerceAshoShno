@@ -2,11 +2,10 @@
 
 import React, { useState, useEffect, useRef } from "react";
 
-const CustomSelect = ({ options }) => {
+const CustomSelect = ({ options , selectedOption , setSelectedOption }) => {
   // state برای باز/بسته بودن dropdown
   const [isOpen, setIsOpen] = useState(false);
-  // state برای نگه‌داری گزینه انتخاب‌شده (پیش‌فرض: اولین گزینه از props)
-  const [selectedOption, setSelectedOption] = useState(options[0]);
+
   // ref برای تشخیص کلیک خارج از کامپوننت
   const selectRef = useRef(null);
 
@@ -37,6 +36,9 @@ const CustomSelect = ({ options }) => {
     setSelectedOption(option); // ست کردن گزینه انتخابی
     toggleDropdown(); // بستن dropdown
   };
+
+  // محافظت وقتی options هنوز نیومده
+  if (!options.length || !selectedOption) return null;
 
   return (
     <div
