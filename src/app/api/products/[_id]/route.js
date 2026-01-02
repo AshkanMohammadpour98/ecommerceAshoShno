@@ -1,6 +1,6 @@
 // /api/products/[_id]/route.js
 import { NextResponse } from "next/server";
-import connectDB from "/utils/connectDB";
+import connectDB from "@/utils/connectDB";
 import Product from "/models/Products";
 import { writeFile } from "fs/promises";
 import path from "path";
