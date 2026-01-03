@@ -6,6 +6,8 @@ import { writeFile } from "fs/promises";
 import path from "path";
 import crypto from "crypto";
 import fs from "fs";
+  const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL
+  const CATEGORYS_URL = process.env.NEXT_PUBLIC_API_CATEGORYS_URL
 
 /* =========================
    تابع کمکی برای حذف فیزیکی فایل‌ها
@@ -204,7 +206,7 @@ export async function DELETE(req, { params }) {
     // 5. تعامل با API دسته‌بندی (طبق درخواست شما)
     // نکته: اگر نیاز دارید آیتمی از دسته‌بندی‌ها کم شود، اینجا باید ریکوئست بزنید
     try {
-       await fetch(`http://localhost:3000/api/categorys`, {
+       await fetch(`${BASE_URL}${CATEGORYS_URL}`, {
          method: 'DELETE',
          body: JSON.stringify({ categoryName: product.categorie }),
          headers: { 'Content-Type': 'application/json' }
