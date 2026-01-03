@@ -11,9 +11,12 @@ const withPWA = require('next-pwa')({
 const nextConfig = {
   typescript: {
     ignoreBuildErrors: true,
+      turbopack: {}, // فعال کردن Turbopack بدون خطا
+
   },
   // اگر در آینده تنظیمات دیگه‌ای داشتی، اینجا اضافه کن
 };
+/** @type {import('next').NextConfig} */
 
 // 3. در نهایت، تنظیمات نکست رو با تنظیمات PWA ادغام و export می‌کنیم
 module.exports = withPWA(nextConfig);
