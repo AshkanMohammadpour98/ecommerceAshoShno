@@ -106,8 +106,10 @@ export async function POST(request) {
         httpOnly: true, // از سمت جاوااسکریپت قابل خواندن نیست → امنیت بالاتر
         path: "/",       // روی کل سایت اعمال می‌شود
         maxAge: 60 * 60 * 2, // اعتبار ۲ ساعت
-        sameSite: "strict",   // جلوگیری از CSRF
-        secure: true,   // فقط روی HTTPS فعال می‌شود
+        // sameSite: "strict",   // جلوگیری از CSRF
+        // secure: true,   // فقط روی HTTPS فعال می‌شود
+         sameSite: "lax",
+    secure: process.env.NODE_ENV === "production",
                        // اگر روی localhost تست می‌کنی باید false کنی
       })
     );

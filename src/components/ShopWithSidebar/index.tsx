@@ -61,7 +61,7 @@ useEffect(() => {
   useEffect(() => {
     const fetchOptions = async () => {
       try {
-        const res = await fetch("http://localhost:3000/api/options");
+        const res = await fetch("/api/options");
         const data = await res.json();
 
         if (data.success) {
@@ -101,19 +101,19 @@ useEffect(() => {
   useEffect(() => {
     const fetchProducts = async () => {
       try {
-        const res = await fetch("http://localhost:3000/api/products");
+        const res = await fetch("/api/products");
         if (!res.ok) throw new Error("خطا در دریافت اطلاعات");
 
         const data = await res.json();
         setProductsData(data.data); // ذخیره داده‌ها در state
         setVisibleProducts(data.data.slice(0, 10)); // فقط 10 محصول اول نمایش داده میشه
 
-        const resCategories = await fetch("http://localhost:3000/api/categorys");
+        const resCategories = await fetch("/api/categorys");
         if (!resCategories.ok) throw new Error("خطا در دریافت اطلاعات دسته بندی ها");
         const dataCategories = await resCategories.json();
         setCategories(dataCategories.data)
 
-        const resGenders = await fetch("http://localhost:3000/api/genders");
+        const resGenders = await fetch("/api/genders");
         if (!resGenders.ok) throw new Error("خطا در دریافت اطلاعات جنسیت ها  ");
         const dataGenders = await resGenders.json();
         setGenders(dataGenders.data)

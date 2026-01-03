@@ -1,5 +1,5 @@
-import { cookies } from "next/headers";
-import jwt from "jsonwebtoken";
+// /api/auth/me/route.js
+import { cookies } from "next/headers";import jwt from "jsonwebtoken";
 import connectDB from "/utils/ConnectDB";
 import Users from "/models/Users";
 import { NextResponse } from "next/server";

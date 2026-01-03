@@ -1,3 +1,4 @@
+// components/Auth/Signin/index.tsx
 "use client";
 
 import { useState } from "react";
@@ -19,13 +20,13 @@ const toEnglishDigits = (s = "") =>
 const onlyDigitsEnglish = (val = "") => toEnglishDigits(val).replace(/\D/g, "");
 
 // کوکی با انقضای پیش‌فرض 1 روز (86400 ثانیه)
-const setCookie = (name, value, { maxAgeSec = 86400 } = {}) => {
-  const secure =
-    typeof window !== "undefined" && window.location.protocol === "https:" ? "; Secure" : "";
-  document.cookie = `${name}=${encodeURIComponent(
-    value
-  )}; Path=/; Max-Age=${maxAgeSec}; SameSite=Lax${secure}`;
-};
+// const setCookie = (name, value, { maxAgeSec = 86400 } = {}) => {
+//   const secure =
+//     typeof window !== "undefined" && window.location.protocol === "https:" ? "; Secure" : "";
+//   document.cookie = `${name}=${encodeURIComponent(
+//     value
+//   )}; Path=/; Max-Age=${maxAgeSec}; SameSite=Lax${secure}`;
+// };
 
 
 // ===================================================
@@ -111,9 +112,10 @@ const handleSubmit = async (e) => {
     });
 
     // ============= ریدایرکت به پنل =============
-    // اگر API شناسه کاربر را ارسال کند، از آن استفاده کن
+
     setTimeout(() => {
-      window.location.href = `/my-account/${data.userId || ""}`;
+      // window.location.href = `/my-account/${data.userId || ""}`;
+      window.location.href = `/my-account`;
     }, 1300);
 
   } catch (error) {

@@ -5,6 +5,8 @@ import React, { createContext, useContext } from "react";
 const UserContext = createContext(null);
 
 export const UserProvider = ({ children, user }) => {
+  console.log(user , 'user... usercontext.js');
+  
   return (
     <UserContext.Provider value={user}>
       {children}

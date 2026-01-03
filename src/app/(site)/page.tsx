@@ -1,4 +1,3 @@
-// import AuthGuard from "@/components/AuthGuard";
 import Home from "@/components/Home";
 import { Metadata } from "next";
 
@@ -13,10 +12,7 @@ export const metadata: Metadata = {
 export default function HomePage() {
   return (
     <>
-    {/* <AuthGuard> */}
-
       <Home />
-    {/* </AuthGuard> */}
     </>
   );
 }
