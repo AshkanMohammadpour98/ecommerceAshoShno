@@ -1,7 +1,11 @@
 {
   "compilerOptions": {
     "target": "es5",
-    "lib": ["dom", "dom.iterable", "esnext"],
+    "lib": [
+      "dom",
+      "dom.iterable",
+      "esnext"
+    ],
     "allowJs": true,
     "skipLibCheck": true,
     "strict": false,
@@ -11,7 +15,7 @@
     "moduleResolution": "bundler",
     "resolveJsonModule": true,
     "isolatedModules": true,
-    "jsx": "preserve",
+    "jsx": "react-jsx",
     "incremental": true,
     "plugins": [
       {
@@ -19,9 +23,24 @@
       }
     ],
     "paths": {
-      "@/*": ["./src/*"]
+      "@/*": [
+        "./src/*"
+      ]
     }
   },
-  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts", "src/app/(site)/(pages)/(widthMnu)/my-account/[userId]/page.js", "src/components/Header/index.tsx", "src/app/(site)/(pages)/(widthMnu)/my-account/page.jsx", "src/components/AuthGuard/index.jsx", "src/app/(site)/(pages)/(notMenu)/panel/editProduct/page.jsx"],
-  "exclude": ["node_modules"]
+  "include": [
+    "next-env.d.ts",
+    "**/*.ts",
+    "**/*.tsx",
+    ".next/types/**/*.ts",
+    "src/app/(site)/(pages)/(widthMnu)/my-account/[userId]/page.js",
+    "src/components/Header/index.tsx",
+    "src/app/(site)/(pages)/(widthMnu)/my-account/page.jsx",
+    "src/components/AuthGuard/index.jsx",
+    "src/app/(site)/(pages)/(notMenu)/panel/editProduct/page.jsx",
+    ".next/dev/types/**/*.ts"
+  ],
+  "exclude": [
+    "node_modules"
+  ]
 }
