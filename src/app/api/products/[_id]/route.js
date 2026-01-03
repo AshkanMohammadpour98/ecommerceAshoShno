@@ -1,6 +1,6 @@
 // /api/products/[_id]/route.js
 import { NextResponse } from "next/server";
-import connectDB from "@/utils/connectDB";
+import connectDB from "/utils/ConnectDB"
 import Product from "/models/Products";
 import { writeFile } from "fs/promises";
 import path from "path";
@@ -31,7 +31,7 @@ export async function GET(req, { params }) {
   try {
     await connectDB();
 
-    const { _id } = params;
+    const { _id } =  params;
     console.log(_id);
   
     
@@ -98,7 +98,7 @@ export async function PATCH(req, { params }) {
     await connectDB();
 
     // ۱. استخراج _id (در نسخه های جدید Next.js باید await شود)
-    const { _id } = await params;
+    const { _id } =  params;
 
     // ۲. دریافت داده‌های فرم
     const formData = await req.formData();
@@ -178,7 +178,7 @@ export async function PATCH(req, { params }) {
 export async function DELETE(req, { params }) {
   try {
     await connectDB();
-    const { _id } = params;
+    const { _id } =  params;
 
     // 1. پیدا کردن محصول قبل از حذف برای دسترسی به آدرس تصاویر
     const product = await Product.findById(_id);
