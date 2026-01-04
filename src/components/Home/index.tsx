@@ -17,7 +17,7 @@ const Home = () => {
       <NewArrival />
       <LimitedDiscountCountdown />
       <PromoBanner />
-      <BestSeller />
+      {/* <BestSeller /> */}
       <Testimonials />
       {/* <Newsletter /> */}
     </main>

@@ -49,6 +49,8 @@ const CategoryItem = ({ category, isSelected, onSelect }) => {
 
 // 🔹 این کامپوننت منوی کشویی دسته‌بندی‌ها را مدیریت و نمایش می‌دهد
 const CategoryDropdown = ({ categories, selectedCategories, setSelectedCategories, }) => {
+  console.log(categories , "categories ...");
+  
   // state برای باز/بسته بودن منوی کشویی
   const [toggleDropdown, setToggleDropdown] = useState(true);
   const handleSelectCategory = (category) => {
@@ -65,6 +67,7 @@ const CategoryDropdown = ({ categories, selectedCategories, setSelectedCategorie
   });
 };
 
+console.log(selectedCategories , 'selectedCategories...');
 
   return (
     <div className="bg-white shadow-1 rounded-lg">

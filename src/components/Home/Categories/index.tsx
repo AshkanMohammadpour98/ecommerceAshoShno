@@ -35,8 +35,9 @@ const Categories = () => {
     };
     fetchProduct();
   }, []);
+ 
 
-  // console.log(categoriesHeaderData + 'categoriesHeaderData');
+  console.log(categoriesHeaderData , 'categoriesHeaderData...');
   
   return (
     <section className="overflow-hidden pt-17.5">

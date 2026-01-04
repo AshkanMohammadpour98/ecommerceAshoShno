@@ -31,6 +31,7 @@ const ShopWithSidebar = () => {
   const [productSidebar, setProductSidebar] = useState(false); // باز و بسته شدن سایدبار
   const [stickyMenu, setStickyMenu] = useState(false); // چسبندگی منو بالا هنگام اسکرول
   const [selectedOption, setSelectedOption] = useState(null);
+  const [selectedCategories, setSelectedCategories] = useState([]);
 
   // داده‌ها از سرور گرفته می‌شوند
   const [productsData, setProductsData] = useState([]);
@@ -229,7 +230,8 @@ useEffect(() => {
                         پاک کردن همه
                       </button>
                     </div>
-                    <CategoryDropdown categories={categories} />
+                    <CategoryDropdown categories={categories} selectedCategories={selectedCategories}
+                    setSelectedCategories={setSelectedCategories}/>
                     <GenderDropdown genders={genders} />
                     <SizeDropdown />
                     <ColorsDropdwon />

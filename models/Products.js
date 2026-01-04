@@ -2,6 +2,7 @@ import { models, model, Schema } from "mongoose";
 
 const productsSchema = new Schema(
   {
+    
     // id فرانت
     id: {
       type: String,

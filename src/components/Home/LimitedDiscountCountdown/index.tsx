@@ -4,6 +4,10 @@ import React, { useEffect, useMemo, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 
+// URLS
+const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL
+const LIMITED_DISCOUNT_URL = process.env.NEXT_PUBLIC_API_LIMITED_DISCOUNT_URL
+const PRODUCTS_URL = process.env.NEXT_PUBLIC_API_PRODUCTS_URL
 // ============================================
 // توابع کمکی (Helper Functions)
 // ============================================
@@ -36,11 +40,12 @@ const CounDown = () => {
   // تغییر مهم: timeProgress را به استیت تبدیل کردیم تا بتوانیم هر ثانیه آپدیتش کنیم
   const [timeProgress, setTimeProgress] = useState(0);
 
-// URLS
-const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL
-const LIMITED_DISCOUNT_URL = process.env.NEXT_PUBLIC_API_LIMITED_DISCOUNT_URL
-const PRODUCTS_URL = process.env.NEXT_PUBLIC_API_PRODUCTS_URL
 
+
+
+console.log(
+  `${BASE_URL}${LIMITED_DISCOUNT_URL}`
+);
 
   // ============================================
   // دریافت داده‌ها از API
@@ -57,9 +62,12 @@ const PRODUCTS_URL = process.env.NEXT_PUBLIC_API_PRODUCTS_URL
           `${BASE_URL}${LIMITED_DISCOUNT_URL}`,
           { cache: "no-store" }
         );
+      
+        
         if (!discountRes.ok) throw new Error("discount fetch error");
 
         const discountJson = await discountRes.json();
+        // const discountData = discountJson.data || discountJson;
         const discountData = discountJson.data || discountJson;
 
         if (!Array.isArray(discountData) || discountData.length === 0) {
@@ -72,16 +80,21 @@ const PRODUCTS_URL = process.env.NEXT_PUBLIC_API_PRODUCTS_URL
         }
 
         const activeDiscount = discountData[0];
+        console.log(activeDiscount , 'activeDiscount....');
+        
 
         const productRes = await fetch(
           `${BASE_URL}${PRODUCTS_URL}/${activeDiscount.productId}`,
           { cache: "no-store" }
         );
+        console.log(productRes , 'productRes.......');
         
         if (!productRes.ok) throw new Error("Product not found");
 
         const productJson = await productRes.json();
         const productData = productJson.data || productJson;
+      
+        
 
         if (!ignore) {
           setDiscount(activeDiscount);
