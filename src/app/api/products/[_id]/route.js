@@ -97,7 +97,7 @@ export async function PATCH(req, { params }) {
     await connectDB();
 
     // ۱. استخراج _id (در نسخه های جدید Next.js باید await شود)
-    const { _id } =  params;
+    const { _id } = await params;
 
     // ۲. دریافت داده‌های فرم
     const formData = await req.formData();
@@ -177,7 +177,7 @@ export async function PATCH(req, { params }) {
 export async function DELETE(req, { params }) {
   try {
     await connectDB();
-    const { _id } =  params;
+    const { _id } =  await params;
 
     // 1. پیدا کردن محصول قبل از حذف برای دسترسی به آدرس تصاویر
     const product = await Product.findById(_id);

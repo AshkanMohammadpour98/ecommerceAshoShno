@@ -109,6 +109,9 @@ export async function POST(req) {
         previews,
       },
     };
+    
+    console.log(productData);
+    
 
     // 🟢 ذخیره در MongoDB
     const product = await Products.create(productData);
