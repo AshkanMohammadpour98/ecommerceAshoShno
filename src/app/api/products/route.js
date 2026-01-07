@@ -98,7 +98,7 @@ export async function POST(req) {
 
       price: Number(data.get("price")),
       reviews: Number(data.get("reviews")),
-      count: Number(data.get("count") || 1), // 🟢 count اضافه شد
+      count: Number(data.get("count") || 1), //  count اضافه شد
       hasDiscount: data.get("hasDiscount") === "true",
       discountedPrice: data.get("discountedPrice")
         ? Number(data.get("discountedPrice"))

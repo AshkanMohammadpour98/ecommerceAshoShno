@@ -58,7 +58,7 @@ const BlogDetailsWithSidebar = async () => {
                   </a>
                   <span className="block w-px h-4 bg-gray-4"></span>
                   <a href="#" className="ease-out duration-200 hover:text-blue">
-                    ۳۰۰ هزار بازدید
+                   تتتتتتت ۳۰۰ هزار بازدید
                   </a>
                 </span>
 

@@ -1,3 +1,4 @@
+// pages/panel/addBlog/page.js
 "use client";
 
 import { useEffect, useState } from "react";
@@ -28,7 +29,7 @@ export default function AddBlogForm() {
     title: "",
     date: initialDate,
     views: 0,
-    img: "",
+    img: null,
     categorie: "",
     content: "",
   });
@@ -47,30 +48,44 @@ export default function AddBlogForm() {
   };
 
   // انتخاب عکس
-  const handleImageChange = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      const imageUrl = URL.createObjectURL(file);
-      setFormData({ ...formData, img: imageUrl });
-    }
-  };
+const handleImageChange = (e) => {
+  const file = e.target.files?.[0];
+  if (!file) return;
 
-  // ثبت فرم
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  setFormData((prev) => ({
+    ...prev,
+    img: file, // ✅ ذخیره File
+  }));
+};
 
-    const newBlog = { ...formData, id: String(Date.now()) };
-    console.log(newBlog + 'new blog');
-    
 
-    await fetch(`${BASE_URL}${BLOGS_URL}`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(newBlog),
-    });
+  // ثبت فرم 
+  // قبلا بصورت جی سون میفرستادیم الان بصورت فرم دیتا
+ const handleSubmit = async (e) => {
+  e.preventDefault();
 
-    router.push("/blogs/blog-grid-with-sidebar");
-  };
+  if (!formData.img) {
+    alert("لطفا تصویر مقاله را انتخاب کنید");
+    return;
+  }
+
+  const form = new FormData();
+  form.append("id", String(Date.now()));
+  form.append("title", formData.title);
+  form.append("date", formData.date);
+  form.append("views", formData.views);
+  form.append("categorie", formData.categorie);
+  form.append("content", formData.content);
+  form.append("img", formData.img); // ✅ ارسال فایل
+
+  await fetch(`${BASE_URL}${BLOGS_URL}`, {
+    method: "POST",
+    body: form, // ❗ بدون Content-Type
+  });
+
+  router.push("/blogs/blog-grid-with-sidebar");
+};
+
 
   return (
      
@@ -158,7 +173,7 @@ export default function AddBlogForm() {
                     items-center sm:flex-row sm:items-center sm:gap-4">
       {formData.img ? (
         <img
-          src={formData.img || null}
+          src={URL.createObjectURL(formData.img)}
           alt="img add blog"
           className="w-24 h-24 sm:w-28 sm:h-28 lg:w-32 lg:h-32 
                      object-cover rounded-lg mb-2 sm:mb-0"

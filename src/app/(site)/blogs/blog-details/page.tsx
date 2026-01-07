@@ -16,7 +16,7 @@ const BlogDetailsPage = () => {
   return (
     <main dir="rtl">
       {/* 🔑 نمایش کامپوننت جزئیات بلاگ */}
-      <BlogDetails />
+      {/* <BlogDetails /> */}
     </main>
   );
 };

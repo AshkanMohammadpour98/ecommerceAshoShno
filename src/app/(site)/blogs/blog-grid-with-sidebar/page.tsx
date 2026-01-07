@@ -12,11 +12,11 @@ export const metadata: Metadata = {
   description: "صفحه نمایش مقالات بلاگ همراه با سایدبار",
 };
 
-const BlogGridWithSidebarPage = () => {
+const BlogGridWithSidebarPage = ({ searchParams }) => {
   return (
     <main dir="rtl">
       {/* 🔑 نمایش کامپوننت گرید بلاگ با سایدبار */}
-      <BlogGridWithSidebar />
+      <BlogGridWithSidebar  searchParams={searchParams}/>
     </main>
   );
 };

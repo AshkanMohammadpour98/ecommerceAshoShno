@@ -11,7 +11,7 @@ import Categorys from '/models/Categorys';
 export async function GET(request, { params }) {
   try {
     await connectDB();
-    const { _id } = params;
+    const { _id } = await params;
 
     let category = null;
 
@@ -50,7 +50,7 @@ export async function GET(request, { params }) {
 export async function DELETE(request, { params }) {
   try {
     await connectDB();
-    const { _id } = params;
+    const { _id } = await params;
 
     if (!isValidObjectId(_id)) {
       return NextResponse.json({ message: 'Invalid category ID' }, { status: 400 });
@@ -101,7 +101,7 @@ export async function PUT(request, { params }) {
 export async function PATCH(request, { params }) {
   try {
     await connectDB();
-    const { _id } = params;
+    const { _id } = await params;
     const body = await request.json();
 
     if (!isValidObjectId(_id)) {

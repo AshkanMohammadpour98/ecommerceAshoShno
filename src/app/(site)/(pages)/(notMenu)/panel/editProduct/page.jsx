@@ -30,7 +30,7 @@ export default function EditProducts() {
   const [totalCount, setTotalCount] = useState(0);
   const [categories, setCategories] = useState([]);
   // ذخیره ID محصولی که در حال حذف است برای نمایش لودر اختصاصی
-const [deletingId, setDeletingId] = useState(null);
+  const [deletingId, setDeletingId] = useState(null);
 
   // --- استیت‌های مربوط به مودال مشاهده سریع ---
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -38,26 +38,26 @@ const [deletingId, setDeletingId] = useState(null);
   const [activePreview, setActivePreview] = useState(0);
   const [quantity, setQuantity] = useState(1);
 
- const fetchProducts = async () => {
-  try {
-    // دریافت همزمان محصولات و دسته‌بندی‌ها
-    const [prodRes, catRes] = await Promise.all([
-      fetch(`${BASE_URL}${PRODUCTS_URL}`),
-      fetch(`${BASE_URL}${CATEGORYS_URL}`)
-    ]);
+  const fetchProducts = async () => {
+    try {
+      // دریافت همزمان محصولات و دسته‌بندی‌ها
+      const [prodRes, catRes] = await Promise.all([
+        fetch(`${BASE_URL}${PRODUCTS_URL}`),
+        fetch(`${BASE_URL}${CATEGORYS_URL}`)
+      ]);
 
-    if (!prodRes.ok || !catRes.ok) throw new Error("خطا در دریافت اطلاعات");
+      if (!prodRes.ok || !catRes.ok) throw new Error("خطا در دریافت اطلاعات");
 
-    const prodData = await prodRes.json();
-    const catData = await catRes.json();
+      const prodData = await prodRes.json();
+      const catData = await catRes.json();
 
-    setProductsData(Array.isArray(prodData.data) ? prodData.data : []);
-    setCategories(Array.isArray(catData.data) ? catData.data : []);
-    setTotalCount(prodData.count || prodData.data?.length || 0);
-  } catch (err) {
-    console.error(err);
-  }
-};
+      setProductsData(Array.isArray(prodData.data) ? prodData.data : []);
+      setCategories(Array.isArray(catData.data) ? catData.data : []);
+      setTotalCount(prodData.count || prodData.data?.length || 0);
+    } catch (err) {
+      console.error(err);
+    }
+  };
 
   useEffect(() => {
     fetchProducts();
@@ -97,22 +97,22 @@ const [deletingId, setDeletingId] = useState(null);
 
   // تابع کمکی برای کاهش تعداد محصولات در دسته‌بندی
   const decrementCategoryCount = async (categoryName) => {
-  const category = categories.find(cat => cat.name === categoryName);
-  if (!category) return;
+    const category = categories.find(cat => cat.name === categoryName);
+    if (!category) return;
 
-  try {
-    await fetch(`${BASE_URL}${CATEGORYS_URL}/${category._id}`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ 
-        products: Math.max(0, (category.products || 0) - 1),
-        id: category.id // طبق دستور شما برای مقایسه/جستجو id ارسال می‌شود
-      }),
-    });
-  } catch (err) {
-    console.error("خطا در به‌روزرسانی تعداد دسته‌بندی:", err);
-  }
-};
+    try {
+      await fetch(`${BASE_URL}${CATEGORYS_URL}/${category._id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          products: Math.max(0, (category.products || 0) - 1),
+          id: category.id // طبق دستور شما برای مقایسه/جستجو id ارسال می‌شود
+        }),
+      });
+    } catch (err) {
+      console.error("خطا در به‌روزرسانی تعداد دسته‌بندی:", err);
+    }
+  };
 
   return (
     <section className="overflow-y-scroll h-screen relative pb-20 pt-2 lg:pt-10 xl:pt-12 bg-[#f3f4f6]">
@@ -143,45 +143,45 @@ const [deletingId, setDeletingId] = useState(null);
                       />
 
                       <div className="absolute inset-x-0 bottom-4 flex items-center justify-center gap-3">
-                      <button
-  disabled={deletingId === item._id} // غیرفعال کردن دکمه در حال حذف
-  onClick={async () => {
-    const confirm = await Swal.fire({
-      title: 'آیا مطمئن هستید؟',
-      icon: 'warning',
-      showCancelButton: true,
-      confirmButtonText: 'بله، حذف کن',
-      cancelButtonText: 'انصراف'
-    });
+                        <button
+                          disabled={deletingId === item._id} // غیرفعال کردن دکمه در حال حذف
+                          onClick={async () => {
+                            const confirm = await Swal.fire({
+                              title: 'آیا مطمئن هستید؟',
+                              icon: 'warning',
+                              showCancelButton: true,
+                              confirmButtonText: 'بله، حذف کن',
+                              cancelButtonText: 'انصراف'
+                            });
 
-    if (!confirm.isConfirmed) return;
+                            if (!confirm.isConfirmed) return;
 
-    setDeletingId(item._id); // شروع لودینگ برای این محصول خاص
+                            setDeletingId(item._id); // شروع لودینگ برای این محصول خاص
 
-    try {
-      const res = await fetch(`${BASE_URL}${PRODUCTS_URL}/${item._id}`, { method: 'DELETE' });
-      if (!res.ok) throw new Error('حذف محصول ناموفق بود');
+                            try {
+                              const res = await fetch(`${BASE_URL}${PRODUCTS_URL}/${item._id}`, { method: 'DELETE' });
+                              if (!res.ok) throw new Error('حذف محصول ناموفق بود');
 
-      await decrementCategoryCount(item.categorie);
+                              await decrementCategoryCount(item.categorie);
 
-      Swal.fire({ icon: "success", title: "حذف شد", timer: 1500, showConfirmButton: false });
-      fetchProducts();
-    } catch (err) { 
-      Swal.fire('خطا!', err.message, 'error'); 
-    } finally {
-      setDeletingId(null); // پایان لودینگ
-    }
-  }}
-  className={`flex h-10 w-10 items-center justify-center rounded-full text-white shadow-md transition-all 
+                              Swal.fire({ icon: "success", title: "حذف شد", timer: 1500, showConfirmButton: false });
+                              fetchProducts();
+                            } catch (err) {
+                              Swal.fire('خطا!', err.message, 'error');
+                            } finally {
+                              setDeletingId(null); // پایان لودینگ
+                            }
+                          }}
+                          className={`flex h-10 w-10 items-center justify-center rounded-full text-white shadow-md transition-all 
     ${deletingId === item._id ? "bg-gray-400" : "bg-red lg:opacity-0 lg:translate-y-4 lg:group-hover:opacity-100 lg:group-hover:translate-y-0"}`}
->
-  {deletingId === item._id ? (
-    // لودر چرخشی کوچک
-    <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-  ) : (
-    <TrashIcon className="size-5" />
-  )}
-</button>
+                        >
+                          {deletingId === item._id ? (
+                            // لودر چرخشی کوچک
+                            <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                          ) : (
+                            <TrashIcon className="size-5" />
+                          )}
+                        </button>
 
                         {/* دکمه مشاهده سریع */}
                         <button
@@ -226,7 +226,7 @@ const [deletingId, setDeletingId] = useState(null);
                           </span>
                         </div>
 
-{/* اگه بعدا کامنتی داشتیم میتونیم اضافه کنیم */}
+                        {/* اگه بعدا کامنتی داشتیم میتونیم اضافه کنیم */}
                         {/* <div className="flex items-center gap-1 text-blue">
                           <ChatBubbleLeftEllipsisIcon className="h-4 w-4 sm:h-5 sm:w-5" />
                           <span className="text-xs sm:text-sm">
@@ -237,21 +237,21 @@ const [deletingId, setDeletingId] = useState(null);
                       </div>
 
                       <div className="mt-auto">
-  {item.hasDiscount ? (
-    <div className="flex items-center gap-2">
-      <span className="text-xl font-bold text-blue">
-        ${item.discountedPrice.toLocaleString()}
-      </span>
-      <span className="text-base text-gray-400 line-through">
-        ${item.price.toLocaleString()}
-      </span>
-    </div>
-  ) : (
-    <span className="text-xl font-bold text-blue">
-      ${item.price.toLocaleString()}
-    </span>
-  )}
-</div>
+                        {item.hasDiscount ? (
+                          <div className="flex items-center gap-2">
+                            <span className="text-xl font-bold text-blue">
+                              ${item.discountedPrice.toLocaleString()}
+                            </span>
+                            <span className="text-base text-gray-400 line-through">
+                              ${item.price.toLocaleString()}
+                            </span>
+                          </div>
+                        ) : (
+                          <span className="text-xl font-bold text-blue">
+                            ${item.price.toLocaleString()}
+                          </span>
+                        )}
+                      </div>
 
                     </div>
                   </div>

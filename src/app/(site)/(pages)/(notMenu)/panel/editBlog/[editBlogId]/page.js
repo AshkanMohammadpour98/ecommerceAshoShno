@@ -1,3 +1,4 @@
+// pages/panel/editBlog/[editBlogId]/page.js
 "use client";
 
 import React, { useState, useEffect } from "react";
@@ -18,7 +19,7 @@ export default function EditBlogForm({ params }) {
 
   const unwrappedParams = React.use(params);
   const blogId = unwrappedParams.editBlogId; // دقیقاً همنام با پوشه [editBlogId]
-  console.log(blogId , 'blogID...');
+
   
   
   const router = useRouter();
@@ -26,6 +27,8 @@ export default function EditBlogForm({ params }) {
   const [blogData, setBlogData] = useState(null);
   const [categories, setCategories] = useState([]);
   const [selectedDate, setSelectedDate] = useState(null);
+  const [newImageFile, setNewImageFile] = useState(null);
+const [previewUrl, setPreviewUrl] = useState(null);
 
   // ✅ تبدیل اعداد فارسی به انگلیسی
   const faToEnNumbers = (str) => {
@@ -80,67 +83,65 @@ export default function EditBlogForm({ params }) {
   };
 
   // تغییر عکس
-  const handleImageChange = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      const imgURL = URL.createObjectURL(file);
-      setBlogData({ ...blogData, img: imgURL  });
-    }
-  };
+  // ایجاد یک State جدید برای نگهداری فایل عکس جدید (اختیاری اما تمیزتر است)
+
+const handleImageChange = (e) => {
+  const file = e.target.files[0];
+  if (file) {
+    setNewImageFile(file); // ذخیره خود فایل برای ارسال به سرور
+    setPreviewUrl(URL.createObjectURL(file)); // ذخیره آدرس موقت برای نمایش در صفحه
+  }
+};
 
   // ثبت تغییرات
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+const handleSubmit = async (e) => {
+  e.preventDefault();
 
-    if (!selectedDate) {
+  if (!selectedDate) {
+    Swal.fire({ title: "خطا!", text: "لطفاً یک تاریخ انتخاب کنید.", icon: "warning" });
+    return;
+  }
+
+  const formattedDate = selectedDate.format("YYYY/MM/DD");
+
+  // ۱. ایجاد شیء FormData برای ارسال ترکیبی از متن و فایل
+  const formDataToSend = new FormData();
+  
+  // ۲. اضافه کردن فیلدهای متنی
+  // توجه: طبق تنظیمات شما از _id برای شناسایی استفاده می‌کنیم
+  formDataToSend.append("title", blogData.title);
+  formDataToSend.append("date", formattedDate);
+  formDataToSend.append("views", blogData.views);
+  formDataToSend.append("categorie", blogData.categorie);
+  formDataToSend.append("content", blogData.content);
+
+  // ۳. مدیریت عکس:
+  // اگر عکس جدید انتخاب شده، فایل جدید را بفرست
+  // در غیر این صورت، همان آدرس عکس قبلی را بفرست
+  if (newImageFile) {
+    formDataToSend.append("img", newImageFile); 
+  } else {
+    formDataToSend.append("img", blogData.img); // ارسال آدرس قبلی (اگر سرور این را قبول می‌کند)
+  }
+
+  try {
+    const res = await fetch(`${BASE_URL}${BLOGS_URL}/${blogId}`, {
+      method: "PUT", // یا PATCH بسته به تنظیمات API شما
+      body: formDataToSend, // ❗ نکته: وقتی FormData می‌فرستید، نباید Header Content-Type ست کنید
+    });
+
+    if (res.ok) {
       Swal.fire({
-        title: "خطا!",
-        text: "لطفاً یک تاریخ انتخاب کنید.",
-        icon: "warning",
-        confirmButtonText: "باشه",
-      });
-      return;
+        title: "موفقیت!",
+        text: "تغییرات با موفقیت ذخیره شد.",
+        icon: "success",
+        timer: 1500,
+      }).then(() => router.push("/panel/editBlog"));
     }
-
-    // ✅ تاریخ نهایی لاتین
-    const formattedDate = selectedDate.format("YYYY/MM/DD");
-
-    const updatedBlog = { ...blogData, date: formattedDate };
-
-    try {
-      const res = await fetch(`${BASE_URL}${BLOGS_URL}/${blogId}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(updatedBlog),
-      });
-
-      if (res.ok) {
-        Swal.fire({
-          title: "موفقیت!",
-          text: "مقاله با موفقیت ویرایش شد.",
-          icon: "success",
-          showConfirmButton: false,
-          timer: 1500,
-        }).then(() => router.push("/panel/editBlog"));
-      } else {
-        Swal.fire({
-          title: "خطا!",
-          text: "ویرایش مقاله با مشکل مواجه شد.",
-          icon: "error",
-          showConfirmButton: false,
-          timer: 1500,
-        });
-      }
-    } catch (error) {
-      Swal.fire({
-        title: "خطای شبکه!",
-        text: "لطفاً اتصال اینترنت یا سرور را بررسی کنید.",
-        icon: "warning",
-        showConfirmButton: false,
-          timer: 1500,
-      });
-    }
-  };
+  } catch (error) {
+    console.error("Error updating blog:", error);
+  }
+};
 
   return (
     <form
@@ -233,31 +234,34 @@ export default function EditBlogForm({ params }) {
         />
       </div>
 
-      {/* عکس */}
-      <div>
-        <label className="block text-sm font-semibold text-gray-600 mb-2">
-          تصویر مقاله
-        </label>
-        <div className="border-2 border-dashed rounded-xl p-4 flex flex-col items-center">
-          {blogData.img ? (
-            <img
-              src={blogData.img || null}
-              alt="preview"
-              className="w-32 h-32 object-cover rounded-lg mb-2"
-            />
-          ) : (
-            <span className="text-gray-400 text-sm mb-2">
-              انتخاب تصویر مقاله
-            </span>
-          )}
-          <input
-            type="file"
-            accept="image/*"
-            onChange={handleImageChange}
-            className="text-sm"
-          />
-        </div>
-      </div>
+      {/* بخش عکس در ریترن فرم */}
+<div>
+  <label className="block text-sm font-semibold text-gray-600 mb-2">
+    تصویر مقاله
+  </label>
+  <div className="border-2 border-dashed rounded-xl p-4 flex flex-col items-center">
+    {/* اولویت نمایش: 
+       ۱. اگر عکس جدید انتخاب شده (previewUrl)
+       ۲. اگر عکسی از قبل در دیتابیس بوده (blogData.img)
+    */}
+    {(previewUrl || blogData.img) ? (
+      <img
+        src={previewUrl || blogData.img} 
+        alt="preview"
+        className="w-32 h-32 object-cover rounded-lg mb-2"
+      />
+    ) : (
+      <span className="text-gray-400 text-sm mb-2">انتخاب تصویر مقاله</span>
+    )}
+    
+    <input
+      type="file"
+      accept="image/*"
+      onChange={handleImageChange}
+      className="text-sm"
+    />
+  </div>
+</div>
 
       {/* دکمه ثبت */}
       <button

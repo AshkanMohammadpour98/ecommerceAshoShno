@@ -44,7 +44,7 @@ const BlogItem = ({ blog }: { blog: BlogItemType }) => {
 
         {/* لینک ادامه مطلب */}
         <Link
-          href="/blogs/blog-details"
+          href={`/blogs/blog-details/${blog._id}`}
           className="text-sm inline-flex items-center gap-2 py-2 ease-out duration-200 hover:text-blue"
         >
           ادامه مطلب
