@@ -65,6 +65,8 @@ export default function EditBlogs() {
     if (!confirm.isConfirmed) return;
 
     setDeletingId(blog._id);
+    console.log(blog.img , 'bog.img in edit bog page..');
+    
 
     try {
       const res = await fetch(`${BASE_URL}${BLOGS_URL}/${blog._id}`, {
@@ -105,7 +107,7 @@ export default function EditBlogs() {
   <Image
     // اگر تصویر داشت از همون مسیر ذخیره شده در دیتابیس استفاده می‌کنیم
     // مثال: /uploads/blogs/imageName-123.jpg
-    src={blog.img}
+    src={ blog.img || "/images/notImg.png"}
     alt={blog.title || "blog image"}
     width={330}
     height={210}
@@ -192,7 +194,7 @@ export default function EditBlogs() {
             {/* بستن مودال */}
             <button
               onClick={closeModal}
-              className="absolute top-3 right-3 w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center hover:bg-red hover:text-white transition"
+              className="absolute top-3 right-3 w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center bg-red hover:bg-red-dark hover:text-white transition"
             >
               <XMarkIcon className="h-6 w-6" />
             </button>

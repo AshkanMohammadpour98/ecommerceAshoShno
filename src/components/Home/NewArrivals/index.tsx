@@ -19,9 +19,7 @@ const NewArrival = () => {
             if (!res.ok) throw new Error("خطا در دریافت اطلاعات");
     
             const data = await res.json();
-            console.log(data);
-            
-            setProductsData(data.data); // ذخیره داده‌ها در state
+            setProductsData(data.data.slice(0, 10)); // فقط 10 محصول اول نمایش داده میشه
           } catch (err) {
             console.error(err);
             setProductsData([]); // اگه خطا بود، state خالی بمونه

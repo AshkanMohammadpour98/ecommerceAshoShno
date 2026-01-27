@@ -11,26 +11,21 @@ import { usePreviewSlider } from "@/app/context/PreviewSliderContext";
 import { resetQuickView } from "@/redux/features/quickView-slice";
 import { addItemToWishlist } from "@/redux/features/wishlist-slice"; // اکشن افزودن محصول به لیست علاقه‌مندی‌ها
 import { updateproductDetails } from "@/redux/features/product-details";
+import Swal from "sweetalert2";
+
 
 const QuickViewModal = () => {
-  
-  
   const { isModalOpen, closeModal } = useModalContext();
   const { openPreviewModal } = usePreviewSlider();
   const [quantity, setQuantity] = useState(1);
-
-  console.log(isModalOpen  , "isModalOpen...");
-  console.log(openPreviewModal  , "openPreviewModal...");
-  console.log(quantity  , "quantity..");
-  
 
   const dispatch = useDispatch<AppDispatch>();
 
   // get the product data
   const product = useAppSelector((state) => state.quickViewReducer.value);
-  // console.log(product.reviews + "quickViewR78..");
-  
   const [activePreview, setActivePreview] = useState(0);
+
+  console.log(product, 'product in QuickViewModal.tsx file');
 
   // preview modal
   const handlePreviewSlider = () => {
@@ -41,6 +36,8 @@ const QuickViewModal = () => {
 
   // add to cart
   const handleAddToCart = () => {
+    console.log(quantity, 'quantity quickViewModel.tsx');
+
     dispatch(
       addItemToCart({
         ...product,
@@ -50,15 +47,17 @@ const QuickViewModal = () => {
 
     closeModal();
   };
+  console.log(product , 'procunt log in quick file');
+  
   // تابعی برای افزودن محصول به لیست علاقه‌مندی‌ها
   const handleItemToWishList = () => {
+    
     dispatch(
-      addItemToWishlist({
-        ...product,
-        status: "available", // وضعیتش موجود است
-        quantity: 1,
-      })
-    );
+    addItemToWishlist({
+      ...product,
+      quantity: 1, // ← اصلاح اینجا
+    })
+  );
   };
 
   useEffect(() => {
@@ -79,12 +78,18 @@ const QuickViewModal = () => {
       setQuantity(1);
     };
   }, [isModalOpen, closeModal]);
-    // منطق ستاره ها
+  // منطق ستاره ها
   const totalStars = 5;
 
   // تبدیل به عدد و محدود کردن بین 0 تا totalStars
   const ratingValue = Number(product.reviews) || 0;
   const safeFilled = Math.min(Math.max(ratingValue, 0), totalStars);
+
+  // محاسبه درصد تخفیف اگر discountedPrice موجود باشد
+  const discountPercent =
+    product.hasDiscount && product.discountedPrice
+      ? Math.round(((product.price - product.discountedPrice) / product.price) * 100)
+      : 0;
 
 
   return (
@@ -127,6 +132,7 @@ const QuickViewModal = () => {
                       className={`flex items-center justify-center w-20 h-20 overflow-hidden rounded-lg bg-gray-1 ease-out duration-200 hover:border-2 hover:border-blue ${activePreview === key && "border-2 border-blue"
                         }`}
                     >
+
                       <Image
                         src={img || ""}
                         alt="thumbnail"
@@ -134,6 +140,7 @@ const QuickViewModal = () => {
                         height={61}
                         className="aspect-square"
                       />
+
                     </button>
                   ))}
                 </div>
@@ -163,6 +170,7 @@ const QuickViewModal = () => {
                     </button>
 
                     {product?.imgs?.previews?.[activePreview] ? (
+
                       <Image
                         src={product.imgs.previews[activePreview]}
                         alt="products-details"
@@ -181,9 +189,12 @@ const QuickViewModal = () => {
             </div>
 
             <div className="max-w-[445px] w-full">
-              <span className="inline-block text-custom-xs font-medium text-white py-1 px-3 bg-green mb-6.5">
-                SALE 20% OFF
-              </span>
+              {discountPercent > 0 && (
+                <span className="inline-block text-custom-xs font-medium text-white py-1 px-3 bg-green mb-6.5">
+                  SALE {discountPercent}% OFF
+                </span>
+              )}
+
 
               <h3 className="font-semibold text-xl xl:text-heading-5 text-dark mb-4">
                 {product.title}
@@ -193,58 +204,58 @@ const QuickViewModal = () => {
                 <div className="flex items-center gap-1.5">
                   {/* <!-- stars --> */}
                   <div className="flex items-center gap-1">
-                  <div style={{ display: "flex", gap: "4px" }}>
-                        {[...Array(totalStars)].map((_, i) => {
-                          // ستاره پر
-                          if (i < Math.floor(safeFilled)) {
-                            return (
-                              <Image
-                                key={i}
-                                src="/images/icons/icon-star.svg"
-                                alt="star icon"
-                                width={15}
-                                height={15}
-                              />
-                            );
-                          }
-                          // ستاره نیمه پر (مثلاً برای امتیاز 3.5)
-                          if (i === Math.floor(safeFilled) && safeFilled % 1 >= 0.5) {
-                            return (
-                              <Image
-                                key={i}
-                                src="/images/icons/icon-star-half.svg"
-                                alt="half star icon"
-                                width={15}
-                                height={15}
-                              />
-                            );
-                          }
-                          // ستاره خالی (SVG که دادی)
+                    <div style={{ display: "flex", gap: "4px" }}>
+                      {[...Array(totalStars)].map((_, i) => {
+                        // ستاره پر
+                        if (i < Math.floor(safeFilled)) {
                           return (
-                            <svg
+                            <Image
                               key={i}
-                              className="fill-gray-4"
-                              width="18"
-                              height="18"
-                              viewBox="0 0 18 18"
-                              fill="none"
-                              xmlns="http://www.w3.org/2000/svg"
-                            >
-                              <g clipPath="url(#clip0_375_9172)">
-                                <path
-                                  d="M16.7906 6.72187L11.7 5.93438L9.39377 1.09688C9.22502 0.759375 8.77502 0.759375 8.60627 1.09688L6.30002 5.9625L1.23752 6.72187C0.871891 6.77812 0.731266 7.25625 1.01252 7.50938L4.69689 11.3063L3.82502 16.6219C3.76877 16.9875 4.13439 17.2969 4.47189 17.0719L9.05627 14.5687L13.6125 17.0719C13.9219 17.2406 14.3156 16.9594 14.2313 16.6219L13.3594 11.3063L17.0438 7.50938C17.2688 7.25625 17.1563 6.77812 16.7906 6.72187Z"
-                                  fill=""
-                                />
-                              </g>
-                              <defs>
-                                <clipPath id="clip0_375_9172">
-                                  <rect width="18" height="18" fill="white" />
-                                </clipPath>
-                              </defs>
-                            </svg>
+                              src="/images/icons/icon-star.svg"
+                              alt="star icon"
+                              width={15}
+                              height={15}
+                            />
                           );
-                        })}
-                      </div>
+                        }
+                        // ستاره نیمه پر (مثلاً برای امتیاز 3.5)
+                        if (i === Math.floor(safeFilled) && safeFilled % 1 >= 0.5) {
+                          return (
+                            <Image
+                              key={i}
+                              src="/images/icons/icon-star-half.svg"
+                              alt="half star icon"
+                              width={15}
+                              height={15}
+                            />
+                          );
+                        }
+                        // ستاره خالی (SVG که دادی)
+                        return (
+                          <svg
+                            key={i}
+                            className="fill-gray-4"
+                            width="18"
+                            height="18"
+                            viewBox="0 0 18 18"
+                            fill="none"
+                            xmlns="http://www.w3.org/2000/svg"
+                          >
+                            <g clipPath="url(#clip0_375_9172)">
+                              <path
+                                d="M16.7906 6.72187L11.7 5.93438L9.39377 1.09688C9.22502 0.759375 8.77502 0.759375 8.60627 1.09688L6.30002 5.9625L1.23752 6.72187C0.871891 6.77812 0.731266 7.25625 1.01252 7.50938L4.69689 11.3063L3.82502 16.6219C3.76877 16.9875 4.13439 17.2969 4.47189 17.0719L9.05627 14.5687L13.6125 17.0719C13.9219 17.2406 14.3156 16.9594 14.2313 16.6219L13.3594 11.3063L17.0438 7.50938C17.2688 7.25625 17.1563 6.77812 16.7906 6.72187Z"
+                                fill=""
+                              />
+                            </g>
+                            <defs>
+                              <clipPath id="clip0_375_9172">
+                                <rect width="18" height="18" fill="white" />
+                              </clipPath>
+                            </defs>
+                          </svg>
+                        );
+                      })}
+                    </div>
 
                   </div>
 
@@ -285,9 +296,9 @@ const QuickViewModal = () => {
 
               <p>
                 متن لوریم فارسی، یا همان «طرح‌نما»، متنی ساختگی ض77777777ض
-                و بی‌معنی است که برای نشان دادن ظاهر و چیدمان یک طراحی 
+                و بی‌معنی است که برای نشان دادن ظاهر و چیدمان یک طراحی
                 (مثل وب‌سایت یا فایل چاپی) بدون حواس‌پرتی از محتوای
-                 واقعی به کار می‌رود.
+                واقعی به کار می‌رود.
               </p>
 
               <div className="flex flex-wrap justify-between gap-5 mt-6 mb-7.5">
@@ -297,19 +308,19 @@ const QuickViewModal = () => {
                   </h4>
                   <span className="flex items-center gap-2">
                     {(product.hasDiscount && product.discountedPrice && product.discountedPrice > 0) ? (
-    <>
-      <span className="font-medium text-dark-4 text-lg xl:text-2xl line-through">
-        ${product.price}
-      </span>
-      <span className="font-semibold text-dark text-xl xl:text-heading-4">
-        ${product.discountedPrice}
-      </span>
-    </>
-  ) : (
-    <span className="font-semibold text-dark text-xl xl:text-heading-4">
-      ${product.price}
-    </span>
-  )}
+                      <>
+                        <span className="font-medium text-dark-4 text-lg xl:text-2xl line-through">
+                          ${product.price.toLocaleString()}
+                        </span>
+                        <span className="font-semibold text-dark text-xl xl:text-heading-4">
+                          ${product.discountedPrice.toLocaleString()}
+                        </span>
+                      </>
+                    ) : (
+                      <span className="font-semibold text-dark text-xl xl:text-heading-4">
+                        ${product.price.toLocaleString()}
+                      </span>
+                    )}
                   </span>
                 </div>
 
@@ -350,7 +361,22 @@ const QuickViewModal = () => {
                     </span>
 
                     <button
-                      onClick={() => setQuantity(quantity + 1)}
+                      onClick={() => {
+                        // بررسی موجودی محصول قبل از افزایش تعداد
+                        // بررسی موجودی قبل از افزایش تعداد
+                        // اگر quantity بیشتر از موجودی شد، پیام هشدار با Swal نمایش بده
+
+                        if (quantity < product.count) {
+                          setQuantity(quantity + 1);
+                        } else {
+                          Swal.fire({
+                            icon: "warning",
+                            title: "موجودی کافی نیست",
+                            text: `شما فقط ${product.count} عدد از این محصول می‌توانید سفارش دهید`,
+                            confirmButtonText: "باشه",
+                          });
+                        }
+                      }}
                       aria-label="button for add product"
                       className="flex items-center justify-center w-10 h-10 rounded-[5px] bg-gray-2 text-dark ease-out duration-200 hover:text-blue"
                     >
@@ -381,14 +407,14 @@ const QuickViewModal = () => {
               </div>
 
               <div className="flex flex-wrap items-center gap-4">
-                <button
-                  disabled={quantity === 0 && true}
-                  onClick={() => handleAddToCart()}
-                  className={`inline-flex font-medium text-white bg-blue py-3 px-7 rounded-md ease-out duration-200 hover:bg-blue-dark
-                  `}
-                >
-                  افزودن به سبد خریدaaaaaaaaas
-                </button>
+<button
+  disabled={quantity === 0}
+  onClick={handleAddToCart}
+  className="inline-flex font-medium text-white bg-blue py-3 px-7 rounded-md ease-out duration-200 hover:bg-blue-dark"
+>
+  افزودن {quantity} عدد به سبد خرید
+</button>
+
 
                 <button
                   onClick={() => handleItemToWishList()}

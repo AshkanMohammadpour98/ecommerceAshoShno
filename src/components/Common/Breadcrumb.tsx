@@ -22,7 +22,7 @@ const Breadcrumb = ({ title, pages = [] }: { title: string; pages: Crumb[] }) =>
 
   // نکته: dir="rtl" جهت‌دهی راست‌به‌چپ را تضمین می‌کند؛ فاصله‌دهی‌های Tailwind متناسب با نقاط شکست تنظیم شده‌اند.
   return (
-    <div className="overflow-hidden shadow-breadcrumb pt-[209px] sm:pt-[155px] lg:pt-[95px] xl:pt-[165px]" dir="rtl">
+    <div className="overflow-hidden shadow-breadcrumb" dir="rtl">
       {/* خط جداکننده‌ی بالا برای تفکیک بصری از بخش‌های پیشین */}
       <div className="border-t border-gray-3">
         <div className="max-w-[1170px] w-full mx-auto px-4 sm:px-8 xl:px-0 py-5 xl:py-10">

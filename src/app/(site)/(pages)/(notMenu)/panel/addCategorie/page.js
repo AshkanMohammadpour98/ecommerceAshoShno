@@ -83,7 +83,7 @@ export default function AddCategory() {
       const exists = categories.data.find(
         (cat) => cat.name.toLowerCase() === formData.name.toLowerCase()
       );
-      console.log(exists);
+      // console.log(exists);
       
       if (exists) {
         Swal.fire(

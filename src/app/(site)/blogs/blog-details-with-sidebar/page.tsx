@@ -2,7 +2,7 @@
 // در این صفحه جزئیات یک مقاله بلاگ به همراه سایدبار نمایش داده می‌شود.
 
 import React from "react";
-import BlogDetailsWithSidebar from "@/components/BlogDetailsWithSidebar"; // 🔑 کامپوننت جزئیات بلاگ با سایدبار
+// import BlogDetailsWithSidebar from "@/components/BlogDetailsWithSidebar"; // 🔑 کامپوننت جزئیات بلاگ با سایدبار
 
 import { Metadata } from "next";
 
@@ -16,7 +16,7 @@ const BlogDetailsWithSidebarPage = () => {
   return (
     <main dir="rtl">
       {/* 🔑 نمایش کامپوننت جزئیات بلاگ همراه با سایدبار */}
-      <BlogDetailsWithSidebar />
+      {/* <BlogDetailsWithSidebar /> */}
     </main>
   );
 };

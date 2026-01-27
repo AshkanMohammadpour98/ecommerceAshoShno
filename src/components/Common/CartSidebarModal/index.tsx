@@ -50,8 +50,8 @@ const CartSidebarModal: React.FC = () => {
 
           {/* لیست آیتم‌ها */}
           <div className="flex-1 overflow-y-auto no-scrollbar px-4 sm:px-7.5 lg:px-11 pt-4">
-            {cartItems.length > 0 ? cartItems.map((item, idx) => (
-              <SingleItem key={idx} item={item} removeItemFromCart={removeItemFromCart}/>
+            {cartItems.length > 0 ? cartItems.map((item) => (
+              <SingleItem key={item.id} item={item} removeItemFromCart={removeItemFromCart}/>
             )) : <EmptyCart />}
           </div>
 

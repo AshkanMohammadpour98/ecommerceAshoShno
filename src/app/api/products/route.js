@@ -110,7 +110,7 @@ export async function POST(req) {
       },
     };
     
-    console.log(productData);
+    // console.log(productData);
     
 
     // 🟢 ذخیره در MongoDB

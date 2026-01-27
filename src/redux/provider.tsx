@@ -9,6 +9,7 @@ import React from "react";
 
 // 🛠️ ReduxProvider: یک کامپوننت که کل پروژه رو داخل Provider قرار می‌ده
 export function ReduxProvider({ children }: { children: React.ReactNode }) {
+  // console.log({store} , 'store...');
   return (
     // 🎯 کل children (یعنی همه صفحات و کامپوننت‌ها) داخل Provider قرار می‌گیرن
     <Provider store={store}>

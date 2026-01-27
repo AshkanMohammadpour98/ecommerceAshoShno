@@ -43,9 +43,9 @@ const CounDown = () => {
 
 
 
-console.log(
-  `${BASE_URL}${LIMITED_DISCOUNT_URL}`
-);
+  console.log(
+    `${BASE_URL}${LIMITED_DISCOUNT_URL}`
+  );
 
   // ============================================
   // دریافت داده‌ها از API
@@ -62,8 +62,8 @@ console.log(
           `${BASE_URL}${LIMITED_DISCOUNT_URL}`,
           { cache: "no-store" }
         );
-      
-        
+
+
         if (!discountRes.ok) throw new Error("discount fetch error");
 
         const discountJson = await discountRes.json();
@@ -80,21 +80,21 @@ console.log(
         }
 
         const activeDiscount = discountData[0];
-        console.log(activeDiscount , 'activeDiscount....');
-        
+        console.log(activeDiscount, 'activeDiscount....');
+
 
         const productRes = await fetch(
           `${BASE_URL}${PRODUCTS_URL}/${activeDiscount.productId}`,
           { cache: "no-store" }
         );
-        console.log(productRes , 'productRes.......');
-        
+        console.log(productRes, 'productRes.......');
+
         if (!productRes.ok) throw new Error("Product not found");
 
         const productJson = await productRes.json();
         const productData = productJson.data || productJson;
-      
-        
+
+
 
         if (!ignore) {
           setDiscount(activeDiscount);
@@ -195,6 +195,7 @@ console.log(
     return (
       <section className="overflow-hidden py-20" dir="rtl">
         <div className="max-w-[1170px] w-full mx-auto px-4 sm:px-8 xl:px-0">
+          <h2 className="font-semibold text-xl xl:text-heading-5 text-dark">تخفیف ویژه</h2>
           <div className="relative rounded-xl bg-blue-light-5 p-6 sm:p-10 shadow-2">
             <div className="grid lg:grid-cols-12 gap-8 items-center">
               <div className="lg:col-span-6 order-2 lg:order-1">
@@ -355,11 +356,10 @@ console.log(
               <Link
                 href={`/shop-details/${product._id}`}
                 aria-label="مشاهده محصول"
-                className={`inline-flex items-center justify-center font-semibold text-white py-4 px-10 rounded-xl ease-out duration-200 shadow-2 ${
-                  expired
+                className={`inline-flex items-center justify-center font-semibold text-white py-4 px-10 rounded-xl ease-out duration-200 shadow-2 ${expired
                     ? "bg-gray-4 cursor-not-allowed"
                     : "bg-blue hover:bg-blue-dark hover:shadow-3 hover:scale-105"
-                }`}
+                  }`}
                 onClick={(e) => expired && e.preventDefault()}
               >
                 {expired

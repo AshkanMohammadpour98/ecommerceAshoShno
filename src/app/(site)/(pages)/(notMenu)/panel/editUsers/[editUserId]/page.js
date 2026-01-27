@@ -76,7 +76,7 @@ export default function Page({ params }) {
         // ⬇️ تغییر یافته: دسترسی مستقیم به email, phone, password, gender, role
         // دیگر نیازی به registerWith نیست
 // console.log(data , 'data...');
-console.log(`${BASE_URL}${USERS_URL}/${userId}`);
+// console.log(`${BASE_URL}${USERS_URL}/${userId}`);
 
 
 
@@ -223,7 +223,7 @@ const handleEditablePriceChange = (_id, value, hasDiscount) => {
     // ⬇️ حذف شده: registerWith دیگر در payload نیست
 
     try {
-      console.log("📤 Payload ارسالی:", payload);
+      // console.log("📤 Payload ارسالی:", payload);
 
       // ⬇️ تغییر یافته: آدرس API جدید با _id
       const res = await fetch(`${BASE_URL}${USERS_URL}/${userId}`, {

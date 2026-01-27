@@ -63,7 +63,7 @@ const HeroCarousal = () => {
                 </div>
 
                 <h1 className="font-semibold text-dark text-xl sm:text-3xl mb-3">
-                  <a href="#">{item.descriptionBenner ? item.descriptionBenner : ""}</a>
+                  <a href={`/shop-details/${item._id}`}>{item.descriptionBenner ? item.descriptionBenner : ""}</a>
                 </h1>
 
                 <p>
@@ -73,7 +73,7 @@ const HeroCarousal = () => {
                 </p>
 
                 <a
-                  href="#"
+                  href={`/shop-details/${item._id}`}
                   className="inline-flex font-medium text-white text-custom-sm rounded-md bg-dark py-3 px-9 ease-out duration-200 hover:bg-blue mt-10"
                 >
                   خرید کنید
@@ -83,7 +83,7 @@ const HeroCarousal = () => {
               <div>
                 <Image
                   src={ item.imgs.thumbnails[0]  ||"/images/notImg.png"}
-                  alt="headphone"
+                  alt={item.title ? item.title : "product slaider"}
                   width={351}
                   height={358}
                 />

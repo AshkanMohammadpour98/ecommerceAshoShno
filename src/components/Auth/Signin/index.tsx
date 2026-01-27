@@ -132,7 +132,7 @@ const handleSubmit = async (e) => {
 
 
   return (
-    <section className="flex items-center justify-center min-h-screen bg-gray p-4">
+    <section className="mt-10 sm:mt-11 md:mt-15 lg:mt-14 xl:mt-23 flex items-center justify-center min-h-screen bg-gray p-4">
       <div className="w-full max-w-md p-6 sm:p-8 bg-white rounded-2xl shadow-2 border border-gray-3">
         <div className="text-center">
           <h2 className="text-2xl font-bold text-dark">ورود به حساب کاربری</h2>

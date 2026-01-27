@@ -1,27 +1,27 @@
-// src/app/api/chaildBennerHome/[id]/route.js
+// src/app/api/chaildBennerHome/[_id]/route.js
 
 import { NextResponse } from 'next/server'
 import connectDB from '/utils/ConnectDB'
 import CustomPromoBenners from '/models/CustomPromoBenners'
 
 /* =====================================================
-   GET - دریافت یک بنر با id
+   GET - دریافت یک بنر با _id
 ===================================================== */
 export async function GET(request, { params }) {
   try {
     await connectDB()
 
-    const { id } = params
+    const { _id } = await params
 
-    // بررسی وجود id
-    if (!id) {
+    // بررسی وجود _id
+    if (!_id) {
       return NextResponse.json(
         { success: false, message: 'ID ارسال نشده است' },
         { status: 422 }
       )
     }
 
-    const banner = await CustomPromoBenners.findById(id)
+    const banner = await CustomPromoBenners.findById(_id)
 
     if (!banner) {
       return NextResponse.json(
@@ -35,7 +35,7 @@ export async function GET(request, { params }) {
       { status: 200 }
     )
   } catch (error) {
-    console.error(`Error fetching banner ${params.id}:`, error)
+    console.error(`Error fetching banner ${params._id}:`, error)
 
     return NextResponse.json(
       { success: false, message: 'خطای سرور' },
@@ -45,17 +45,19 @@ export async function GET(request, { params }) {
 }
 
 /* =====================================================
-   PATCH - ویرایش بنر با id
+   PATCH - ویرایش بنر با _id
 ===================================================== */
 export async function PATCH(request, { params }) {
+  
+  
   try {
     await connectDB()
 
-    const { id } = params
+    const { _id } = await params
     const body = await request.json()
 
-    // بررسی وجود id
-    if (!id) {
+    // بررسی وجود _id
+    if (!_id) {
       return NextResponse.json(
         { success: false, message: 'ID ارسال نشده است' },
         { status: 400 }
@@ -64,7 +66,7 @@ export async function PATCH(request, { params }) {
 
     // آپدیت بنر
     const updatedBanner = await CustomPromoBenners.findByIdAndUpdate(
-      id,
+      _id,
       body,
       {
         new: true,          // داده آپدیت‌شده برگردانده شود
@@ -100,16 +102,16 @@ export async function PATCH(request, { params }) {
 }
 
 /* =====================================================
-   DELETE - حذف بنر با id
+   DELETE - حذف بنر با _id
 ===================================================== */
 export async function DELETE(request, { params }) {
   try {
     await connectDB()
 
-    const { id } = params
+    const { _id } = await params
 
     // بررسی وجود id
-    if (!id) {
+    if (!_id) {
       return NextResponse.json(
         { success: false, message: 'ID ارسال نشده است' },
         { status: 400 }
@@ -117,7 +119,7 @@ export async function DELETE(request, { params }) {
     }
 
     // حذف بنر
-    const deletedBanner = await CustomPromoBenners.findByIdAndDelete(id)
+    const deletedBanner = await CustomPromoBenners.findByIdAndDelete(_id)
 
     if (!deletedBanner) {
       return NextResponse.json(

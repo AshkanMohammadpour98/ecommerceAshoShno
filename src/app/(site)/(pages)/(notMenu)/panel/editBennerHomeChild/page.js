@@ -127,7 +127,7 @@ const ChildBannerSliderEditor = () => {
     });
     if (!result.isConfirmed) return;
 
-    console.log(_id, 'item _id props');
+    // console.log(_id, 'item _id props');
 
     setDeletingId(_id);
     try {

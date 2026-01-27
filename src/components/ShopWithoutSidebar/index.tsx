@@ -4,7 +4,7 @@ import React, { useEffect, useState } from "react";
 import Breadcrumb from "../Common/Breadcrumb";
 import SingleGridItem from "../Shop/SingleGridItem";
 import SingleListItem from "../Shop/SingleListItem";
-import CustomSelect from "../ShopWithSidebar/CustomSelect";
+// import CustomSelect from "../ShopWithSidebar/CustomSelect";
 import InfiniteScroll from "react-infinite-scroll-component";
 
 // URLS
@@ -15,7 +15,7 @@ const ShopWithoutSidebar = () => {
   const [productStyle, setProductStyle] = useState("grid"); // حالت نمایش (grid یا list)
   const [productsData, setProductsData] = useState([]); // همه محصولات
   const [visibleProducts, setVisibleProducts] = useState([]); // محصولات قابل نمایش در صفحه
-  const [selectedOption, setSelectedOption] = useState(null);
+  // const [selectedOption, setSelectedOption] = useState(null);
 
   // گرفتن اطلاعات محصولات از API
   useEffect(() => {
@@ -26,7 +26,7 @@ const ShopWithoutSidebar = () => {
 
         const data = await res.json();
         setProductsData(data.data); // ذخیره همه داده‌ها
-        setVisibleProducts(data.data.slice(0, 10)); // فقط 10 محصول اول نمایش داده میشه
+        setVisibleProducts(data.data); 
       } catch (err) {
         console.error(err);
         setProductsData([]); // اگر خطا بود، state خالی بمونه
@@ -71,7 +71,7 @@ const ShopWithoutSidebar = () => {
                 <div className="flex items-center justify-between">
                   {/* سمت چپ */}
                   <div className="flex flex-wrap items-center gap-4">
-                    <CustomSelect options={options} />
+                    {/* <CustomSelect options={options} selectedOption={selectedOption} setSelectedOption={setSelectedOption} /> */}
                     <p>
                       <span className="text-dark">{visibleProducts.length} از {productsData.length}</span>{" "}
                       همه محصولات

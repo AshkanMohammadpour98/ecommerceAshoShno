@@ -26,7 +26,7 @@ import {
 // ✅ ساختار دیتا را استاندارد کردیم (پشتیبانی از فرزندان)
 const menuItems = [
   { name: "بازگشت", icon: ArrowLeftIcon, href: "/" },
-  { name: "داشبورد", icon: HomeIcon, href: "/panel/dashboard" }, // اصلاح لینک تستی
+  { name: "داشبورد", icon: HomeIcon, href: "/my-account" }, // اصلاح لینک تستی
   {
     name: "محصول",
     icon: ArchiveBoxIcon,

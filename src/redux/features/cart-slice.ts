@@ -1,3 +1,4 @@
+// redux/features/cart-slice.ts
 // 📌 این فایل مربوط به مدیریت سبد خرید (Cart) با استفاده از Redux Toolkit است.
 // در اینجا اکشن‌ها و سلکتورها + مدیریت تخفیف کوپن اضافه شده‌اند.
 
@@ -62,11 +63,11 @@ export const cart = createSlice({
     },
 
     // 🔄 تغییر تعداد محصول
-    updateCartItemQuantity: (state, action: PayloadAction<{ id: number; quantity: number }>) => {
-      const { id, quantity } = action.payload;
+    updateCartItemQuantity: (state, action: PayloadAction<{ id: number; _id : any ; quantity: number }>) => {
+      const { id, _id ,quantity } = action.payload;
       const existingItem = state.items.find((item) => item.id === id);
       if (existingItem) {
-        existingItem.quantity = quantity;
+        existingItem.quantity += quantity;
       }
     },
 
@@ -96,7 +97,7 @@ export const selectCartItems = (state: RootState) => state.cartReducer.items;
 
 // 💰 مجموع قیمت کالاها (قبل از کوپن)
 export const selectTotalPrice = createSelector([selectCartItems], (items) =>
-  items.reduce((total, item) => total + item.discountedPrice * item.quantity, 0)
+  items.reduce((total, item) => total + (item.discountedPrice ? item.discountedPrice : item.price) * item.quantity, 0)
 );
 
 // 💳 مبلغ تخفیف کوپن

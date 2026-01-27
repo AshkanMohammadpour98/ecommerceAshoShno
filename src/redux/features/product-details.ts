@@ -6,9 +6,9 @@ import { createSlice } from "@reduxjs/toolkit";
 import { Product } from "@/types/product";
 
 // 🎯 نوع استیت اولیه (اطلاعات محصول)
-type InitialState = {
-  value: Product;
-};
+// type InitialState = {
+//   value: Product;
+// };
 
 // 📦 مقدار اولیه استیت (محصول خالی)
 const initialState = {
@@ -16,13 +16,16 @@ const initialState = {
     title: "", // عنوان محصول
     reviews: 0, // تعداد نظرات
     price: 0, // قیمت اصلی
+    hasDiscount : false , // ایا تخفیف دارد یا نه
     discountedPrice: 0, // قیمت بعد از تخفیف
     img: "", // تصویر اصلی
     images: [], // لیست تصاویر
     id: 0, // شناسه محصول
+    _id: 0, // شناسه محصول
+    count : 0,
     imgs: { thumbnails: [], previews: [] }, // تصاویر کوچک و پیش‌نمایش
   },
-} as InitialState;
+} ;
 
 // 🛠️ ایجاد Slice برای مدیریت جزئیات محصول
 export const productDetails = createSlice({

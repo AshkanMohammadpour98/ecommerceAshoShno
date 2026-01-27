@@ -12,7 +12,16 @@ const PRODUCTS_URL = process.env.NEXT_PUBLIC_API_PRODUCTS_URL
 const BLOGS_URL = process.env.NEXT_PUBLIC_API_BLOGS_URL
 const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL
 
-const BlogDetailsWithSidebar = async () => {
+const BlogDetailsWithSidebar = async ({_id}) => {
+  // console.log(_id  , 'id blog ditail with navar...');
+  
+  // اینجا مستقیم fetch میکنیم → SSR گرفتن اون بلاگ  با ایدی گرفنتن
+  const resBlog = await fetch(`${BASE_URL}${BLOGS_URL}/${_id}`, {
+    cache: "no-store", // برای اینکه هر بار رفرش شه (معادل getServerSideProps)
+  });
+  const blog = await resBlog.json();
+
+
   // اینجا مستقیم fetch میکنیم → SSR
   const resBlogs = await fetch(`${BASE_URL}${BLOGS_URL}`, {
     cache: "no-store", // برای اینکه هر بار رفرش شه (معادل getServerSideProps)
@@ -43,8 +52,8 @@ const BlogDetailsWithSidebar = async () => {
               <div className="rounded-[10px] overflow-hidden mb-7.5">
                 <Image
                   className="rounded-[10px]"
-                  src="/images/blog/blog-details-01.jpg"
-                  alt="جزئیات مقاله"
+                  src={blog.img}
+                  alt={`جزئیات مقاله ${blog.title}`}
                   width={750}
                   height={477}
                 />
@@ -54,11 +63,12 @@ const BlogDetailsWithSidebar = async () => {
                 {/* تاریخ و بازدید */}
                 <span className="flex items-center gap-3 mb-4">
                   <a href="#" className="ease-out duration-200 hover:text-blue">
-                    ۲۷ اسفند ۱۴۰۰
+                    {blog.date}
                   </a>
+                  <p className="mb-2 text-blue font-medium">دسته بندی: {blog.categorie}</p>
                   <span className="block w-px h-4 bg-gray-4"></span>
                   <a href="#" className="ease-out duration-200 hover:text-blue">
-                   تتتتتتت ۳۰۰ هزار بازدید
+                   {blog.views.toLocaleString('fa-IR')} بازدید
                   </a>
                 </span>
 
@@ -74,15 +84,14 @@ const BlogDetailsWithSidebar = async () => {
                 </p>
 
                 <p className="mb-6">
-                  این بخش می‌تواند شامل توضیحات تکمیلی درباره مقاله باشد
-                  و تجربه کاربر را شبیه‌سازی کند.
+                {blog.content}
                 </p>
 
-                <p>
+                {/* <p>
                   لورم ایپسوم متن ساختگی با تولید سادگی نامفهوم از صنعت چاپ و
                   با استفاده از طراحان گرافیک است. این متن فقط برای تست ظاهر
                   مقاله نوشته شده است.
-                </p>
+                </p> */}
 
                 {/* بخش لیست نکات */}
                 <div className="mt-7.5">
@@ -158,7 +167,7 @@ const BlogDetailsWithSidebar = async () => {
             <div className="lg:max-w-[370px] w-full">
               <SearchForm />
               <LatestPosts blogs={blogData} />
-              <LatestProducts products={productsData} />
+              <LatestProducts products={productsData.data} />
 
               {/* دسته‌بندی‌های محبوب */}
               <div className="shadow-1 bg-white rounded-xl mt-7.5">
@@ -190,7 +199,7 @@ const BlogDetailsWithSidebar = async () => {
               </div>
 
               {/* تگ‌ها */}
-              <div className="shadow-1 bg-white rounded-xl mt-7.5">
+              {/* <div className="shadow-1 bg-white rounded-xl mt-7.5">
                 <div className="px-4 sm:px-6 py-4.5 border-b border-gray-3">
                   <h2 className="font-medium text-lg text-dark">تگ‌ها</h2>
                 </div>
@@ -200,7 +209,7 @@ const BlogDetailsWithSidebar = async () => {
                   <a className="inline-flex hover:text-white border border-gray-3 py-2 px-4 rounded-md ease-out duration-200 hover:bg-blue hover:border-blue" href="#">پی‌سی</a>
                   <a className="inline-flex hover:text-white border border-gray-3 py-2 px-4 rounded-md ease-out duration-200 hover:bg-blue hover:border-blue" href="#">ساعت</a>
                 </div>
-              </div>
+              </div> */}
 
             </div>
           </div>

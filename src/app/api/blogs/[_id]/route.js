@@ -13,7 +13,7 @@ async function deletePhysicalFile(relativeUrl) {
     const filePath = path.join(process.cwd(), "public", relativeUrl);
     try {
       await fs.unlink(filePath);
-      console.log("فایل با موفقیت حذف شد:", relativeUrl);
+      // console.log("فایل با موفقیت حذف شد:", relativeUrl);
     } catch (err) {
       console.error("خطا در حذف فایل یا فایل وجود ندارد:", relativeUrl);
     }
@@ -28,22 +28,22 @@ export async function GET(request, { params }) {
     const { _id } =  await params;
 
     if (!isValidObjectId(_id)) {
-      return NextResponse.json({ message: "Invalid product ID" }, { status: 400 });
+      return NextResponse.json({ message: "Invalid blog ID" }, { status: 400 });
     }
 
     const blog = await Blog.findById(_id);
     if (!blog) {
-      return NextResponse.json({ message: "Product not found" }, { status: 404 });
+      return NextResponse.json({ message: "blog not found" }, { status: 404 });
     }
 
     return NextResponse.json(blog, { status: 200 });
   } catch (error) {
-    console.error(`Error fetching product ${params._id}:`, error);
+    console.error(`Error fetching blog ${params._id}:`, error);
     return NextResponse.json({ message: "Server error" }, { status: 500 });
   }
 }
 
-// PUT /api/products/[_id] (آپدیت یک محصول با ID)
+// PUT /api/blogs/[_id] (آپدیت یک بلاگ با ID)
 //  ویرایش بلاگ (PUT)
 export async function PUT(request, { params }) {
   try {
@@ -87,7 +87,7 @@ export async function PUT(request, { params }) {
   }
 }
 
-// DELETE /api/products/[id] (حذف یک محصول با ID)
+// DELETE /api/products/[id] (حذف یک بلاگ با ID)
 //  حذف بلاگ (DELETE)
 export async function DELETE(request, { params }) {
   try {

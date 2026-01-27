@@ -39,8 +39,6 @@ const Discount = () => {
 
     try {
       const code = couponCode.trim().toUpperCase();
-      console.log(code , "code discountCode");
-
       const res = await fetch(`${BASE_URL}${DISCOUNT_CODES_URL}?discountCode=${code}`);
 
       if (!res.ok) throw new Error("خطا در دریافت اطلاعات از سرور");

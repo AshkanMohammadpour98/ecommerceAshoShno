@@ -21,7 +21,9 @@ const Hero = () => {
   console.log(productsDataBennerChildHomeData , 'productsDataBennerChildHomeData....');
   
   return (
-    <section className="overflow-hidden pb-10 lg:pb-12.5 xl:pb-15 pt-57.5 sm:pt-45 lg:pt-30 xl:pt-51.5 bg-[#E5EAF4]">
+    <section className="overflow-hidden bg-[#E5EAF4] 
+  pb-10 lg:pb-15 
+  pt-[100px] sm:pt-[120px] lg:pt-[140px] xl:pt-[180px]">
       <div className="max-w-[1170px] w-full mx-auto px-4 sm:px-8 xl:px-0">
         <div className="flex flex-wrap gap-5">
           {/* بخش اسلایدر اصلی */}
@@ -51,7 +53,7 @@ const Hero = () => {
                     <div className="flex items-center gap-14 flex-row-reverse"> {/* راست‌چین کردن */}
                       <div>
                         <h2 className="max-w-[153px] font-semibold text-dark text-xl mb-20">
-                          <a href="#">{item.title}</a>
+                          <a href={`/shop-details/${item._id}`}>{item.title}</a>
                         </h2>
 
                         <div>
@@ -62,16 +64,16 @@ const Hero = () => {
                             {
                               item.discountedPrice ? (
                                 <>
-                                  <span className="font-medium text-heading-5 text-red">
-                                    {item.discountedPrice}$
+                                  <span className="font-medium text-heading-5  text-blue-dark hover:text-blue ">
+                                    {item.discountedPrice.toLocaleString()}$
                                   </span>
-                                  <span className="font-medium text-2xl text-dark-4 line-through">
-                                    {item.price}$
+                                  <span className="font-medium text-2xl  line-through  text-red-dark hover:text-red">
+                                    {item.price.toLocaleString()}$
                                   </span></>
                               ) :
                                 (
-                                  <span className="font-medium text-2xl text-dark-4 line-through">
-                                    {item.price}$
+                                  <span className="font-medium text-heading-5 text-blue-dark hover:text-blue ">
+                                    {item.price.toLocaleString()}$
                                   </span>
                                 )
                             }
@@ -82,7 +84,7 @@ const Hero = () => {
                       <div>
                         <Image
                           src={item.imgs.thumbnails[0]}
-                          alt="mobile image"
+                          alt={item.title ? item.title : "product image slaidbar"}
                           width={123}
                           height={161}
                         />

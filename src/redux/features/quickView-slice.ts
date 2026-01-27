@@ -6,23 +6,26 @@ import { createSlice } from "@reduxjs/toolkit";
 import { Product } from "@/types/product";
 
 // 🎯 نوع استیت اولیه (اطلاعات محصول)
-type InitialState = {
-  value: Product;
-};
+// type InitialState = {
+//   value: Product;
+// };
 
 // 📦 مقدار اولیه استیت (محصول خالی)
 const initialState = {
   value: {
     title: "", // عنوان محصول
     reviews: 0, // تعداد نظرات
+    count : 0,
     price: 0, // قیمت اصلی
+    hasDiscount : false , // ایا تخفیف دارد یا نه
     discountedPrice: 0, // قیمت با تخفیف
     img: "", // تصویر اصلی
-    id: 0, // شناسه محصول
+    id: 0, // شناسه محصول برای کارهای دستی کوچک
+    _id: 0, // شناسه محصول
     images: [], // لیست تصاویر
     imgs: { thumbnails: [], previews: [] }, // تصاویر بندانگشتی و پیش‌نمایش
-  } as Product,
-} as InitialState;
+  } ,
+} ;
 
 // 🛠️ ایجاد Slice برای مدیریت Quick View
 export const quickView = createSlice({

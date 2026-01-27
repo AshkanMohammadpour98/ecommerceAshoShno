@@ -2,6 +2,9 @@ import { models , model , Schema } from "mongoose";
 
 const customPromoBennerSchema = new Schema(
      {
+    _id : {
+      type : String,
+    },
     // 🟢   تبلیغ محصول مشتری عنوان اصلی بنر
     title: {
       type: String,

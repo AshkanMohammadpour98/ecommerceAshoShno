@@ -16,6 +16,13 @@ const contactSchema = new Schema(
       maxlength: 30,
       trim: true, // حذف فاصله‌های اضافی ابتدا و انتها
     },
+        categoryJob: {
+      type: String,
+      required: [true, "نوع شغل  الزامی است"],
+      minlength: 3,
+      maxlength: 30,
+      trim: true, // حذف فاصله‌های اضافی ابتدا و انتها
+    },
 
     phone: {
       type: String, // شماره تلفن حتما String باشد
@@ -40,6 +47,11 @@ const contactSchema = new Schema(
       type: String,
       minlength: 8,
       trim: true,
+    },
+    logo: {
+      type: String, // می‌تونه URL یا مسیر عکس روی سرور باشه
+      trim: true,
+      default: "", 
     },
 
     isActive: {

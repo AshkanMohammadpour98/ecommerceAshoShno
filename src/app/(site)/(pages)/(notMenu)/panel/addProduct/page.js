@@ -136,7 +136,7 @@ export default function AddProductForm() {
       );
 
       if (selectedCategory) {
-        console.log(formData);
+        // console.log(formData);
         
         await fetch(
           `${BASE_URL}${CATEGORYS_URL}/${selectedCategory._id}`,

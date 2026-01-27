@@ -4,9 +4,9 @@ import { Menu } from "@/types/Menu";
 export const menuData: Menu[] = [
   {
     id: 1,
-    title: "محبوب", // Popular
+    title: "علاقه مندی", // wishlist
     newTab: false,
-    path: "/",
+    path: "/wishlist",
   },
   {
     id: 2,
@@ -47,8 +47,8 @@ export const menuData: Menu[] = [
     submenu: [
       { id: 71, title: "وبلاگ شبکه‌ای با نوارکناری", newTab: false, path: "/blogs/blog-grid-with-sidebar" },
       { id: 72, title: "وبلاگ شبکه‌ای", newTab: false, path: "/blogs/blog-grid" },
-      { id: 73, title: "جزئیات وبلاگ با نوارکناری", newTab: false, path: "/blogs/blog-details-with-sidebar" },
-      { id: 74, title: "جزئیات وبلاگ", newTab: false, path: "/blogs/blog-details" },
+      // { id: 73, title: "جزئیات وبلاگ با نوارکناری", newTab: false, path: "/blogs/blog-details-with-sidebar" },
+      // { id: 74, title: "جزئیات وبلاگ", newTab: false, path: "/blogs/blog-details" },
     ],
   },
 ];

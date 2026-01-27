@@ -35,17 +35,17 @@ const PromoBanner = () => {
     const fetchBanners = async () => {
       try {
         setLoading(true);
-        
+
         // درخواست به API
         const response = await fetch(`${BASE_URL}${CUSTOM_PROMO_BENNER_URL}`);
-        
+
         // بررسی موفقیت‌آمیز بودن درخواست
         if (!response.ok) {
           throw new Error('Failed to fetch banners');
         }
-        
+
         const data = await response.json();
-        
+
         // بررسی اینکه آیا داده‌ای دریافت شده و آرایه است
         if (Array.isArray(data.data) && data.data.length > 0) {
           // اگر داده‌ها کمتر از 3 تا بود، از داده‌های پیش‌فرض برای تکمیل استفاده می‌کنیم
@@ -98,12 +98,13 @@ const PromoBanner = () => {
   return (
     <section className="overflow-hidden py-20">
       <div className="max-w-[1170px] w-full mx-auto px-4 sm:px-8 xl:px-0">
+      <h2 className="font-semibold text-xl xl:text-heading-5 text-dark">تبلیغ مشتریان</h2>
 
         {/* =============================
             بنر بزرگ تبلیغاتی
         ============================== */}
         {mainBanner && (
-          <div 
+          <div
             className="relative z-1 overflow-hidden rounded-lg py-12.5 lg:py-17.5 xl:py-22.5 px-4 sm:px-7.5 lg:px-14 xl:px-19 mb-7.5"
             style={{ backgroundColor: mainBanner.bgColor || '#F5F5F7' }}
           >
@@ -145,7 +146,7 @@ const PromoBanner = () => {
 
           {/* بنر کوچک اول */}
           {smallBanners[0] && (
-            <div 
+            <div
               className="relative z-1 overflow-hidden rounded-lg py-10 xl:py-16 px-4 sm:px-7.5 xl:px-10"
               style={{ backgroundColor: smallBanners[0].bgColor || '#DBF4F3' }}
             >
@@ -165,6 +166,9 @@ const PromoBanner = () => {
                 <h2 className="font-bold text-xl lg:text-heading-4 text-dark mb-2.5">
                   {smallBanners[0].subtitle}
                 </h2>
+                <p className="max-w-[285px] text-custom-sm">
+                  {smallBanners[0].description}
+                </p>
 
                 {smallBanners[0].discount && (
                   <p className="font-semibold text-custom-1 text-teal">
@@ -184,7 +188,7 @@ const PromoBanner = () => {
 
           {/* بنر کوچک دوم */}
           {smallBanners[1] && (
-            <div 
+            <div
               className="relative z-1 overflow-hidden rounded-lg py-10 xl:py-16 px-4 sm:px-7.5 xl:px-10"
               style={{ backgroundColor: smallBanners[1].bgColor || '#FFECE1' }}
             >

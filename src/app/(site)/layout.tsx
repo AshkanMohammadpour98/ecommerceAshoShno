@@ -1,3 +1,4 @@
+// src/app/layout.tsx
 "use client";
 import { useState, useEffect } from "react";
 import "../css/euclid-circular-a-font.css";
@@ -16,6 +17,8 @@ import PreviewSliderModal from "@/components/Common/PreviewSlider";
 // import ScrollToTop from "@/components/Common/ScrollToTop";
 import PreLoader from "@/components/Common/PreLoader";
 import { usePathname } from "next/navigation";
+import { WishlistSidebarModalProvider } from "../context/WishlistSidebarModalContext";
+import WishlistSidebarModal from "@/components/Common/WishlistSidebarModal";
 // import { UserProvider, useUser } from "@/app/context/UserContext"
 
 
@@ -43,21 +46,23 @@ export default function RootLayout({
         ) : (
           <>
             <ReduxProvider>
+              <WishlistSidebarModalProvider>
+                
               <CartModalProvider>
                 <ModalProvider>
-                  <PreviewSliderProvider>
-                    {!isPanel && <Header />}
-                          
-                            
-                    {children}
-                          
+ <PreviewSliderProvider>
+  {!isPanel && <Header />}
 
-                    <QuickViewModal />
-                    <CartSidebarModal />
-                    <PreviewSliderModal />
-                  </PreviewSliderProvider>
+  {children}
+
+  <QuickViewModal />
+  <CartSidebarModal />
+  <WishlistSidebarModal />
+  <PreviewSliderModal />
+</PreviewSliderProvider>
                 </ModalProvider>
               </CartModalProvider>
+              </WishlistSidebarModalProvider>
             </ReduxProvider>
             {/* <ScrollToTop /> */}
             {!isPanel && <Footer />}

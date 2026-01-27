@@ -1,85 +1,104 @@
+// redux/features/wishlist-slice.ts
 // مدیریت لیست علاقه‌مندی‌های کاربر با استفاده از Redux Toolkit شامل افزودن، حذف یک آیتم و پاک‌کردن کل لیست
 
-import { createSlice, PayloadAction } from "@reduxjs/toolkit"; 
-// از Redux Toolkit برای ساخت slice و تعریف اکشن‌ها/ردیوسرها استفاده می‌کنیم
-// PayloadAction برای تعریف نوع داده‌ای است که همراه هر اکشن ارسال می‌شود
+// مدیریت لیست علاقه‌مندی‌ها با Redux Toolkit و پشتیبانی از LocalStorage
 
-// شکل اولیه state که در این slice ذخیره می‌شود
-type InitialState = {
-  items: WishListItem[]; // آرایه‌ای از آیتم‌های لیست علاقه‌مندی
-};
+import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 
-// ساختار هر آیتم لیست علاقه‌مندی
-type WishListItem = {
-  id: number;                   // شناسه یکتا محصول
-  title: string;                 // عنوان محصول
-  price: number;                 // قیمت اصلی محصول
-  discountedPrice: number;       // قیمت تخفیف خورده
-  quantity: number;              // تعداد این محصول در wishlist
-  status?: string;               // وضعیت محصول (مثلاً available)
-  imgs?: {                       // تصاویر محصول
-    thumbnails: string[];        // عکس‌های کوچک
-    previews: string[];          // عکس‌های بزرگ/پیش‌نمایش
+// 🔹 نوع هر آیتم لیست علاقه‌مندی
+export type WishListItem = {
+  id: number;
+  _id: any;
+  title: string;
+  count : number,
+  price: number;
+  discountedPrice: number;
+  quantity: number;
+  status?: string;
+  hasDiscount?: boolean;
+  reviews : number ;
+  date? :any;
+   categorie?: string;
+  imgs?: {
+    thumbnails: string[];
+    previews: string[];
   };
 };
 
-// state اولیه که در ابتدای برنامه خالی است
-const initialState: InitialState = {
-  items: [],
+// 🔹 نوع State که شامل آرایه آیتم‌هاست
+type WishlistState = {
+  items: WishListItem[];
 };
 
-// ساخت slice مربوط به wishlist
-export const wishlist = createSlice({
-  name: "wishlist",         // نام slice برای شناسایی در store
-  initialState,             // state اولیه
-  reducers: {               // اکشن‌ها و ردیوسرهای تغییر state
+// 🔹 کلید LocalStorage که داده‌ها با آن ذخیره می‌شوند
+const LOCAL_STORAGE_KEY = "wishlistItems";
 
-    // اکشن: افزودن آیتم به لیست علاقه‌مندی‌ها
+// 🔹 تابع کمکی برای گرفتن داده‌ها از LocalStorage
+const loadWishlistFromLocalStorage = (): WishListItem[] => {
+  try {
+    const serializedData = localStorage.getItem(LOCAL_STORAGE_KEY);
+    if (serializedData === null) return []; // اگر چیزی ذخیره نشده بود، آرایه خالی برگردان
+    return JSON.parse(serializedData) as WishListItem[];
+  } catch (err) {
+    console.error("Error loading wishlist from localStorage", err);
+    return [];
+  }
+};
+
+// 🔹 تابع کمکی برای ذخیره داده‌ها در LocalStorage
+const saveWishlistToLocalStorage = (items: WishListItem[]) => {
+  try {
+    const serializedData = JSON.stringify(items);
+    localStorage.setItem(LOCAL_STORAGE_KEY, serializedData);
+  } catch (err) {
+    console.error("Error saving wishlist to localStorage", err);
+  }
+};
+
+// 🔹 state اولیه: بارگذاری از LocalStorage یا خالی
+const initialState: WishlistState = {
+  items: typeof window !== "undefined" ? loadWishlistFromLocalStorage() : [],
+};
+
+// 🔹 ایجاد Slice
+export const wishlistSlice = createSlice({
+  name: "wishlist",
+  initialState,
+  reducers: {
+    // ➕ اضافه کردن آیتم به لیست علاقه‌مندی
     addItemToWishlist: (state, action: PayloadAction<WishListItem>) => {
-      // جداکردن مقادیر از payload اکشن
-      const { id, title, price, quantity, imgs, discountedPrice, status } =
-        action.payload;
-        
-      // بررسی اینکه آیا محصول از قبل در لیست وجود دارد؟
-      const existingItem = state.items.find((item) => item.id === id);
+      const item = action.payload;
+      const existingItem = state.items.find((i) => i.id === item.id);
 
       if (existingItem) {
-        // اگر قبلاً وجود دارد، فقط تعدادش را زیاد کن
-        existingItem.quantity += quantity;
+        existingItem.quantity += item.quantity; // اگر قبلاً بود، تعداد را زیاد کن
       } else {
-        // در غیر این‌صورت، محصول را به لیست اضافه کن
-        state.items.push({
-          id,
-          title,
-          price,
-          quantity,
-          imgs,
-          discountedPrice,
-          status,
-        });
+        state.items.push(item); // در غیر این صورت، اضافه کن
       }
+
+      saveWishlistToLocalStorage(state.items); // 🔄 همزمان در LocalStorage ذخیره کن
     },
 
-    // اکشن: حذف یک آیتم از لیست علاقه‌مندی‌ها بر اساس id
+    // ❌ حذف یک آیتم بر اساس id
     removeItemFromWishlist: (state, action: PayloadAction<number>) => {
-      const itemId = action.payload;
-      // فیلترکردن برای حذف آیتم با id داده‌شده
-      state.items = state.items.filter((item) => item.id !== itemId);
+      state.items = state.items.filter((item) => item.id !== action.payload);
+      saveWishlistToLocalStorage(state.items); // 🔄 بروزرسانی LocalStorage
     },
 
-    // اکشن: پاک کردن کل لیست علاقه‌مندی
+    // 🗑️ حذف همه آیتم‌ها
     removeAllItemsFromWishlist: (state) => {
       state.items = [];
+      saveWishlistToLocalStorage(state.items); // 🔄 پاک کردن LocalStorage
     },
   },
 });
 
-// خروجی گرفتن اکشن‌ها برای استفاده در کامپوننت‌های دیگر
+// 🔹 خروجی گرفتن اکشن‌ها برای استفاده در کامپوننت‌ها
 export const {
   addItemToWishlist,
   removeItemFromWishlist,
   removeAllItemsFromWishlist,
-} = wishlist.actions;
+} = wishlistSlice.actions;
 
-// خروجی گرفتن reducer برای افزودن به store
-export default wishlist.reducer;
+// 🔹 خروجی گرفتن reducer برای اضافه کردن به Store
+export default wishlistSlice.reducer;

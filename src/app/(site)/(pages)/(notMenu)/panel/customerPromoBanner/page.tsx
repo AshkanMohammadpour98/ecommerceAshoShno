@@ -25,6 +25,7 @@ type Banner = {
   title: string;
   subtitle: string;
   description: string;
+  // descriptionBenner : string
   buttonText: string;
   buttonLink: string;
   image: string;

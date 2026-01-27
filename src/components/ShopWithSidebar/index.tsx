@@ -204,7 +204,7 @@ const sortProducts = (products, optionValue) => {
     <>
       <Breadcrumb
         title={"نمایش همه محصولات"}
-        pages={["فروشگاه", "/", "فروشگاه با نوار کناری"]}
+        pages={["فروشگاه",  "فروشگاه با نوار کناری"]}
       />
       <section className="overflow-hidden relative pb-20 pt-5 lg:pt-20 xl:pt-28 bg-[#f3f4f6]">
         <div className="max-w-[1170px] w-full mx-auto px-4 sm:px-8 xl:px-0">
@@ -293,7 +293,7 @@ const sortProducts = (products, optionValue) => {
                     />
 
                     <p>
-                      نمایش <span className="text-dark">9 از 50</span>{" "}
+                      نمایش <span className="text-dark">{visibleProducts.length} از {visibleProducts.length}</span>{" "}
                       محصولات
                     </p>
                   </div>

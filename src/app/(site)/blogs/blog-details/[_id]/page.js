@@ -1,21 +1,27 @@
 import React from "react";
 import BlogDetails from "@/components/BlogDetails";
-import { notFound } from "next/navigation";
 
-// ✅ بخش جادویی سئو (Dynamic Metadata)
+// ثابت‌ها را از محیط سیستم می‌گیریم
+const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL;
+const BLOGS_URL = process.env.NEXT_PUBLIC_API_BLOGS_URL;
+
 export async function generateMetadata({ params }) {
   const { _id } = await params;
 
   try {
-    // واکشی اطلاعات مقاله برای استفاده در متا تگ‌ها
-    const res = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/blogs/${_id}`);
+    // واکشی اطلاعات مقاله با استفاده از _id
+    const res = await fetch(`${BASE_URL}${BLOGS_URL}/${_id}`, {
+      cache: "no-store", // اطمینان از تازگی اطلاعات سئو
+    });
+    
+    if (!res.ok) return { title: "مقاله یافت نشد | آسو شنو" };
+    
     const blog = await res.json();
 
     if (!blog || !blog.title) {
       return { title: "مقاله یافت نشد | آسو شنو" };
     }
 
-    // تمیز کردن محتوا برای توضیحات (Description) - حذف کاراکترهای اضافی و محدود کردن به 160 کاراکتر
     const shortDesc = blog.content ? blog.content.substring(0, 160).replace(/\n/g, ' ') : "";
 
     return {
@@ -28,17 +34,10 @@ export async function generateMetadata({ params }) {
         title: blog.title,
         description: shortDesc,
         url: `/blogs/blog-details/${_id}`,
-        siteName: 'آسو شنو',
-        images: [
-          {
-            url: blog.img, // تصویری که در شبکه‌های اجتماعی هنگام اشتراک‌گذاری لود می‌شود
-            width: 1200,
-            height: 630,
-          },
-        ],
+        images: [{ url: blog.img, width: 1200, height: 630 }],
         locale: 'fa_IR',
         type: 'article',
-        publishedTime: blog.date, // سئو برای تاریخ انتشار اهمیت زیادی دارد
+        publishedTime: blog.date,
       },
       twitter: {
         card: 'summary_large_image',
@@ -55,8 +54,13 @@ export async function generateMetadata({ params }) {
 const BlogDetailsPage = async ({ params }) => {
   const { _id } = await params;
 
+
+
+
+
   return (
     <main dir="rtl">
+   
       <BlogDetails _id={_id} />
     </main>
   );

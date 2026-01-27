@@ -7,6 +7,7 @@ import PromoBanner from "./PromoBanner"; // بنرهای تبلیغاتی
 import BestSeller from "./BestSeller"; // محصولات پرفروش
 import LimitedDiscountCountdown from "./LimitedDiscountCountdown"; // شمارش معکوس برای تخفیف‌ها
 import Testimonials from "./Testimonials"; // نظرات کاربران
+import ShopWithoutSidebar from "../ShopWithoutSidebar";
 // import Newsletter from "../Common/Newsletter"; // عضویت در خبرنامه
 
 const Home = () => {
@@ -14,10 +15,11 @@ const Home = () => {
     <main dir="rtl"> {/* تمام محتوای داخلی این صفحه راست‌چین می‌شود */}
       <Hero />
       <Categories />
+      <ShopWithoutSidebar/>
       <NewArrival />
       <LimitedDiscountCountdown />
       <PromoBanner />
-      {/* <BestSeller /> */}
+      <BestSeller />
       <Testimonials />
       {/* <Newsletter /> */}
     </main>

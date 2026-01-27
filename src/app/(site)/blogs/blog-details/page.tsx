@@ -1,8 +1,8 @@
 // ✅ این فایل مربوط به صفحه جزئیات بلاگ است
 // در این صفحه جزئیات یک مطلب یا مقاله بلاگ نمایش داده می‌شود.
 
-import React from "react";
-import BlogDetails from "@/components/BlogDetails"; // 🔑 کامپوننت جزئیات بلاگ
+// import React from "react";
+// import BlogDetails from "@/components/BlogDetails"; // 🔑 کامپوننت جزئیات بلاگ
 
 import { Metadata } from "next";
 

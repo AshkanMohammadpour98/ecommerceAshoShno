@@ -11,7 +11,7 @@ import { AppDispatch } from "@/redux/store";
 import Link from "next/link";
 import Image from "next/image";
 
-const SingleListItem = ({ item }: { item: Product }) => {
+const SingleListItem = ({ item  }) => {
     // منطق ستاره ها
   const totalStars = 5;
 
@@ -119,17 +119,17 @@ const SingleListItem = ({ item }: { item: Product }) => {
         <div className="w-full flex flex-col gap-5 sm:flex-row sm:items-center justify-center sm:justify-between py-5 px-4 sm:px-7.5 lg:pl-11 lg:pr-12">
           <div>
             <h3 className="font-medium text-dark ease-out duration-200 hover:text-blue mb-1.5">
-              <Link href={`/shop-details/${item.id}`}> {item.title} </Link>
+              <Link href={`/shop-details/${item._id}`}> {item.title} </Link>
             </h3>
 
             <span className="flex items-center gap-2 font-medium text-lg">
               {(item.hasDiscount && item.discountedPrice && item.discountedPrice > 0) ? (
                 <>
-                  <span className="text-dark-4 line-through">${item.price}</span>
-                  <span className="text-dark">${item.discountedPrice}</span>
+                  <span className="text-dark-4 line-through">${item.price.toLocaleString()}</span>
+                  <span className="text-dark">${item.discountedPrice.toLocaleString()}</span>
                 </>
               ) : (
-                <span className="text-dark">${item.price}</span>
+                <span className="text-dark">${item.price.toLocaleString()}</span>
               )}
             </span>
           </div>

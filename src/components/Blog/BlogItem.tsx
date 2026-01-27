@@ -6,7 +6,7 @@ const BlogItem = ({ blog }: { blog: BlogItemType }) => {
   return (
     <div className="shadow-1 bg-white rounded-xl px-4 sm:px-5 pt-5 pb-4 text-right">
       {/* لینک تصویر بلاگ */}
-      <Link href="/blogs/blog-details" className="rounded-md overflow-hidden block">
+      <Link href={`/blogs/blog-details/${blog._id}`} className="rounded-md overflow-hidden block">
         <img
           src={blog.img || null}
           alt="تصویر بلاگ"
@@ -39,7 +39,7 @@ const BlogItem = ({ blog }: { blog: BlogItemType }) => {
 
         {/* عنوان مقاله */}
         <h2 className="font-medium text-dark text-lg sm:text-xl ease-out duration-200 mb-4 hover:text-blue">
-          <Link href="/blogs/blog-details">{blog.title}</Link>
+          <Link href={`/blogs/blog-details/${blog._id}`}>{blog.title}</Link>
         </h2>
 
         {/* لینک ادامه مطلب */}

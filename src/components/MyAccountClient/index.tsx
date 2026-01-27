@@ -5,6 +5,7 @@ import React, { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation"; // برای هدایت کاربر بعد از خروج
 import Swal from "sweetalert2"; // برای نمایش پیام تایید
 import toast from "react-hot-toast"; // برای نمایش نوتیفیکیشن موفقیت
+import Link from "next/link";
 
 // ------- TYPES (بدون تغییر) -------
 interface QRConfig { value: string; ecc: string; colors: { fg: string; bg: string }; }
@@ -14,23 +15,36 @@ interface PurchasedProduct { id: string; title: string; reviews: number; price: 
 interface UserData { _id: string; id: string; name: string; lastName: string; gender: string; role: string; dateLogin: string; phone: string; email: string; password?: string; SuggestedCategories: string[]; PurchasedProducts: PurchasedProduct[]; purchaseInvoice: { id: string; countProducts: number }[]; img: string; address: string; }
 interface MyAccountClientProps { user: UserData; }
 interface AddressModalProps { isOpen: boolean; closeModal: () => void; }
-type TabKey = "dashboard" | "orders" | "downloads" | "addresses" | "account-details";
+type TabKey = "dashboard" | "orders" | "downloads" | "addresses" | "favrate" | "account-details";
 
 // ------- ICONS (بدون تغییر) --------
 const Icons = {
-  dashboard: ( <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" /></svg> ),
-  orders: ( <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" /></svg> ),
-  downloads: ( <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg> ),
-  addresses: ( <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg> ),
-  account: ( <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg> ),
-  logout: ( <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" /></svg> ),
+  dashboard: (<svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" /></svg>),
+  orders: (<svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" /></svg>),
+  downloads: (<svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>),
+  addresses: (<svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg>),
+  account: (<svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>),
+  logout: (<svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" /></svg>),
+  favrate: (
+    <svg className="fill-current" width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><path
+      fillRule="evenodd"
+      clipRule="evenodd"
+      d="M3.74949 2.94946C2.6435 3.45502 1.83325 4.65749 1.83325 6.0914C1.83325 7.55633 2.43273 8.68549 3.29211 9.65318C4.0004 10.4507 4.85781 11.1118 5.694 11.7564C5.89261 11.9095 6.09002 12.0617 6.28395 12.2146C6.63464 12.491 6.94747 12.7337 7.24899 12.9099C7.55068 13.0862 7.79352 13.1667 7.99992 13.1667C8.20632 13.1667 8.44916 13.0862 8.75085 12.9099C9.05237 12.7337 9.3652 12.491 9.71589 12.2146C9.90982 12.0617 10.1072 11.9095 10.3058 11.7564C11.142 11.1118 11.9994 10.4507 12.7077 9.65318C13.5671 8.68549 14.1666 7.55633 14.1666 6.0914C14.1666 4.65749 13.3563 3.45502 12.2503 2.94946C11.1759 2.45832 9.73214 2.58839 8.36016 4.01382C8.2659 4.11175 8.13584 4.16709 7.99992 4.16709C7.864 4.16709 7.73393 4.11175 7.63967 4.01382C6.26769 2.58839 4.82396 2.45832 3.74949 2.94946ZM7.99992 2.97255C6.45855 1.5935 4.73256 1.40058 3.33376 2.03998C1.85639 2.71528 0.833252 4.28336 0.833252 6.0914C0.833252 7.86842 1.57358 9.22404 2.5444 10.3172C3.32183 11.1926 4.2734 11.9253 5.1138 12.5724C5.30431 12.7191 5.48911 12.8614 5.66486 12.9999C6.00636 13.2691 6.37295 13.5562 6.74447 13.7733C7.11582 13.9903 7.53965 14.1667 7.99992 14.1667C8.46018 14.1667 8.88401 13.9903 9.25537 13.7733C9.62689 13.5562 9.99348 13.2691 10.335 12.9999C10.5107 12.8614 10.6955 12.7191 10.886 12.5724C11.7264 11.9253 12.678 11.1926 13.4554 10.3172C14.4263 9.22404 15.1666 7.86842 15.1666 6.0914C15.1666 4.28336 14.1434 2.71528 12.6661 2.03998C11.2673 1.40058 9.54129 1.5935 7.99992 2.97255Z"
+      fill=""
+    />
+    </svg>
+  )
 };
+// console.log();
+
 
 const tabs = [
   { key: "dashboard", title: "داشبورد", icon: Icons.dashboard },
+  // { key: "panel", title: "پنل", icon: Icons.dashboard },
   { key: "orders", title: "سفارش‌ها", icon: Icons.orders },
   { key: "downloads", title: "کدهای دیجیتال (QR)", icon: Icons.downloads },
   { key: "addresses", title: "آدرس‌ها", icon: Icons.addresses },
+  { key: "favrate", title: "علاقه مندی ها", icon: Icons.favrate },
   { key: "account-details", title: "جزئیات حساب", icon: Icons.account },
 ];
 
@@ -69,7 +83,7 @@ const AddressModal: React.FC<AddressModalProps> = ({ isOpen, closeModal }) => {
 
 // ------- MAIN COMPONENT --------
 const MyAccountClient: React.FC<MyAccountClientProps> = () => {
-  const user = useUser(); 
+  const user = useUser();
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<TabKey>("dashboard");
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -107,56 +121,56 @@ const MyAccountClient: React.FC<MyAccountClientProps> = () => {
   const formatPrice = (price: number) => price.toLocaleString();
 
   return (
-    <section className="mt-52 sm:mt-30 md:mt-34 lg:mt-36 xl:mt-40 bg-gray-1 min-h-screen py-10 px-4 md:px-6" dir="rtl">
+    <section className="mt-18 sm:mt-12 md:mt-12 lg:mt-15 xl:mt-25 bg-gray-1 min-h-screen py-10 px-4 md:px-6" dir="rtl">
       <div className="container mx-auto max-w-7xl">
-        
+
         {/* Header Section */}
         <div className="flex flex-col md:flex-row items-center justify-between mb-8 bg-white p-6 rounded-xl shadow-1">
-            <div className="flex items-center gap-4">
-                <div className="w-16 h-16 rounded-full bg-blue-light-5 flex items-center justify-center text-blue text-2xl font-bold uppercase overflow-hidden">
-                    {user.img ? <img src={user.img} alt={user.name} className="w-full h-full object-cover"/> : user.name.charAt(0)}
-                </div>
-                <div>
-                    <h1 className="text-heading-6 font-bold text-dark">سلام، {user.name} {user.lastName} 👋</h1>
-                    <p className="text-body text-sm mt-1">{user.email}</p>
-                </div>
+          <div className="flex items-center gap-4">
+            <div className="w-16 h-16 rounded-full bg-blue-light-5 flex items-center justify-center text-blue text-2xl font-bold uppercase overflow-hidden">
+              {user.img ? <img src={user.img} alt={user.name} className="w-full h-full object-cover" /> : user.name.charAt(0)}
             </div>
-            <div className="mt-4 md:mt-0 text-right md:text-left">
-                <span className="inline-block bg-green-light-6 text-green-dark px-3 py-1 rounded-full text-xs font-semibold">
-                    {user.role === 'user' ? 'کاربر عادی' : 'مدیر'}
-                </span>
+            <div>
+              <h1 className="text-heading-6 font-bold text-dark">سلام، {user.name} {user.lastName} 👋</h1>
+              <p className="text-body text-sm mt-1">{user.email}</p>
             </div>
+          </div>
+          <div className="mt-4 md:mt-0 text-right md:text-left">
+            <span className="inline-block bg-green-light-6 text-green-dark px-3 py-1 rounded-full text-xs font-semibold">
+              {user.role === 'user' ? 'کاربر عادی' : 'مدیر'}
+            </span>
+          </div>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8">
-          
+
           {/* ---- Sidebar Navigation ---- */}
           <aside className="col-span-12 lg:col-span-3">
             <div className="bg-white rounded-xl shadow-2 overflow-hidden sticky top-4">
+
               <nav className="flex flex-col p-2">
                 {tabs.map((t) => (
                   <button
                     key={t.key}
                     onClick={() => setActiveTab(t.key as TabKey)}
-                    className={`flex items-center gap-3 px-4 py-3.5 rounded-lg transition-all duration-200 text-sm font-medium ${
-                      activeTab === t.key
-                        ? "bg-blue text-white shadow-1"
-                        : "text-body hover:bg-gray-1 hover:text-dark"
-                    }`}
+                    className={`flex items-center gap-3 px-4 py-3.5 rounded-lg transition-all duration-200 text-sm font-medium ${activeTab === t.key
+                      ? "bg-blue text-white shadow-1"
+                      : "text-body hover:bg-gray-1 hover:text-dark"
+                      }`}
                   >
                     <span>{t.icon}</span>
                     {t.title}
                   </button>
                 ))}
                 <div className="h-px bg-gray-2 my-2 mx-4"></div>
-                
+
                 {/* 🔵 دکمه خروج اصلاح شده */}
-                <button 
+                <button
                   onClick={handleLogout}
                   className="flex items-center gap-3 px-4 py-3.5 rounded-lg text-red hover:bg-red-light-6 transition-all duration-200 text-sm font-medium w-full text-right"
                 >
-                    {Icons.logout}
-                    خروج از حساب
+                  {Icons.logout}
+                  خروج از حساب
                 </button>
               </nav>
             </div>
@@ -165,59 +179,70 @@ const MyAccountClient: React.FC<MyAccountClientProps> = () => {
           {/* ---- بقیه محتوا (بدون تغییر) ---- */}
           <div className="col-span-12 lg:col-span-9">
             <div className="bg-white rounded-xl shadow-2 p-6 md:p-8 min-h-[500px]">
-              
+
               {/* DASHBOARD TAB */}
               {activeTab === "dashboard" && (
                 <div className="space-y-6 animate-fadeIn">
+                  <div className="mt-2 md:mt-0 text-right md:text-left">
+                    {/* PANEL */}
+                    {
+                      user.role === "admin" && (
+                        <Link href={'/panel'} className="  border rounded-md border-blue-dark p-2 ml-3 bg-blue font-bold text-white mb-4"> ورود به پنل مدیریتی</Link>
+                      )
+                    }
+
+                  </div>
                   <h2 className="text-heading-5 font-bold text-dark mb-4">داشبورد شما</h2>
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
                     <div className="bg-blue-light-5 p-5 rounded-xl border border-blue-light-4">
-                        <span className="text-blue text-3xl font-bold block mb-1">{user.PurchasedProducts.length}</span>
-                        <span className="text-body text-sm">سفارش‌های تکمیل شده</span>
+                      <span className="text-blue text-3xl font-bold block mb-1">{user.PurchasedProducts.length}</span>
+                      <span className="text-body text-sm">سفارش‌های تکمیل شده</span>
                     </div>
                     <div className="bg-yellow-light-2 p-5 rounded-xl border border-yellow-light-1">
-                        <span className="text-yellow-dark-2 text-3xl font-bold block mb-1">{user.purchaseInvoice.length}</span>
-                        <span className="text-body text-sm">فاکتورهای پرداخت شده</span>
+                      <span className="text-yellow-dark-2 text-3xl font-bold block mb-1">{user.purchaseInvoice.length}</span>
+                      <span className="text-body text-sm">فاکتورهای پرداخت شده</span>
                     </div>
-                     <div className="bg-green-light-6 p-5 rounded-xl border border-green-light-4">
-                        <span className="text-green-dark text-3xl font-bold block mb-1">{user.dateLogin.split('/')[2]}</span>
-                        <span className="text-body text-sm">روز عضویت در ماه جاری</span>
+                    <div className="bg-green-light-6 p-5 rounded-xl border border-green-light-4">
+                      <span className="text-green-dark text-3xl font-bold block mb-1">{user.dateLogin.split('/')[2]}</span>
+                      <span className="text-body text-sm">روز عضویت در ماه جاری</span>
                     </div>
                   </div>
-                  
+
                   <div className="mt-8">
                     <h3 className="text-lg font-bold text-dark mb-3">آخرین خریدها</h3>
                     {user.PurchasedProducts.length > 0 ? (
-                         <div className="overflow-x-auto">
-                         <table className="w-full text-right text-sm text-body">
-                             <thead className="bg-gray-1 text-dark font-medium">
-                                 <tr>
-                                     <th className="px-4 py-3 rounded-r-lg">محصول</th>
-                                     <th className="px-4 py-3">تاریخ</th>
-                                     <th className="px-4 py-3">قیمت</th>
-                                     <th className="px-4 py-3 rounded-l-lg">وضعیت</th>
-                                 </tr>
-                             </thead>
-                             <tbody>
-                                 {user.PurchasedProducts.slice(0,3).map((prod) => (
-                                     <tr key={prod.id} className="border-b border-gray-2 last:border-0">
-                                         <td className="px-4 py-4 font-medium text-dark">{prod.title}</td>
-                                         <td className="px-4 py-4">{prod.date}</td>
-                                         <td className="px-4 py-4">{formatPrice(prod.discountedPrice || prod.price)} $</td>
-                                         <td className="px-4 py-4">
-                                           <span className="bg-green-light-6 text-green-dark px-2 py-1 rounded text-xs">تکمیل شده</span>
-                                         </td>
-                                     </tr>
-                                 ))}
-                             </tbody>
-                         </table>
-                     </div>
+                      <div className="overflow-x-auto">
+                        <table className="w-full text-right text-sm text-body">
+                          <thead className="bg-gray-1 text-dark font-medium">
+                            <tr>
+                              <th className="px-4 py-3 rounded-r-lg">محصول</th>
+                              <th className="px-4 py-3">تاریخ</th>
+                              <th className="px-4 py-3">قیمت</th>
+                              <th className="px-4 py-3 rounded-l-lg">وضعیت</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {user.PurchasedProducts.slice(0, 3).map((prod) => (
+                              <tr key={prod.id} className="border-b border-gray-2 last:border-0">
+                                <td className="px-4 py-4 font-medium text-dark">{prod.title}</td>
+                                <td className="px-4 py-4">{prod.date}</td>
+                                <td className="px-4 py-4">{formatPrice(prod.discountedPrice || prod.price)} $</td>
+                                <td className="px-4 py-4">
+                                  <span className="bg-green-light-6 text-green-dark px-2 py-1 rounded text-xs">تکمیل شده</span>
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
                     ) : (
-                        <p className="text-body">هیچ خریدی انجام نشده است.</p>
+                      <p className="text-body">هیچ خریدی انجام نشده است.</p>
                     )}
                   </div>
                 </div>
               )}
+              {/*پنل رو تو مپ زدن قرار ندادم چون فعلا ایکون مناسبی نداشتم و تستی اینجا گزاشتم */}
+
 
               {/* ORDERS TAB */}
               {activeTab === "orders" && (
@@ -225,27 +250,27 @@ const MyAccountClient: React.FC<MyAccountClientProps> = () => {
                   <h2 className="text-heading-6 font-bold text-dark mb-6">لیست سفارش‌های من</h2>
                   <div className="flex flex-col gap-4">
                     {user.PurchasedProducts.map((product) => (
-                        <div key={product.id} className="flex flex-col sm:flex-row gap-5 border border-gray-2 rounded-xl p-4 hover:shadow-1 transition-all bg-white">
-                            <div className="w-full sm:w-32 h-32 bg-gray-1 rounded-lg flex-shrink-0 flex items-center justify-center overflow-hidden">
-                                <img src={product.imgs.thumbnails[0]} alt={product.title} className="w-full h-full object-contain hover:scale-105 transition-transform" />
-                            </div>
-                            <div className="flex-1 flex flex-col justify-between">
-                                <div>
-                                    <div className="flex justify-between items-start">
-                                        <h3 className="text-lg font-bold text-dark line-clamp-1">{product.title}</h3>
-                                        <span className="text-xs bg-blue-light-5 text-blue px-2 py-1 rounded">{product.categorie}</span>
-                                    </div>
-                                    <p className="text-sm text-body mt-2">تاریخ خرید: {product.date}</p>
-                                </div>
-                                <div className="flex justify-between items-end mt-4">
-                                    <div className="flex flex-col">
-                                        {product.hasDiscount && <span className="text-xs text-red line-through decoration-red">{formatPrice(product.price)} $</span>}
-                                        <span className="text-xl font-bold text-dark">{formatPrice(product.discountedPrice)} $</span>
-                                    </div>
-                                    <button className="text-blue text-sm font-medium hover:underline">مشاهده فاکتور</button>
-                                </div>
-                            </div>
+                      <div key={product.id} className="flex flex-col sm:flex-row gap-5 border border-gray-2 rounded-xl p-4 hover:shadow-1 transition-all bg-white">
+                        <div className="w-full sm:w-32 h-32 bg-gray-1 rounded-lg flex-shrink-0 flex items-center justify-center overflow-hidden">
+                          <img src={product.imgs.thumbnails[0]} alt={product.title} className="w-full h-full object-contain hover:scale-105 transition-transform" />
                         </div>
+                        <div className="flex-1 flex flex-col justify-between">
+                          <div>
+                            <div className="flex justify-between items-start">
+                              <h3 className="text-lg font-bold text-dark line-clamp-1">{product.title}</h3>
+                              <span className="text-xs bg-blue-light-5 text-blue px-2 py-1 rounded">{product.categorie}</span>
+                            </div>
+                            <p className="text-sm text-body mt-2">تاریخ خرید: {product.date}</p>
+                          </div>
+                          <div className="flex justify-between items-end mt-4">
+                            <div className="flex flex-col">
+                              {product.hasDiscount && <span className="text-xs text-red line-through decoration-red">{formatPrice(product.price)} $</span>}
+                              <span className="text-xl font-bold text-dark">{formatPrice(product.discountedPrice)} $</span>
+                            </div>
+                            <button className="text-blue text-sm font-medium hover:underline">مشاهده فاکتور</button>
+                          </div>
+                        </div>
+                      </div>
                     ))}
                   </div>
                 </div>
@@ -254,37 +279,56 @@ const MyAccountClient: React.FC<MyAccountClientProps> = () => {
               {/* DOWNLOADS TAB */}
               {activeTab === "downloads" && (
                 <div className="space-y-6 animate-fadeIn">
-                    <h2 className="text-heading-6 font-bold text-dark mb-4">کدهای دیجیتال (QR)</h2>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                         {user.PurchasedProducts.filter(p => p.QRDatas).map((product) => (
-                             <div key={`qr-${product.id}`} className="border border-gray-3 rounded-xl p-5 flex flex-col items-center text-center bg-gray-1/30">
-                                 <h4 className="font-bold text-dark mb-2">{product.title}</h4>
-                                 <div className="bg-white p-3 rounded-lg shadow-1 border border-gray-2 mb-4">
-                                      <img src={product.QRDatas?.preview.url} alt="QR Code" className="w-40 h-40 object-contain" />
-                                 </div>
-                                 <button className="mt-4 w-full bg-blue text-white py-2 rounded-lg text-sm hover:bg-blue-dark transition-colors">دانلود تصویر QR</button>
-                             </div>
-                         ))}
-                    </div>
+                  <h2 className="text-heading-6 font-bold text-dark mb-4">کدهای دیجیتال (QR)</h2>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {user.PurchasedProducts.filter(p => p.QRDatas).map((product) => (
+                      <div key={`qr-${product.id}`} className="border border-gray-3 rounded-xl p-5 flex flex-col items-center text-center bg-gray-1/30">
+                        <h4 className="font-bold text-dark mb-2">{product.title}</h4>
+                        <div className="bg-white p-3 rounded-lg shadow-1 border border-gray-2 mb-4">
+                          <img src={product.QRDatas?.preview.url} alt="QR Code" className="w-40 h-40 object-contain" />
+                        </div>
+                        <button className="mt-4 w-full bg-blue text-white py-2 rounded-lg text-sm hover:bg-blue-dark transition-colors">دانلود تصویر QR</button>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               )}
 
               {/* ADDRESSES TAB */}
               {activeTab === "addresses" && (
                 <div className="animate-fadeIn">
-                    <div className="flex justify-between items-center mb-6">
-                        <h2 className="text-heading-6 font-bold text-dark">آدرس‌های ثبت شده</h2>
-                        <button onClick={() => setIsModalOpen(true)} className="bg-green text-white px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2">افزودن آدرس</button>
+                  <div className="flex justify-between items-center mb-6">
+                    <h2 className="text-heading-6 font-bold text-dark">آدرس‌های ثبت شده</h2>
+                    <button onClick={() => setIsModalOpen(true)} className="bg-green text-white px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2">افزودن آدرس</button>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="border border-blue rounded-xl p-5 bg-blue-light-5/20 relative group">
+                      <span className="absolute top-4 left-4 bg-blue text-white text-[10px] px-2 py-0.5 rounded-full">پیش‌فرض</span>
+                      <h4 className="font-bold text-dark mb-2">منزل</h4>
+                      <p className="text-body text-sm leading-relaxed mb-4">{user.address}</p>
+                      <p className="text-dark text-sm font-medium">{user.phone}</p>
                     </div>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div className="border border-blue rounded-xl p-5 bg-blue-light-5/20 relative group">
-                            <span className="absolute top-4 left-4 bg-blue text-white text-[10px] px-2 py-0.5 rounded-full">پیش‌فرض</span>
-                            <h4 className="font-bold text-dark mb-2">منزل</h4>
-                            <p className="text-body text-sm leading-relaxed mb-4">{user.address}</p>
-                            <p className="text-dark text-sm font-medium">{user.phone}</p>
-                        </div>
+                  </div>
+                  <AddressModal isOpen={isModalOpen} closeModal={() => setIsModalOpen(false)} />
+                </div>
+              )}
+
+              {/* favrate TAB */}
+              {activeTab === "favrate" && (
+                <div className="animate-fadeIn">
+                  <div className="flex justify-between items-center mb-6">
+                    <h2 className="text-heading-6 font-bold text-dark"> محصولات پسندیده شده</h2>
+                    {/* <button onClick={() => setIsModalOpen(true)} className="bg-green text-white px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2">افزودن آدرس</button> */}
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="border border-blue rounded-xl p-5 bg-blue-light-5/20 relative group">
+                      <span className="absolute top-4 left-4 bg-blue text-white text-[10px] px-2 py-0.5 rounded-full">پیش‌فرض</span>
+                      <h4 className="font-bold text-dark mb-2">منزل</h4>
+                      <p className="text-body text-sm leading-relaxed mb-4">{user.address}</p>
+                      <p className="text-dark text-sm font-medium">{user.phone}</p>
                     </div>
-                    <AddressModal isOpen={isModalOpen} closeModal={() => setIsModalOpen(false)} />
+                  </div>
+                  <AddressModal isOpen={isModalOpen} closeModal={() => setIsModalOpen(false)} />
                 </div>
               )}
 
@@ -293,17 +337,16 @@ const MyAccountClient: React.FC<MyAccountClientProps> = () => {
                 <div className="animate-fadeIn">
                   <h2 className="text-heading-6 font-bold text-dark mb-6">ویرایش اطلاعات حساب</h2>
                   <form className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                      <div className="space-y-1"><label className="text-sm font-medium text-body">نام</label><input type="text" defaultValue={user.name} className="w-full border border-gray-3 rounded-lg px-4 py-3 bg-white" /></div>
-                      <div className="space-y-1"><label className="text-sm font-medium text-body">نام خانوادگی</label><input type="text" defaultValue={user.lastName} className="w-full border border-gray-3 rounded-lg px-4 py-3 bg-white" /></div>
-                      <div className="col-span-1 md:col-span-2 flex justify-end mt-4">
-                          <button type="button" className="bg-blue hover:bg-blue-dark text-white px-8 py-3 rounded-lg font-medium shadow-2">ذخیره تغییرات</button>
-                      </div>
+                    <div className="space-y-1"><label className="text-sm font-medium text-body">نام</label><input type="text" defaultValue={user.name} className="w-full border border-gray-3 rounded-lg px-4 py-3 bg-white" /></div>
+                    <div className="space-y-1"><label className="text-sm font-medium text-body">نام خانوادگی</label><input type="text" defaultValue={user.lastName} className="w-full border border-gray-3 rounded-lg px-4 py-3 bg-white" /></div>
+                    <div className="col-span-1 md:col-span-2 flex justify-end mt-4">
+                      <button type="button" className="bg-blue hover:bg-blue-dark text-white px-8 py-3 rounded-lg font-medium shadow-2">ذخیره تغییرات</button>
+                    </div>
                   </form>
                 </div>
               )}
             </div>
           </div>
-
         </div>
       </div>
     </section>

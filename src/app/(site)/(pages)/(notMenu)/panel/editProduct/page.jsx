@@ -298,7 +298,7 @@ export default function EditProducts() {
                   {selectedProduct.imgs?.previews?.[activePreview] ? (
                     <Image
                       src={selectedProduct.imgs.previews[activePreview]}
-                      alt="preview"
+                      alt="preview img"
                       width={350}
                       height={350}
                       className="object-contain p-2"
