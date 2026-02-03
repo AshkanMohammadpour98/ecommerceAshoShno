@@ -80,7 +80,7 @@ const CounDown = () => {
         }
 
         const activeDiscount = discountData[0];
-        console.log(activeDiscount, 'activeDiscount....');
+        // console.log(activeDiscount, 'activeDiscount....');
 
 
         const productRes = await fetch(

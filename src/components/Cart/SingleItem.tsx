@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import Swal from "sweetalert2";
 import { AppDispatch } from "@/redux/store";
 import { useDispatch } from "react-redux";
 import {
@@ -13,36 +14,73 @@ import {
   PlusSmallIcon,
 } from "@heroicons/react/24/outline";
 
-const formatMoney = (n: number) => `${new Intl.NumberFormat("fa-IR").format(n)} تومان`;
+// 🎯 فرمت قیمت به تومان
+const formatMoney = (n: number) =>
+  `${new Intl.NumberFormat("fa-IR").format(n)} تومان`;
 
 const SingleItem = ({ item }: { item: any }) => {
+  // 🧮 استیت محلی برای تعداد
   const [quantity, setQuantity] = useState<number>(item.quantity || 1);
+
+  // 📤 دسترسی به dispatch ریداکس
   const dispatch = useDispatch<AppDispatch>();
 
+  // ⛔ غیرفعال کردن دکمه کاهش وقتی تعداد = 1
   const decDisabled = quantity <= 1;
 
+  // ❌ حذف کامل محصول از سبد
   const handleRemoveFromCart = () => {
-    dispatch(removeItemFromCart(item.id));
-  };
-
-  const handleIncreaseQuantity = () => {
-    setQuantity((prev) => {
-      const next = prev + 1;
-      dispatch(updateCartItemQuantity({ id: item.id, quantity: next }));
-      return next;
+    Swal.fire({
+      title: "حذف محصول",
+      text: "آیا از حذف این محصول مطمئن هستید؟",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonText: "بله، حذف شود",
+      cancelButtonText: "لغو",
+    }).then((result) => {
+      if (result.isConfirmed) {
+        dispatch(removeItemFromCart(item.id));
+        Swal.fire("حذف شد", "محصول از سبد خرید حذف شد", "success");
+      }
     });
   };
 
+  // ➕ افزایش تعداد (با کنترل موجودی انبار)
+  const handleIncreaseQuantity = () => {
+    // 🧠 بررسی سقف موجودی
+    if (item.count && quantity >= item.count) {
+      Swal.fire({
+        icon: "error",
+        title: "موجودی محدود",
+        text: `حداکثر تعداد قابل سفارش ${item.count} عدد می‌باشد`,
+        confirmButtonText: "باشه",
+      });
+      return;
+    }
+
+    const next = quantity + 1;
+
+    // 🔄 آپدیت state محلی
+    setQuantity(next);
+
+    // 🔄 آپدیت مقدار در ریداکس
+    dispatch(updateCartItemQuantity({ id: item.id, _id: item._id , quantity: next }));
+  };
+
+  // ➖ کاهش تعداد
   const handleDecreaseQuantity = () => {
     if (decDisabled) return;
-    setQuantity((prev) => {
-      const next = Math.max(1, prev - 1);
-      dispatch(updateCartItemQuantity({ id: item.id, quantity: next }));
-      return next;
-    });
+
+    const next = Math.max(1, quantity - 1);
+
+    setQuantity(next);
+    dispatch(updateCartItemQuantity({ id: item.id, _id : item._id , quantity: next }));
   };
 
-  const unitPrice = item.discountedPrice || 0;
+  // 💰 محاسبه قیمت واحد (در صورت وجود تخفیف)
+  const unitPrice = item.discountedPrice || item.price || 0;
+
+  // 🧾 محاسبه جمع جزء
   const lineTotal = unitPrice * quantity;
 
   return (
@@ -65,9 +103,19 @@ const SingleItem = ({ item }: { item: any }) => {
               <h3 className="text-dark hover:text-blue ease-out duration-200 truncate">
                 <Link href={item.link || "#"}>{item.title}</Link>
               </h3>
-              {/* متادیتا اختیاری مثل رنگ/سایز */}
+
+              {/* متادیتا اختیاری مثل رنگ / سایز */}
               {item?.variantTitle && (
-                <p className="mt-1 text-dark-4 text-custom-xs">{item.variantTitle}</p>
+                <p className="mt-1 text-dark-4 text-custom-xs">
+                  {item.variantTitle}
+                </p>
+              )}
+
+              {/* نمایش موجودی */}
+              {item?.count && (
+                <p className="mt-1 text-green-600 text-xs">
+                  موجودی: {item.count} عدد
+                </p>
               )}
             </div>
           </div>
@@ -79,30 +127,27 @@ const SingleItem = ({ item }: { item: any }) => {
         <p className="text-dark">{formatMoney(unitPrice)}</p>
       </div>
 
-      {/* ستون: تعداد (استپر) */}
+      {/* ستون: تعداد */}
       <div className="min-w-[275px]">
         <div className="w-max flex items-center rounded-md border border-gray-3 overflow-hidden">
           <button
             onClick={handleDecreaseQuantity}
-            aria-label="کاهش تعداد"
             disabled={decDisabled}
             className={`flex items-center justify-center w-11.5 h-11.5 transition-colors ${
-              decDisabled ? "text-gray-4 cursor-not-allowed" : "hover:text-blue"
+              decDisabled
+                ? "text-gray-4 cursor-not-allowed"
+                : "hover:text-blue"
             }`}
           >
             <MinusSmallIcon className="w-5 h-5" />
           </button>
 
-          <span
-            className="flex items-center justify-center w-16 h-11.5 border-x border-gray-4 text-dark"
-            aria-live="polite"
-          >
+          <span className="flex items-center justify-center w-16 h-11.5 border-x border-gray-4 text-dark">
             {new Intl.NumberFormat("fa-IR").format(quantity)}
           </span>
 
           <button
             onClick={handleIncreaseQuantity}
-            aria-label="افزایش تعداد"
             className="flex items-center justify-center w-11.5 h-11.5 hover:text-blue transition-colors"
           >
             <PlusSmallIcon className="w-5 h-5" />
@@ -115,11 +160,10 @@ const SingleItem = ({ item }: { item: any }) => {
         <p className="text-dark font-medium">{formatMoney(lineTotal)}</p>
       </div>
 
-      {/* ستون: عملیات */}
+      {/* ستون: حذف */}
       <div className="min-w-[50px] flex justify-end">
         <button
           onClick={handleRemoveFromCart}
-          aria-label={`حذف ${item?.title || "محصول"} از سبد`}
           title="حذف از سبد"
           className="flex items-center justify-center rounded-lg max-w-[38px] w-full h-9.5 bg-gray-2 border border-gray-3 text-dark transition-colors hover:bg-red-light-6 hover:border-red-light-4 hover:text-red"
         >

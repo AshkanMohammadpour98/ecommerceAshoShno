@@ -17,6 +17,12 @@ import {
   SparklesIcon,
 } from "@heroicons/react/24/outline";
 import { CheckCircleIcon, XCircleIcon } from "@heroicons/react/24/solid";
+import DatePicker from "react-multi-date-picker";
+import TimePicker from "react-multi-date-picker/plugins/time_picker";
+import persian from "react-date-object/calendars/persian";
+import persian_fa from "react-date-object/locales/persian_fa";
+
+
 import Swal from "sweetalert2";
 
 
@@ -36,11 +42,12 @@ const DiscountCodesPage = () => {
   const [successMessage, setSuccessMessage] = useState(null);
 
   // API Base URL
- 
+
 
   // URLS
-  const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL;
-  const DISCOUNT_CODES_URL = process.env.NEXT_PUBLIC_API_DISCOUNT_CODES_URL;
+  const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || "/";
+  const DISCOUNT_CODES_URL = process.env.NEXT_PUBLIC_API_DISCOUNT_CODES_URL || "/api/discountCodes";
+
 
   /**
    * دریافت لیست کدهای تخفیف از API
@@ -49,7 +56,14 @@ const DiscountCodesPage = () => {
     try {
       setLoading(true);
       setError(null);
+      if (!BASE_URL || !DISCOUNT_CODES_URL) {
+        setError("آدرس API کدهای تخفیف معتبر نیست. لطفاً تنظیمات را بررسی کنید.");
+        setLoading(false);
+        return;
+      }
+
       const response = await fetch(`${BASE_URL}${DISCOUNT_CODES_URL}`);
+
       if (!response.ok) throw new Error("خطا در دریافت اطلاعات");
       const data = await response.json();
       setDiscountCodes(data.data);
@@ -66,7 +80,7 @@ const DiscountCodesPage = () => {
    */
   const checkDuplicateCode = async (code, excludeId) => {
     try {
-      const response = await fetch(API_URL);
+      const response = await fetch(`${BASE_URL}${DISCOUNT_CODES_URL}`);
       const data = await response.json();
       return data.data.some(item =>
         item.discountCode.toLowerCase() === code.toLowerCase() &&
@@ -83,13 +97,17 @@ const DiscountCodesPage = () => {
    */
   const createDiscountCode = async (code) => {
     try {
+      if (!BASE_URL || !DISCOUNT_CODES_URL) {
+        setError("آدرس API کدهای تخفیف معتبر نیست. لطفاً تنظیمات را بررسی کنید.");
+        return false;
+      }
+
       const response = await fetch(`${BASE_URL}${DISCOUNT_CODES_URL}`, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(code),
       });
+
 
       if (!response.ok) throw new Error("خطا در ایجاد کد تخفیف");
 
@@ -110,13 +128,17 @@ const DiscountCodesPage = () => {
    */
   const updateDiscountCode = async (_id, updatedCode) => {
     try {
-      const response = await fetch(`${API_URL}/${_id}`, {
+      if (!BASE_URL || !DISCOUNT_CODES_URL) {
+        setError("آدرس API کدهای تخفیف معتبر نیست. لطفاً تنظیمات را بررسی کنید.");
+        return false;
+      }
+
+      const response = await fetch(`${BASE_URL}${DISCOUNT_CODES_URL}/${_id}`, {
         method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(updatedCode),
       });
+
 
       if (!response.ok) throw new Error("خطا در ویرایش کد تخفیف");
 
@@ -137,10 +159,18 @@ const DiscountCodesPage = () => {
    * حذف کد تخفیف
    */
   const deleteDiscountCode = async (_id) => {
+    console.log(_id, '_id in delet item ');
+
     try {
+      if (!BASE_URL || !DISCOUNT_CODES_URL) {
+        setError("آدرس API کدهای تخفیف معتبر نیست. لطفاً تنظیمات را بررسی کنید.");
+        return;
+      }
+
       const response = await fetch(`${BASE_URL}${DISCOUNT_CODES_URL}/${_id}`, {
         method: "DELETE",
       });
+
 
       if (!response.ok) throw new Error("خطا در حذف کد تخفیف");
 
@@ -251,7 +281,7 @@ const DiscountCodesPage = () => {
       {successMessage && <SuccessNotification message={successMessage} />}
 
       {/* Header Section */}
-      <header className="bg-white border-b border-gray-3 sticky top-0 z-40 shadow-1">
+      <header className="bg-white border-b border-gray-3 sticky top-0 z-1 shadow-1">
         <div className="container max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="py-6 sm:py-8">
             {/* عنوان و دکمه‌ها */}
@@ -402,8 +432,24 @@ const DiscountCodesPage = () => {
  */
 const DiscountCard = ({ code, onCopy, onDelete, onEdit, isCopied }) => {
   return (
+
     <div className="relative bg-white rounded-2xl shadow-2 hover:shadow-3 
                     transition-all duration-300 overflow-hidden group">
+      {/* وضعیت فعال بودن */}
+      <div className="absolute top-3 left-3">
+        {code.isActive ? (
+          <span className="px-3 py-1 text-custom-xs font-medium rounded-full 
+                    bg-green-light-6 text-green-dark border border-green-light-3">
+            فعال
+          </span>
+        ) : (
+          <span className="px-3 py-1 text-custom-xs font-medium rounded-full 
+                    bg-red-light-6 text-red-dark border border-red-light-3">
+            غیر فعال
+          </span>
+        )}
+      </div>
+
       {/* نوار بالای کارت */}
       <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-blue to-blue-light" />
 
@@ -438,9 +484,12 @@ const DiscountCard = ({ code, onCopy, onDelete, onEdit, isCopied }) => {
           </div>
         </div>
 
+
+
+
         {/* مبلغ تخفیف */}
-        <div className="p-4 bg-gradient-to-r from-green-light-6 to-green-light-5 
-                      rounded-xl mb-4">
+        <div className="p-4 bg-gradient-to-r from-green-light-6 to-green-light-5 rounded-xl mb-4">
+
           <div className="flex items-center justify-between">
             <span className="text-custom-sm text-meta-2">مبلغ تخفیف:</span>
             <div className="flex items-center gap-2">
@@ -484,63 +533,71 @@ const DiscountCard = ({ code, onCopy, onDelete, onEdit, isCopied }) => {
  * کامپوننت فرم ایجاد/ویرایش
  */
 const DiscountForm = ({ editingCode, onClose, onSubmit }) => {
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = React.useState({
     discountCode: editingCode?.discountCode || "",
     money: editingCode?.money || 0,
+    moneyDisplay: editingCode?.money?.toLocaleString('fa-IR') || '0',
+    isActive: editingCode?.isActive ?? true,
+    hasActiveDate: !!editingCode?.activeDate,
+    activeDate: editingCode?.activeDate || null,
   });
-  const [errors, setErrors] = useState({});
-  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  /**
-   * اعتبارسنجی فرم
-   */
-  const validateForm = () => {
+  const [errors, setErrors] = React.useState({});
+  const [isSubmitting, setIsSubmitting] = React.useState(false);
+
+  // 🔹 اعتبارسنجی فوری
+  React.useEffect(() => {
     const newErrors = {};
 
+    // کد تخفیف
     if (!formData.discountCode.trim()) {
       newErrors.discountCode = "کد تخفیف الزامی است";
-    } else if (formData.discountCode.length < 3) {
-      newErrors.discountCode = "کد تخفیف باید حداقل ۳ کاراکتر باشد";
-    } else if (!/^[A-Za-z0-9]+$/.test(formData.discountCode)) {
-      newErrors.discountCode = "کد تخفیف فقط باید شامل حروف انگلیسی و اعداد باشد";
     }
 
+    // مبلغ
     if (!formData.money || formData.money <= 0) {
       newErrors.money = "مبلغ تخفیف باید بیشتر از صفر باشد";
-    } else if (formData.money > 10000000) {
-      newErrors.money = "مبلغ تخفیف نمی‌تواند بیشتر از ۱۰ میلیون تومان باشد";
+    }
+
+    // تاریخ انقضا (خطای فوری)
+    if (formData.hasActiveDate) {
+      if (!formData.activeDate) {
+        newErrors.activeDate = "لطفاً تاریخ و ساعت پایان اعتبار را انتخاب کنید";
+      } else if (new Date(formData.activeDate) <= new Date()) {
+        // 🔴 خطای فوری تاریخ گذشته
+        newErrors.activeDate = "تاریخ انقضا باید بعد از الان باشد";
+      }
     }
 
     setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
+  }, [formData.discountCode, formData.money, formData.hasActiveDate, formData.activeDate]);
 
-  /**
-   * ارسال فرم
-   */
+  const validateForm = () => Object.keys(errors).length === 0;
+
   const handleSubmit = async (e) => {
     e.preventDefault();
-
-    if (!validateForm()) return;
+    if (!validateForm()) return; // اگر خطا داریم submit نشود
 
     setIsSubmitting(true);
+
     const success = await onSubmit({
       discountCode: formData.discountCode.toUpperCase(),
       money: Number(formData.money),
+      isActive: formData.isActive,
+      activeDate: formData.hasActiveDate ? formData.activeDate : null,
     });
 
     setIsSubmitting(false);
-    if (success) {
-      onClose();
-    }
+
+    if (success) onClose();
   };
 
   return (
-    <div className="fixed inset-0 bg-dark/50 backdrop-blur-sm z-50 
-                    flex items-center justify-center p-4">
-      <div className="bg-white rounded-2xl shadow-3 w-full max-w-lg 
-                      transform transition-all duration-300">
-        {/* هدر فرم */}
+    <div className="fixed inset-0 bg-dark/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 sm:p-6">
+      {/* 🔹 مودال scrollable برای ارتفاع زیاد */}
+      <div className="bg-white rounded-2xl shadow-3 w-full max-w-lg transform transition-all duration-300 sm:max-w-md
+                      max-h-[90vh] overflow-y-auto">
+        {/* هدر */}
         <div className="flex items-center justify-between p-6 border-b border-gray-3">
           <div className="flex items-center gap-3">
             <div className="p-2.5 bg-gradient-to-br from-blue-light-5 to-blue-light-4 rounded-xl">
@@ -553,8 +610,7 @@ const DiscountForm = ({ editingCode, onClose, onSubmit }) => {
           <button
             onClick={onClose}
             disabled={isSubmitting}
-            className="p-2 hover:bg-gray-2 rounded-lg transition-colors duration-200
-                     disabled:opacity-50 disabled:cursor-not-allowed"
+            className="p-2 hover:bg-gray-2 rounded-lg transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <XMarkIcon className="w-5 h-5 text-meta-4" />
           </button>
@@ -562,11 +618,10 @@ const DiscountForm = ({ editingCode, onClose, onSubmit }) => {
 
         {/* بدنه فرم */}
         <form onSubmit={handleSubmit} className="p-6 space-y-5">
-          {/* فیلد کد تخفیف */}
+          {/* کد تخفیف */}
           <div>
             <label className="block text-custom-sm font-medium text-dark mb-2">
-              کد تخفیف
-              <span className="text-red mr-1">*</span>
+              کد تخفیف <span className="text-red mr-1">*</span>
             </label>
             <input
               type="text"
@@ -574,15 +629,11 @@ const DiscountForm = ({ editingCode, onClose, onSubmit }) => {
               onChange={(e) => {
                 const value = e.target.value.replace(/[^A-Za-z0-9]/g, '');
                 setFormData(prev => ({ ...prev, discountCode: value }));
-                setErrors(prev => ({ ...prev, discountCode: undefined }));
               }}
               placeholder="مثال: SUMMER2024"
               disabled={isSubmitting}
               className={`w-full px-4 py-3 bg-gray-1 border rounded-xl
-                       text-base text-dark placeholder-meta-5
-                       focus:outline-none focus:ring-2 transition-all duration-200
-                       disabled:opacity-50 disabled:cursor-not-allowed
-                       ${errors.discountCode
+                ${errors.discountCode
                   ? 'border-red focus:border-red focus:ring-red-light-4'
                   : 'border-gray-3 focus:border-blue focus:ring-blue-light-5'}`}
             />
@@ -592,37 +643,106 @@ const DiscountForm = ({ editingCode, onClose, onSubmit }) => {
                 {errors.discountCode}
               </p>
             )}
-            <p className="text-meta-4 text-custom-xs mt-1">
-              فقط حروف انگلیسی و اعداد مجاز است
-            </p>
           </div>
 
-          {/* فیلد مبلغ تخفیف */}
+          {/* فعال/غیرفعال با checkbox */}
+          <div className="flex items-center gap-3 bg-gray-1 border border-gray-3 rounded-xl px-4 py-3">
+            <input
+              type="checkbox"
+              checked={formData.isActive}
+              onChange={(e) => setFormData(prev => ({ ...prev, isActive: e.target.checked }))}
+              className="w-5 h-5 accent-blue"
+            />
+            <span className="text-custom-sm font-medium text-dark">
+              {formData.isActive ? 'کد تخفیف فعال است' : 'کد تخفیف غیر فعال است'}
+            </span>
+          </div>
+
+          {/* فعال‌سازی تاریخ */}
+          <div className="bg-gray-1 border border-gray-3 rounded-xl p-4 space-y-4">
+            <label className="flex items-center gap-3 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={formData.hasActiveDate}
+                onChange={(e) =>
+                  setFormData(prev => ({
+                    ...prev,
+                    hasActiveDate: e.target.checked,
+                    activeDate: e.target.checked ? prev.activeDate : null,
+                  }))
+                }
+                className="w-5 h-5 accent-blue"
+              />
+              <span className="text-custom-sm font-medium text-dark">
+                فعال‌سازی محدودیت زمانی
+              </span>
+            </label>
+
+            {formData.hasActiveDate && (
+              <div className="space-y-2">
+                <p className="text-custom-xs text-meta-4">تاریخ و ساعت پایان اعتبار</p>
+                <DatePicker
+                  value={formData.activeDate}
+                  onChange={(date) => {
+                    const newDate = date?.toDate();
+                    // 🔹 خطای فوری تاریخ گذشته
+                    if (newDate && newDate <= new Date()) {
+                      setErrors(prev => ({ ...prev, activeDate: "تاریخ انقضا باید بعد از الان باشد" }));
+                    } else {
+                      setErrors(prev => ({ ...prev, activeDate: undefined }));
+                    }
+                    setFormData(prev => ({ ...prev, activeDate: newDate }));
+                  }}
+                  calendar={persian}
+                  locale={persian_fa}
+                  format="YYYY/MM/DD HH:mm"
+                  plugins={[<TimePicker position="bottom" />]}
+                  inputClass="w-full px-4 py-3 bg-white border border-gray-3 rounded-xl
+                              focus:outline-none focus:ring-2 focus:ring-blue-light-5"
+                  minDate={new Date()}
+                />
+                {errors.activeDate && (
+                  <p className="text-red text-custom-xs mt-1 flex items-center gap-1">
+                    <ExclamationTriangleIcon className="w-4 h-4" />
+                    {errors.activeDate}
+                  </p>
+                )}
+              </div>
+            )}
+          </div>
+
+          {/* مبلغ تخفیف */}
           <div>
             <label className="block text-custom-sm font-medium text-dark mb-2">
-              مبلغ تخفیف (تومان)
-              <span className="text-red mr-1">*</span>
+              مبلغ تخفیف (تومان) <span className="text-red mr-1">*</span>
             </label>
             <div className="relative">
               <input
-                type="number"
-                value={formData.money}
-                onChange={(e) => {
-                  setFormData(prev => ({ ...prev, money: parseInt(e.target.value) || 0 }));
-                  setErrors(prev => ({ ...prev, money: undefined }));
+                type="text"
+                value={formData.moneyDisplay}
+                onFocus={() => {
+                  if (formData.moneyDisplay === '0') setFormData(prev => ({ ...prev, moneyDisplay: '' }));
                 }}
-                placeholder="50000"
+                onBlur={() => {
+                  const raw = parseInt(formData.moneyDisplay.replace(/,/g, ''), 10) || 0;
+                  setFormData(prev => ({
+                    ...prev,
+                    money: raw,
+                    moneyDisplay: raw.toLocaleString('fa-IR'),
+                  }));
+                }}
+                onChange={(e) => {
+                  const value = e.target.value.replace(/[^0-9]/g, '');
+                  setFormData(prev => ({ ...prev, moneyDisplay: value }));
+                }}
+                placeholder="مثال: 50,000"
                 disabled={isSubmitting}
                 className={`w-full pl-12 pr-4 py-3 bg-gray-1 border rounded-xl
-                         text-base text-dark placeholder-meta-5
-                         focus:outline-none focus:ring-2 transition-all duration-200
-                         disabled:opacity-50 disabled:cursor-not-allowed
-                         ${errors.money
+                  ${errors.money
                     ? 'border-red focus:border-red focus:ring-red-light-4'
                     : 'border-gray-3 focus:border-blue focus:ring-blue-light-5'}`}
               />
-              <CurrencyDollarIcon className="absolute left-3 top-1/2 -translate-y-1/2 
-                                            w-5 h-5 text-meta-4" />
+              <CurrencyDollarIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-meta-4" />
             </div>
             {errors.money && (
               <p className="text-red text-custom-xs mt-1 flex items-center gap-1">
@@ -630,37 +750,14 @@ const DiscountForm = ({ editingCode, onClose, onSubmit }) => {
                 {errors.money}
               </p>
             )}
-
-            {/* دکمه‌های سریع مبلغ */}
-            <div className="flex gap-2 mt-3">
-              {[10000, 25000, 50000, 100000].map((amount) => (
-                <button
-                  key={amount}
-                  type="button"
-                  onClick={() => {
-                    setFormData(prev => ({ ...prev, money: amount }));
-                    setErrors(prev => ({ ...prev, money: undefined }));
-                  }}
-                  disabled={isSubmitting}
-                  className="flex-1 py-2 px-3 bg-gray-1 hover:bg-gray-2 
-                           border border-gray-3 rounded-lg text-custom-xs
-                           font-medium text-dark transition-colors duration-200
-                           disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {amount.toLocaleString('fa-IR')}
-                </button>
-              ))}
-            </div>
           </div>
 
           {/* پیش‌نمایش */}
           {formData.discountCode && formData.money > 0 && (
-            <div className="p-4 bg-gradient-to-r from-green-light-6 to-green-light-5 
-                          rounded-xl border border-green-light-3">
+            <div className="p-4 bg-gradient-to-r from-green-light-6 to-green-light-5 rounded-xl border border-green-light-3">
               <p className="text-custom-xs text-green-dark mb-2">پیش‌نمایش:</p>
               <div className="flex items-center justify-between">
-                <code className="text-custom-lg font-bold text-green-dark bg-white/50 
-                              px-3 py-1 rounded">
+                <code className="text-custom-lg font-bold text-green-dark bg-white/50 px-3 py-1 rounded">
                   {formData.discountCode.toUpperCase()}
                 </code>
                 <span className="text-custom-sm font-medium text-green-dark">
@@ -670,28 +767,22 @@ const DiscountForm = ({ editingCode, onClose, onSubmit }) => {
             </div>
           )}
 
-          {/* دکمه‌های عملیات */}
-          <div className="flex gap-3 pt-2">
+          {/* دکمه‌ها */}
+          <div className="flex flex-col sm:flex-row gap-3 pt-2">
             <button
               type="button"
               onClick={onClose}
               disabled={isSubmitting}
-              className="flex-1 py-3 px-4 bg-gray-2 hover:bg-gray-3 
-                       text-dark font-medium rounded-xl
-                       transition-colors duration-200
-                       disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex-1 py-3 px-4 bg-gray-2 hover:bg-gray-3 text-dark font-medium rounded-xl transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               انصراف
             </button>
             <button
               type="submit"
-              disabled={isSubmitting}
-              className="flex-1 py-3 px-4 bg-gradient-to-r from-blue to-blue-light 
-                       text-white font-medium rounded-xl shadow-2
-                       hover:shadow-3 hover:scale-[1.01] 
-                       transition-all duration-300 active:scale-[0.99]
-                       disabled:opacity-50 disabled:cursor-not-allowed
-                       flex items-center justify-center gap-2"
+              disabled={isSubmitting || Object.keys(errors).length > 0} // 🔴 disable وقتی خطا داریم
+              className={`flex-1 py-3 px-4 bg-gradient-to-r from-blue to-blue-light text-white font-medium rounded-xl shadow-2 
+                          hover:shadow-3 hover:scale-[1.01] transition-all duration-300 active:scale-[0.99]
+                          disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2`}
             >
               {isSubmitting ? (
                 <>
@@ -708,6 +799,10 @@ const DiscountForm = ({ editingCode, onClose, onSubmit }) => {
     </div>
   );
 };
+
+
+
+
 
 /**
  * کامپوننت نمایش حالت خالی

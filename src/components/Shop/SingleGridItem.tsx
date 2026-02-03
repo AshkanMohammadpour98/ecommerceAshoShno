@@ -11,6 +11,7 @@ import Link from "next/link"; // برای لینک‌های داخلی Next.js
 import Image from "next/image"; // برای بهینه‌سازی تصاویر در Next.js
 import { useAppSelector } from "@/redux/store";
 
+
 // این کامپوننت نمایانگر یک کارت محصول است (در حالت گرید)
 const SingleGridItem = ({ item }) => {
   
@@ -29,6 +30,8 @@ const SingleGridItem = ({ item }) => {
   
   // افزودن محصول به سبد خرید
   const handleAddToCart = () => {
+  
+
     dispatch(addItemToCart({
       ...item,
       quantity: 1, // مقدار پیش‌فرض
@@ -50,7 +53,7 @@ const SingleGridItem = ({ item }) => {
   const safeFilled = Math.min(Math.max(ratingValue, 0), totalStars);
 
    const wishlistItems = useAppSelector((state) => state.wishlistReducer.items);
-    console.log(wishlistItems , 'wishlist item.......');
+    // console.log(wishlistItems , 'wishlist item.......');
     wishlistItems.map(item =>{
       console.log(item);
       

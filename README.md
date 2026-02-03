@@ -23,3 +23,5 @@ While NextMerce Pro features advanced functionalities, seamless integration, and
 #### [🚀 Live Demo](https://demo.nextmerce.com/)
 
 #### [🌐 Visit Website](https://nextmerce.com/)
+
+استفاده از پکیج npm install @supabase/supabase-js برای  اتصال به  عکس ها که بصورت ابری ذخیره بشن

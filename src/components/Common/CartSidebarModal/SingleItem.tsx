@@ -2,10 +2,11 @@ import React from "react";
 import { useDispatch } from "react-redux";
 import { AppDispatch } from "@/redux/store";
 import Image from "next/image";
+import Link from "next/link";
 
 const SingleItem = ({ item, removeItemFromCart }) => {
-  console.log(item , 'item cart sidebarModal');
-  
+  // console.log(item , 'item cart sidebarModal');
+
   const dispatch = useDispatch<AppDispatch>();
 
   const handleRemoveFromCart = () => {
@@ -21,9 +22,18 @@ const SingleItem = ({ item, removeItemFromCart }) => {
 
         <div>
           <h3 className="font-medium text-dark mb-1 ease-out duration-200 hover:text-blue">
-            <a href="#"> {item.title} </a>
+            <Link href={`/shop-details/${item._id}`}> {item.title} </Link>
           </h3>
-          <p className="text-custom-sm text-blue">قیمت: ${item.discountedPrice ? item.discountedPrice.toLocaleString() : item.price.toLocaleString() }</p>
+
+          <p className="text-custom-sm text-blue flex items-center gap-1">
+            قیمت: ${item.discountedPrice ? item.discountedPrice.toLocaleString() : item.price.toLocaleString()}
+            {item.quantity > 1 && (
+              <span className="text-[10px] text-gray-500 bg-gray-200 px-1.5 py-0.5 rounded-md font-medium">
+                ×{item.quantity} عدد
+              </span>
+            )}
+          </p>
+          
         </div>
       </div>
 

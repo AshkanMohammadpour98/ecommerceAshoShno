@@ -2,17 +2,48 @@
 // کاربر می‌تواند محصولات انتخاب شده را ببیند، تعداد را تغییر دهد، کد تخفیف اعمال کند و به صفحه پرداخت برود.
 
 "use client";
-import React from "react";
+import React, { useState } from "react";
 import Discount from "./Discount";
 import OrderSummary from "./OrderSummary";
 import { useAppSelector } from "@/redux/store";
 import SingleItem from "./SingleItem";
 import Breadcrumb from "../Common/Breadcrumb";
 import Link from "next/link";
+import Swal from "sweetalert2";
+import { useDispatch } from "react-redux";
+import { removeAllItemsFromCart } from "@/redux/features/cart-slice";
 
 const Cart = () => {
   // 📌 گرفتن آیتم‌های سبد خرید از استیت ریداکس
   const cartItems = useAppSelector((state) => state.cartReducer.items);
+  const dispatch = useDispatch();
+
+  // =================================================
+  // 📌 state مرکزی مربوط به کد تخفیف
+  // این state بین Discount و OrderSummary مشترک است
+  // =================================================
+  const [coupon, setCoupon] = useState(null);
+  // coupon = { code: string, amount: number } | null
+
+  console.log(cartItems, "carrtItems im cart page");
+
+  // 🧹 حذف همه محصولات سبد خرید
+  const handleClearCart = () => {
+    Swal.fire({
+      title: "پاک کردن سبد خرید",
+      text: "آیا مطمئن هستید که می‌خواهید کل سبد خرید را پاک کنید؟",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonText: "بله، پاک شود",
+      cancelButtonText: "لغو",
+    }).then((result) => {
+      if (result.isConfirmed) {
+        dispatch(removeAllItemsFromCart());
+        setCoupon(null); // 📌 با پاک شدن سبد، کوپن هم حذف می‌شود
+        Swal.fire("انجام شد", "سبد خرید با موفقیت پاک شد", "success");
+      }
+    });
+  };
 
   return (
     <>
@@ -28,7 +59,9 @@ const Cart = () => {
             {/* 📌 عنوان سبد خرید و دکمه پاک کردن */}
             <div className="flex flex-wrap items-center justify-between gap-5 mb-7.5">
               <h2 className="font-medium text-dark text-2xl">سبد خرید شما</h2>
-              <button className="text-blue">پاک کردن سبد خرید</button>
+              <button className="text-blue" onClick={handleClearCart}>
+                پاک کردن سبد خرید
+              </button>
             </div>
 
             {/* 📌 جدول محصولات */}
@@ -46,18 +79,17 @@ const Cart = () => {
                   </div>
 
                   {/* 📌 رندر کردن هر آیتم سبد خرید */}
-                  {cartItems.map((item, key) => (
-                    <SingleItem item={item} key={key} />
+                  {cartItems.map((item) => (
+                    <SingleItem item={item} key={item.id} />
                   ))}
-
                 </div>
               </div>
             </div>
 
             {/* 📌 بخش تخفیف و جمع کل سفارش */}
             <div className="flex flex-col lg:flex-row gap-7.5 xl:gap-11 mt-9">
-              <Discount />       {/* فرم کد تخفیف */}
-              <OrderSummary />   {/* جمع کل و ادامه خرید */}
+              <Discount coupon={coupon} setCoupon={setCoupon} />
+              <OrderSummary coupon={coupon} />
             </div>
 
           </div>
@@ -65,28 +97,10 @@ const Cart = () => {
       ) : (
         // 📌 وقتی سبد خرید خالی باشد
         <div className="text-center mt-8" dir="rtl">
-          <div className="mx-auto pb-7.5">
-            {/* 📌 آیکون سبد خرید خالی */}
-            <svg
-              className="mx-auto"
-              width="100"
-              height="100"
-              viewBox="0 0 100 100"
-              fill="none"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <circle cx="50" cy="50" r="50" fill="#F3F4F6" />
-              {/* ... ادامه مسیر SVG */}
-            </svg>
-          </div>
-
-          {/* 📌 متن اطلاع رسانی */}
           <p className="pb-6">سبد خرید شما خالی است!</p>
-
-          {/* 📌 لینک ادامه خرید */}
           <Link
             href="/shop-with-sidebar"
-            className="w-96 mx-auto flex justify-center font-medium text-white bg-dark py-[13px] px-6 rounded-md ease-out duration-200 hover:bg-opacity-95"
+            className="w-96 mx-auto flex justify-center font-medium text-white bg-dark py-[13px] px-6 rounded-md"
           >
             ادامه خرید
           </Link>

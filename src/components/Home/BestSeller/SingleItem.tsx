@@ -19,6 +19,7 @@ const SingleItem = ({ item }) => {
   };
 
   const handleAddToCart = () => {
+      
     dispatch(
       addItemToCart({
         ...item,

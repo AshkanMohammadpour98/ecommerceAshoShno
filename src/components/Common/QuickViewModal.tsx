@@ -13,7 +13,6 @@ import { addItemToWishlist } from "@/redux/features/wishlist-slice"; // اکشن
 import { updateproductDetails } from "@/redux/features/product-details";
 import Swal from "sweetalert2";
 
-
 const QuickViewModal = () => {
   const { isModalOpen, closeModal } = useModalContext();
   const { openPreviewModal } = usePreviewSlider();
@@ -25,7 +24,7 @@ const QuickViewModal = () => {
   const product = useAppSelector((state) => state.quickViewReducer.value);
   const [activePreview, setActivePreview] = useState(0);
 
-  console.log(product, 'product in QuickViewModal.tsx file');
+  // console.log(product, 'product in QuickViewModal.tsx file');
 
   // preview modal
   const handlePreviewSlider = () => {
@@ -36,18 +35,12 @@ const QuickViewModal = () => {
 
   // add to cart
   const handleAddToCart = () => {
-    console.log(quantity, 'quantity quickViewModel.tsx');
 
-    dispatch(
-      addItemToCart({
-        ...product,
-        quantity,
-      })
-    );
+
 
     closeModal();
   };
-  console.log(product , 'procunt log in quick file');
+  // console.log(product , 'procunt log in quick file');
   
   // تابعی برای افزودن محصول به لیست علاقه‌مندی‌ها
   const handleItemToWishList = () => {

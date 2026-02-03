@@ -1,11 +1,11 @@
 "use client";
 
-import { useState, useEffect, use } from "react"; 
+import { useState, useEffect, use } from "react";
 import { useRouter } from "next/navigation";
 import Swal from "sweetalert2";
 
 export default function EditProductId({ params }) {
-  const resolvedParams = use(params); 
+  const resolvedParams = use(params);
   const _id = resolvedParams._id; // استفاده از _id (طبق دستورات قبلی شما)
   const router = useRouter();
 
@@ -25,8 +25,11 @@ export default function EditProductId({ params }) {
     discountedPrice: 0,
     hasDiscount: false,
     categorie: "",
-    imgs: { thumbnails: [], previews: [] }, 
-    files: { thumbnails: [null, null], previews: [null, null] }, 
+    imgs: { thumbnails: [], previews: [] },
+    files: { thumbnails: [null, null, null, null], previews: [null, null, null, null] },
+    descriptionShort: "", // متن کوتاه محصول
+    descriptionFull: "",  // توضیحات کامل محصول
+    condition: "نو آکبند", // حالت محصول (نو/استوک/کارکرده)
   });
 
   useEffect(() => {
@@ -51,7 +54,10 @@ export default function EditProductId({ params }) {
             thumbnails: actualData.imgs?.thumbnails || [null, null],
             previews: actualData.imgs?.previews || [null, null],
           },
-          files: { thumbnails: [null, null], previews: [null, null] },
+          files: { thumbnails: [null, null, null, null], previews: [null, null, null, null] },
+          descriptionShort: actualData.description?.short || "",
+          descriptionFull: actualData.description?.full || "",
+          condition: actualData.condition || "نو آکبند",
         }));
 
         setOriginalCategory(actualData.categorie);
@@ -84,7 +90,7 @@ export default function EditProductId({ params }) {
     return fetch(`${BASE_URL}${CATEGORYS_URL}/${category._id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ 
+      body: JSON.stringify({
         products: (category.products || 0) + increment,
         id: category.id // حفظ فیلد id در بدنه طبق دستور شما
       }),
@@ -122,6 +128,9 @@ export default function EditProductId({ params }) {
       data.append("hasDiscount", formData.hasDiscount);
       data.append("discountedPrice", formData.hasDiscount ? formData.discountedPrice : 0);
       data.append("categorie", formData.categorie);
+      data.append("descriptionShort", formData.descriptionShort);
+      data.append("descriptionFull", formData.descriptionFull);
+      data.append("condition", formData.condition);
 
       formData.files.thumbnails.forEach((file, i) => {
         if (file) data.append(`thumb_${i}`, file);
@@ -175,6 +184,48 @@ export default function EditProductId({ params }) {
         </div>
       </div>
 
+      <div className="grid grid-cols-1 md:grid-cols-1 gap-6">
+        {/* متن کوتاه */}
+        <div>
+          <label className="block text-sm font-semibold text-gray-600">توضیح کوتاه</label>
+          <input
+            type="text"
+            name="descriptionShort"
+            value={formData.descriptionShort}
+            onChange={handleChange}
+            className="w-full mt-1 border rounded-xl px-4 py-2 outline-none focus:border-blue"
+          />
+        </div>
+
+        {/* توضیحات کامل */}
+        <div>
+          <label className="block text-sm font-semibold text-gray-600">توضیحات کامل</label>
+          <textarea
+            name="descriptionFull"
+            value={formData.descriptionFull}
+            onChange={handleChange}
+            className="w-full mt-1 border rounded-xl px-4 py-2 outline-none focus:border-blue"
+            rows={5}
+          />
+        </div>
+
+        {/* حالت محصول */}
+        <div>
+          <label className="block text-sm font-semibold text-gray-600">وضعیت محصول</label>
+          <select
+            name="condition"
+            value={formData.condition}
+            onChange={handleChange}
+            className="w-full mt-1 border rounded-xl px-4 py-2 outline-none"
+          >
+            <option value="نو آکبند">نو آکبند</option>
+            <option value="استوک">استوک</option>
+            <option value="در حد نو">در حد نو</option>
+            <option value="کارکرده">کارکرده</option>
+          </select>
+        </div>
+      </div>
+
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <div>
           <label className="block text-sm font-semibold text-gray-600">قیمت اصلی</label>
@@ -200,9 +251,9 @@ export default function EditProductId({ params }) {
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
           {formData.imgs.previews.map((imgUrl, i) => (
             <div key={i} className="relative group border-2 border-dashed rounded-xl p-2 flex flex-col items-center bg-gray-50">
-              <img 
-                src={formData.files.previews[i] ? URL.createObjectURL(formData.files.previews[i]) : `${BASE_URL}${imgUrl}`} 
-                className="w-full h-32 object-contain rounded-lg mb-2" 
+              <img
+                src={formData.files.previews[i] ? URL.createObjectURL(formData.files.previews[i]) : `${BASE_URL}${imgUrl}`}
+                className="w-full h-32 object-contain rounded-lg mb-2"
                 alt="preview"
               />
               <input type="file" onChange={(e) => handleImageChange(e, "previews", i)} className="text-[10px] w-full cursor-pointer" />
@@ -217,9 +268,9 @@ export default function EditProductId({ params }) {
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
           {formData.imgs.thumbnails.map((imgUrl, i) => (
             <div key={i} className="relative group border-2 border-dashed rounded-xl p-2 flex flex-col items-center bg-gray-50">
-              <img 
-                src={formData.files.thumbnails[i] ? URL.createObjectURL(formData.files.thumbnails[i]) : `${BASE_URL}${imgUrl}`} 
-                className="w-full h-24 object-contain rounded-lg mb-2" 
+              <img
+                src={formData.files.thumbnails[i] ? URL.createObjectURL(formData.files.thumbnails[i]) : `${BASE_URL}${imgUrl}`}
+                className="w-full h-24 object-contain rounded-lg mb-2"
                 alt="thumbnail"
               />
               <input type="file" onChange={(e) => handleImageChange(e, "thumbnails", i)} className="text-[10px] w-full cursor-pointer" />
@@ -228,25 +279,25 @@ export default function EditProductId({ params }) {
         </div>
       </div>
 
-     <button 
-  type="submit" 
-  disabled={isSubmitting} 
-  className={`w-full py-4 rounded-xl font-bold transition-all shadow-lg flex items-center justify-center gap-3 
-    ${isSubmitting 
-      ? "bg-gray-600 cursor-not-allowed text-[#232936] opacity-90" // استایل زمان سابمیت: خاکستری تیره برای وضوح در بک‌گراند سفید
-      : "bg-[#232936] hover:bg-black text-white active:scale-95" // استایل حالت عادی
-    }`}
->
-  {isSubmitting ? (
-    <>
-      {/* لودر چرخشی با ضخامت بیشتر برای دید بهتر */}
-      <div className="w-5 h-5 border-3 border-white border-t-transparent rounded-full animate-spin"></div>
-      <span>در حال ثبت تغییرات...</span>
-    </>
-  ) : (
-    "بروزرسانی نهایی محصول"
-  )}
-</button>
+      <button
+        type="submit"
+        disabled={isSubmitting}
+        className={`w-full py-4 rounded-xl font-bold transition-all shadow-lg flex items-center justify-center gap-3 
+    ${isSubmitting
+            ? "bg-gray-600 cursor-not-allowed text-[#232936] opacity-90" // استایل زمان سابمیت: خاکستری تیره برای وضوح در بک‌گراند سفید
+            : "bg-[#232936] hover:bg-black text-white active:scale-95" // استایل حالت عادی
+          }`}
+      >
+        {isSubmitting ? (
+          <>
+            {/* لودر چرخشی با ضخامت بیشتر برای دید بهتر */}
+            <div className="w-5 h-5 border-3 border-white border-t-transparent rounded-full animate-spin"></div>
+            <span>در حال ثبت تغییرات...</span>
+          </>
+        ) : (
+          "بروزرسانی نهایی محصول"
+        )}
+      </button>
     </form>
   );
 }

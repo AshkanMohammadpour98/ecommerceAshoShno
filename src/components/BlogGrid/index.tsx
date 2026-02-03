@@ -15,7 +15,7 @@ const BlogGrid = async () => {
     cache: "no-store", // برای اینکه هر بار رفرش شه (معادل getServerSideProps)
   });
   const blogData = await resBlogs.json();
-  console.log("این صفحه لیست مقالات (بلاگ) را به صورت شبکه‌ای همراه با صفحه‌بندی نمایش می‌دهد");
+  // console.log("این صفحه لیست مقالات (بلاگ) را به صورت شبکه‌ای همراه با صفحه‌بندی نمایش می‌دهد");
   
   return (
     <>

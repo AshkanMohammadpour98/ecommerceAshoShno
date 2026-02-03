@@ -15,13 +15,11 @@ export default function AddProductForm() {
     discountedPrice: "",
     hasDiscount: false,
     categorie: "",
-    content: "",
+    count: 1,
     date: "",
-    count: 1, // 🟢 تعداد اولیه محصول (پیش‌فرض 1)
-    imgs: {
-      thumbnails: [null, null], // 🟢 ذخیره File واقعی (نه blob)
-      previews: [null, null],
-    },
+    condition: "نو آکبند", // 🟢 فیلد condition اضافه شد
+    description: { short: "", full: "" }, // 🟢 content به description.short & description.full تبدیل شد
+    imgs: { thumbnails: [null, null], previews: [null, null] },
   });
 
   const [id] = useState(() => String(Date.now()));
@@ -33,6 +31,7 @@ export default function AddProductForm() {
   const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL;
   const PRODUCTS_URL = process.env.NEXT_PUBLIC_API_PRODUCTS_URL;
 
+  // 🟢 دریافت دسته‌بندی‌ها هنگام لود فرم
   useEffect(() => {
     fetch(`${BASE_URL}${CATEGORYS_URL}`)
       .then((res) => res.json())
@@ -43,21 +42,31 @@ export default function AddProductForm() {
   // 📌 تغییر فیلدهای فرم
   const handleChange = (e) => {
     const { name, type, value, checked } = e.target;
+
+    // 🟢 پشتیبانی از checkbox
     setFormData((prev) => ({
       ...prev,
       [name]: type === "checkbox" ? checked : value,
     }));
   };
 
+  // 📌 تغییر description.short و description.full
+  const handleDescriptionChange = (e) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({
+      ...prev,
+      description: { ...prev.description, [name]: value },
+    }));
+  };
+
   // 📌 آپلود تصاویر
-  // اینجا به‌جای blob، خود File ذخیره می‌شود
   const handleImageChange = (e, type, index) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
     setFormData((prev) => {
       const newImgs = { ...prev.imgs };
-      newImgs[type][index] = file; // 🟢 ذخیره File
+      newImgs[type][index] = file; // ذخیره فایل واقعی
       return { ...prev, imgs: newImgs };
     });
   };
@@ -66,18 +75,19 @@ export default function AddProductForm() {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    const {
-      title,
-      price,
-      reviews,
-      content,
-      categorie,
-      imgs,
-      date,
-    } = formData;
+    const { title, price, reviews, categorie, imgs, date, description } =
+      formData;
 
     // ولیدیشن
-    if (!title || !price || !reviews || !content || !categorie || !date) {
+    if (
+      !title ||
+      !price ||
+      !reviews ||
+      !categorie ||
+      !date ||
+      !description.short ||
+      !description.full
+    ) {
       Swal.fire({
         icon: "warning",
         title: "لطفا همه فیلدها را پر کنید",
@@ -97,60 +107,55 @@ export default function AddProductForm() {
     }
 
     try {
-      // 🟢 استفاده از FormData برای ارسال فایل
       const form = new FormData();
 
+      // 🟢 فیلدهای پایه
       form.append("id", id);
       form.append("title", formData.title);
-      form.append("content", formData.content);
       form.append("categorie", formData.categorie);
       form.append("date", formData.date);
       form.append("price", formData.price);
       form.append("reviews", formData.reviews);
-      form.append("count", formData.count); // 🟢 ارسال count
+      form.append("count", formData.count);
       form.append("hasDiscount", formData.hasDiscount);
       form.append(
         "discountedPrice",
         formData.hasDiscount ? formData.discountedPrice : ""
       );
 
+      // 🟢 فیلدهای جدید
+      form.append("condition", formData.condition);
+      form.append("descriptionShort", formData.description.short);
+      form.append("descriptionFull", formData.description.full);
+
       // 🟢 ارسال تصاویر
       formData.imgs.thumbnails.forEach((file) =>
         form.append("thumbnails", file)
       );
-      formData.imgs.previews.forEach((file) =>
-        form.append("previews", file)
-      );
+      formData.imgs.previews.forEach((file) => form.append("previews", file));
 
-      // 1️⃣ ذخیره محصول
+      // ذخیره محصول
       const resProduct = await fetch(`${BASE_URL}${PRODUCTS_URL}`, {
         method: "POST",
-        body: form, // ❗ بدون Content-Type
+        body: form,
       });
 
       if (!resProduct.ok) throw new Error("افزودن محصول انجام نشد");
 
-      // 2️⃣ افزایش تعداد محصولات دسته‌بندی
+      // افزایش تعداد محصولات دسته‌بندی
       const selectedCategory = categories.find(
         (cat) => cat.name === formData.categorie
       );
-
       if (selectedCategory) {
-        // console.log(formData);
-        
-        await fetch(
-          `${BASE_URL}${CATEGORYS_URL}/${selectedCategory._id}`,
-          {
-            method: "PATCH",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              products: (selectedCategory.products ?? 0) + 1,
-            }),
-          }
-        );
+        await fetch(`${BASE_URL}${CATEGORYS_URL}/${selectedCategory._id}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            products: (selectedCategory.products ?? 0) + 1,
+          }),
+        });
       }
 
-      // پیام موفقیت
       await Swal.fire({
         icon: "success",
         title: "محصول با موفقیت اضافه شد!",
@@ -166,9 +171,10 @@ export default function AddProductForm() {
         discountedPrice: "",
         hasDiscount: false,
         categorie: "",
-        content: "",
-        date: "",
         count: 1,
+        date: "",
+        condition: "نو آکبند",
+        description: { short: "", full: "" },
         imgs: { thumbnails: [null, null], previews: [null, null] },
       });
 
@@ -206,18 +212,47 @@ export default function AddProductForm() {
         />
       </div>
 
-      {/* توضیحات */}
+      {/* توضیحات کوتاه و کامل */}
       <div>
         <label className="block text-sm font-semibold text-gray-600">
-          توضیحات محصول
+          توضیح کوتاه
+        </label>
+        <input
+          type="text"
+          name="short"
+          value={formData.description.short}
+          onChange={handleDescriptionChange}
+          required
+          className="w-full mt-1 border rounded-xl px-4 py-2"
+        />
+        <label className="block text-sm font-semibold text-gray-600 mt-2">
+          توضیح کامل
         </label>
         <textarea
-          name="content"
-          value={formData.content}
-          onChange={handleChange}
+          name="full"
+          value={formData.description.full}
+          onChange={handleDescriptionChange}
           required
           className="w-full mt-1 border rounded-xl px-4 py-2 min-h-[100px]"
         />
+      </div>
+
+      {/* فیلد condition */}
+      <div>
+        <label className="block text-sm font-semibold text-gray-600">
+          وضعیت محصول
+        </label>
+        <select
+          name="condition"
+          value={formData.condition}
+          onChange={handleChange}
+          className="w-full border rounded-xl px-4 py-2"
+        >
+          <option value="نو آکبند">نو آکبند</option>
+          <option value="استوک">استوک</option>
+          <option value="در حد نو">در حد نو</option>
+          <option value="کارکرده">کارکرده</option>
+        </select>
       </div>
 
       {/* امتیاز */}
@@ -275,9 +310,7 @@ export default function AddProductForm() {
             checked={formData.hasDiscount}
             onChange={handleChange}
           />
-          <label className="ml-2 text-sm text-gray-700">
-            دارای تخفیف
-          </label>
+          <label className="ml-2 text-sm text-gray-700">دارای تخفیف</label>
         </div>
 
         {formData.hasDiscount && (
@@ -336,9 +369,7 @@ export default function AddProductForm() {
                 <input
                   type="file"
                   accept="image/*"
-                  onChange={(e) =>
-                    handleImageChange(e, type, i)
-                  }
+                  onChange={(e) => handleImageChange(e, type, i)}
                 />
               </div>
             ))}

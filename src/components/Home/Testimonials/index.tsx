@@ -98,7 +98,7 @@ const Testimonials = () => {
             <div className="flex items-center gap-3">
               <button
                 onClick={handlePrev}
-                className="swiper-button-prev cursor-pointer"
+                className="swiper-button-prev cursor-pointer group"
                 aria-label="اسلاید قبلی"
                 title="قبلی"
               >
@@ -116,13 +116,14 @@ const Testimonials = () => {
                     strokeWidth="2"
                     strokeLinecap="round"
                     strokeLinejoin="round"
+                    className="transition-colors group-hover:stroke-white"
                   />
                 </svg>
               </button>
 
               <button
                 onClick={handleNext}
-                className="swiper-button-next cursor-pointer"
+                className="swiper-button-next cursor-pointer group"
                 aria-label="اسلاید بعدی"
                 title="بعدی"
               >
@@ -140,6 +141,7 @@ const Testimonials = () => {
                     strokeWidth="2"
                     strokeLinecap="round"
                     strokeLinejoin="round"
+                    className="transition-colors group-hover:stroke-white"
                   />
                 </svg>
               </button>

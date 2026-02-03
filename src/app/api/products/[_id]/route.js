@@ -85,91 +85,154 @@ async function saveFiles(files, subFolder) {
   }
   return urls;
 }
-/* =========================
-   PATCH → ویرایش محصول
-   (ویرایش جزئی)
-========================= */
+
 /* ==================================================
    PATCH → ویرایش محصول بر اساس _id
-   ================================================== */
+   پشتیبانی کامل از:
+   - description.short
+   - description.full
+   - condition
+================================================== */
 export async function PATCH(req, { params }) {
   try {
     await connectDB();
 
-    // ۱. استخراج _id (در نسخه های جدید Next.js باید await شود)
+    // 🟢 دریافت id محصول از URL
     const { _id } = await params;
 
-    // ۲. دریافت داده‌های فرم
+    // 🟢 دریافت داده‌ها به صورت FormData
     const formData = await req.formData();
 
-    // ۳. پیدا کردن محصول فعلی در دیتابیس
+    // 🟢 گرفتن محصول فعلی برای fallback
     const product = await Product.findById(_id);
     if (!product) {
-      return NextResponse.json({ message: "محصول یافت نشد" }, { status: 404 });
+      return NextResponse.json(
+        { message: "محصول یافت نشد" },
+        { status: 404 }
+      );
     }
 
-    // ۴. استخراج فیلدهای متنی
+    /* =========================
+       فیلدهای ساده
+       اگر مقدار جدید نیامده → مقدار قبلی حفظ می‌شود
+    ========================= */
     const title = formData.get("title") || product.title;
     const reviews = formData.get("reviews") || product.reviews;
     const price = formData.get("price") || product.price;
-    const discountedPrice = formData.get("discountedPrice") || 0;
-    const hasDiscount = formData.get("hasDiscount") === "true";
     const categorie = formData.get("categorie") || product.categorie;
 
-    // کپی از لیست تصاویر فعلی برای تغییر ایندکس‌های خاص
-    let updatedThumbnails = [...(product.imgs?.thumbnails || ["", "", "", ""])];
-    let updatedPreviews = [...(product.imgs?.previews || ["", "", "", ""])];
+    const hasDiscount = formData.get("hasDiscount") === "true";
+    const discountedPrice =
+      formData.get("discountedPrice") || product.discountedPrice;
 
-    // ۵. پردازش تصاویر Thumbnail (اگر فایل جدیدی فرستاده شده باشد)
-    for (let i = 0; i < 4; i++) {
-      const file = formData.get(`thumb_${i}`);
-      if (file && typeof file !== "string") {
-        // استفاده از تابع saveFiles شما (خروجی آن آرایه است)
-        const savedPath = await saveFiles([file], title.replace(/\s+/g, "-"));
-        updatedThumbnails[i] = savedPath[0]; // جایگزین کردن در همان ایندکس
-      }
-    }
+    /* =========================
+       🟢 description (خیلی مهم)
+       اینجا مشکل اصلی حل شد
+    ========================= */
+    const descriptionShort =
+      formData.get("descriptionShort") ||
+      product.description?.short ||
+      "";
 
-    // ۶. پردازش تصاویر Preview (اگر فایل جدیدی فرستاده شده باشد)
-    for (let i = 0; i < 4; i++) {
-      const file = formData.get(`prev_${i}`);
-      if (file && typeof file !== "string") {
-        const savedPath = await saveFiles([file], title.replace(/\s+/g, "-"));
-        updatedPreviews[i] = savedPath[0];
-      }
-    }
+    const descriptionFull =
+      formData.get("descriptionFull") ||
+      product.description?.full ||
+      "";
 
-    // ۷. بروزرسانی نهایی در دیتابیس
+    /* =========================
+       🟢 condition
+    ========================= */
+    const condition =
+      formData.get("condition") ||
+      product.condition ||
+      "نو آکبند";
+
+   /* =========================
+   تصاویر
+   فقط ایندکس‌هایی که فایل جدید دارند تغییر می‌کنند
+   🟢 تغییر جدید: اگر عکس قبلی وجود داشت، قبل از جایگزینی حذف می‌شود
+   🟢 تغییر جدید: فولدر جدید ساخته نمی‌شود، عکس در همان فولدر قبلی جایگزین می‌شود
+========================= */
+let updatedThumbnails = [...(product.imgs?.thumbnails || [])];
+let updatedPreviews = [...(product.imgs?.previews || [])];
+
+for (let i = 0; i < 4; i++) {
+  const thumbFile = formData.get(`thumb_${i}`);
+  if (thumbFile && typeof thumbFile !== "string") {
+    // 🟢 تعیین فولدر بر اساس عکس قبلی یا title
+    let folderNameThumb = updatedThumbnails[i]
+      ? updatedThumbnails[i].split("/uploads/products/")[1].split("/")[0] // فولدر موجود
+      : title.replace(/\s+/g, "-"); // اگر عکس قبلی نبود، فولدر جدید بر اساس title ساخته می‌شود
+
+    const saved = await saveFiles([thumbFile], folderNameThumb);
+
+    // 🟢 حذف عکس قبلی قبل از جایگزینی با عکس جدید
+    if (updatedThumbnails[i]) removeFile(updatedThumbnails[i]);
+
+    // 🟢 جایگزینی عکس جدید
+    updatedThumbnails[i] = saved[0];
+  }
+
+  const prevFile = formData.get(`prev_${i}`);
+  if (prevFile && typeof prevFile !== "string") {
+    // 🟢 تعیین فولدر بر اساس عکس قبلی یا title
+    let folderNamePrev = updatedPreviews[i]
+      ? updatedPreviews[i].split("/uploads/products/")[1].split("/")[0] // فولدر موجود
+      : title.replace(/\s+/g, "-"); // اگر عکس قبلی نبود، فولدر جدید بر اساس title ساخته می‌شود
+
+    const saved = await saveFiles([prevFile], folderNamePrev);
+
+    // 🟢 حذف عکس قبلی قبل از جایگزینی با عکس جدید
+    if (updatedPreviews[i]) removeFile(updatedPreviews[i]);
+
+    // 🟢 جایگزینی عکس جدید
+    updatedPreviews[i] = saved[0];
+  }
+}
+
+
+    /* =========================
+       بروزرسانی نهایی دیتابیس
+    ========================= */
     const updatedProduct = await Product.findByIdAndUpdate(
       _id,
       {
         title,
         reviews,
         price,
-        discountedPrice,
-        hasDiscount,
         categorie,
+        hasDiscount,
+        discountedPrice,
+        condition, // 🟢 جدید
+        description: {
+          short: descriptionShort, // 🟢 جدید
+          full: descriptionFull,   // 🟢 جدید
+        },
         imgs: {
           thumbnails: updatedThumbnails,
           previews: updatedPreviews,
         },
       },
-      { new: true } // برگرداندن دیتای جدید بعد از آپدیت
+      { new: true }
     );
 
     return NextResponse.json(
-      { message: "محصول با موفقیت بروزرسانی شد", data: updatedProduct },
+      {
+        message: "محصول با موفقیت بروزرسانی شد",
+        data: updatedProduct,
+      },
       { status: 200 }
     );
-
   } catch (error) {
-    console.error("Error in PATCH Product:", error);
+    console.error("PATCH PRODUCT ERROR:", error);
     return NextResponse.json(
-      { message: "خطای سرور در ویرایش محصول", error: error.message },
+      { message: "خطای سرور", error: error.message },
       { status: 500 }
     );
   }
 }
+
+
 
 /* =========================
    DELETE → حذف کامل محصول و فایل‌های مرتبط

@@ -196,8 +196,8 @@ const sortProducts = (products, optionValue) => {
   };
 
   // selectedCategories یه ارایه هست که دسته بندی های انتخاب شده رو میده
-  console.log(selectedCategories);
-  console.log(productsData);
+  // console.log(selectedCategories);
+  // console.log(productsData);
 
 
   return (

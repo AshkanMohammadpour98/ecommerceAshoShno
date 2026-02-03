@@ -35,6 +35,7 @@ const SingleListItem = ({ item  }) => {
         quantity: 1,
       })
     );
+  
   };
 
   const handleItemToWishList = () => {

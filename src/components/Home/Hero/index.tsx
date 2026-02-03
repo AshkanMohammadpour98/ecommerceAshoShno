@@ -18,7 +18,6 @@ const Hero = () => {
       .then((data) => setProductsDataBennerChildHomeData(data.data))
       .catch(() => setProductsDataBennerChildHomeData([]));
   } , [])
-  console.log(productsDataBennerChildHomeData , 'productsDataBennerChildHomeData....');
   
   return (
     <section className="overflow-hidden bg-[#E5EAF4] 

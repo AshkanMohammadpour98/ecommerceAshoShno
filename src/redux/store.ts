@@ -11,7 +11,6 @@ import quickViewReducer from "./features/quickView-slice";
 import cartReducer from "./features/cart-slice";
 import wishlistReducer from "./features/wishlist-slice";
 import productDetailsReducer from "./features/product-details";
-
 // 🎣 ایمپورت هوک‌ها و تایپ‌های مورد نیاز برای TypeScript
 import { TypedUseSelectorHook, useSelector, useDispatch } from "react-redux";
 

@@ -69,7 +69,7 @@ const [previewUrl, setPreviewUrl] = useState(null);
       .then((data) => setCategories(data.data))
       .catch(() => setCategories([]));
 
-      console.log(blogData , categories , 'blog data ,... , categories...');
+      // console.log(blogData , categories , 'blog data ,... , categories...');
       
   }, [blogId]);
 

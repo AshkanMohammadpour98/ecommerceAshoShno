@@ -48,7 +48,7 @@ export default function RegisterPage() {
 
   // ⭐ آپدیت state فرم
   const handleChange = (e) => {
-    console.log(e.target.value);
+    // console.log(e.target.value);
     
     const { name, value } = e.target;
     if (name === "phone") {

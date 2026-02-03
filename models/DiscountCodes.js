@@ -29,6 +29,33 @@ const discountCodeSchema = new Schema(
       uppercase: true,
       unique: true, // هر کد تخفیف یکتا باشد
     },
+
+    /**
+     * ===============================
+     * وضعیت فعال / غیر فعال بودن کد
+     * ===============================
+     * true  => فعال
+     * false => غیر فعال
+     */
+    isActive: {
+      type: Boolean,
+      default: true,
+      index: true,
+    },
+
+    /**
+     * ===============================
+     * تاریخ انقضا (ISO Date)
+     * ===============================
+     * مثال:
+     * 2025-01-29T15:00:00.000Z
+     * اگر null باشد یعنی بدون محدودیت زمانی
+     */
+    activeDate: {
+      type: Date,
+      default: null,
+      index: true,
+    },
   },
   {
     timestamps: true, // createdAt , updatedAt

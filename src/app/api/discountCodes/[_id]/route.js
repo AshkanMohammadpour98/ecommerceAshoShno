@@ -4,51 +4,20 @@ import connectDB from "/utils/ConnectDB";
 import DiscountCodes from "/models/DiscountCodes";
 
 /**
- * ===============================
+ * ==================================================
  * GET /api/discountCodes/:_id
- * دریافت یک کد تخفیف
- * ===============================
+ * دریافت یک کد تخفیف با _id مونگوس
+ * ==================================================
  */
 export async function GET(request, { params }) {
   try {
+    // اتصال به دیتابیس
     await connectDB();
 
-    const { _id } = params;
+    // 🔴 در App Router جدید params async است
+    const { _id } = await params;
 
-    const code = await DiscountCodes.findById(_id);
-
-    if (!code) {
-      return NextResponse.json(
-        { success: false, message: "کد تخفیف پیدا نشد" },
-        { status: 404 }
-      );
-    }
-
-    return NextResponse.json({
-      success: true,
-      data: code,
-    });
-  } catch (error) {
-    return NextResponse.json(
-      { success: false, message: "خطا در دریافت کد تخفیف" },
-      { status: 500 }
-    );
-  }
-}
-
-/**
- * ===============================
- * PATCH /api/discountCodes/:_id
- * ویرایش کد تخفیف
- * ===============================
- */
-export async function PATCH(request, { params }) {
-  try {
-    await connectDB();
-
-    const { _id } = params;
-    const body = await request.json();
-
+    // بررسی معتبر بودن ObjectId
     if (!mongoose.Types.ObjectId.isValid(_id)) {
       return NextResponse.json(
         { success: false, message: "ID نامعتبر است" },
@@ -56,12 +25,70 @@ export async function PATCH(request, { params }) {
       );
     }
 
+    // دریافت کد تخفیف از دیتابیس
+    const code = await DiscountCodes.findById(_id);
+
+    // اگر پیدا نشد
+    if (!code) {
+      return NextResponse.json(
+        { success: false, message: "کد تخفیف پیدا نشد" },
+        { status: 404 }
+      );
+    }
+
+    // پاسخ موفق
+    return NextResponse.json({
+      success: true,
+      data: code,
+    });
+  } catch (error) {
+    // مدیریت خطای کلی
+    return NextResponse.json(
+      {
+        success: false,
+        message: "خطا در دریافت کد تخفیف",
+        error: error.message,
+      },
+      { status: 500 }
+    );
+  }
+}
+
+/**
+ * ==================================================
+ * PATCH /api/discountCodes/:_id
+ * ویرایش اطلاعات یک کد تخفیف
+ * ==================================================
+ */
+export async function PATCH(request, { params }) {
+  try {
+    await connectDB();
+
+    // گرفتن id و body
+    const { _id } = await params;
+    const body = await request.json();
+
+    // اعتبارسنجی id
+    if (!mongoose.Types.ObjectId.isValid(_id)) {
+      return NextResponse.json(
+        { success: false, message: "ID نامعتبر است" },
+        { status: 400 }
+      );
+    }
+
+    /**
+     * بروزرسانی کد تخفیف
+     * - new: true → مقدار جدید برگردد
+     * - runValidators → ولیدیشن‌های مدل اجرا شوند
+     */
     const updated = await DiscountCodes.findByIdAndUpdate(
       _id,
       {
         $set: {
           money: body.money,
           discountCode: body.discountCode,
+          isActive: body.isActive,
+          activeDate: body.activeDate,
         },
       },
       {
@@ -70,6 +97,7 @@ export async function PATCH(request, { params }) {
       }
     );
 
+    // اگر رکورد وجود نداشت
     if (!updated) {
       return NextResponse.json(
         { success: false, message: "کد تخفیف پیدا نشد" },
@@ -94,17 +122,18 @@ export async function PATCH(request, { params }) {
 }
 
 /**
- * ===============================
+ * ==================================================
  * DELETE /api/discountCodes/:_id
- * حذف کد تخفیف
- * ===============================
+ * حذف یک کد تخفیف
+ * ==================================================
  */
 export async function DELETE(request, { params }) {
   try {
     await connectDB();
 
-    const { _id } = params;
+    const { _id } = await params;
 
+    // بررسی معتبر بودن id
     if (!mongoose.Types.ObjectId.isValid(_id)) {
       return NextResponse.json(
         { success: false, message: "ID نامعتبر است" },
@@ -112,6 +141,7 @@ export async function DELETE(request, { params }) {
       );
     }
 
+    // حذف از دیتابیس
     const deleted = await DiscountCodes.findByIdAndDelete(_id);
 
     if (!deleted) {

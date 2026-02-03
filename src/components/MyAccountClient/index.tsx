@@ -6,6 +6,28 @@ import { useRouter } from "next/navigation"; // برای هدایت کاربر �
 import Swal from "sweetalert2"; // برای نمایش پیام تایید
 import toast from "react-hot-toast"; // برای نمایش نوتیفیکیشن موفقیت
 import Link from "next/link";
+import DateObject from "react-date-object";
+import persian from "react-date-object/calendars/persian";
+import persian_fa from "react-date-object/locales/persian_fa";
+import {
+  XMarkIcon,
+  TrashIcon,
+  ShoppingCartIcon,
+  HeartIcon,
+} from "@heroicons/react/24/outline";
+// Toast
+// 🎣 هوک‌های تایپ‌شده Redux (طبق store خودت)
+import { useAppDispatch, useAppSelector } from "@/redux/store";
+import { addItemToCart } from "@/redux/features/cart-slice";
+
+// ❤️ اکشن‌های wishlist
+import {
+  removeItemFromWishlist,
+  removeAllItemsFromWishlist,
+} from "@/redux/features/wishlist-slice";
+
+// URLS
+const USERS_URL = process.env.NEXT_PUBLIC_API_USERS_URL
 
 // ------- TYPES (بدون تغییر) -------
 interface QRConfig { value: string; ecc: string; colors: { fg: string; bg: string }; }
@@ -14,7 +36,14 @@ interface ProductImages { thumbnails: string[]; previews: string[]; }
 interface PurchasedProduct { id: string; title: string; reviews: number; price: number; discountedPrice: number; categorie: string; date: string; imgs: ProductImages; hasDiscount: boolean; QRDatas?: QRData; }
 interface UserData { _id: string; id: string; name: string; lastName: string; gender: string; role: string; dateLogin: string; phone: string; email: string; password?: string; SuggestedCategories: string[]; PurchasedProducts: PurchasedProduct[]; purchaseInvoice: { id: string; countProducts: number }[]; img: string; address: string; }
 interface MyAccountClientProps { user: UserData; }
-interface AddressModalProps { isOpen: boolean; closeModal: () => void; }
+interface AddressModalProps {
+  isOpen: boolean;
+  closeModal: () => void;
+  addressData: { recipient: string; address: string; phone: string };
+  setAddressData: React.Dispatch<React.SetStateAction<{ recipient: string; address: string; phone: string }>>;
+  onSave: (data: { recipient: string; address: string; phone: string }) => void;
+}
+
 type TabKey = "dashboard" | "orders" | "downloads" | "addresses" | "favrate" | "account-details";
 
 // ------- ICONS (بدون تغییر) --------
@@ -35,7 +64,60 @@ const Icons = {
     </svg>
   )
 };
-// console.log();
+
+/**
+ * محاسبه مدت زمان عضویت کاربر از تاریخ عضویت تا امروز (شمسی)
+ * @param dateLogin تاریخ عضویت به فرمت 1404/07/04
+ */
+const getMembershipDuration = (dateLogin: string) => {
+  // تاریخ عضویت
+  const start = new DateObject({
+    date: dateLogin,
+    format: "YYYY/MM/DD",
+    calendar: persian,
+    locale: persian_fa,
+  });
+
+  // تاریخ امروز شمسی
+  const now = new DateObject({
+    calendar: persian,
+    locale: persian_fa,
+  });
+
+  // اختلاف کل روزها
+  const diffDays = Math.floor((now.toUnix() - start.toUnix()) / 86400);
+
+  // اگر کمتر از 30 روز بود
+  if (diffDays < 30) {
+    return `${diffDays} روز`;
+  }
+
+  // تبدیل روز به ماه و روز
+  const months = Math.floor(diffDays / 30);
+  const days = diffDays % 30;
+
+  // اگر کمتر از یک سال
+  if (months < 12) {
+    return days === 0
+      ? `${months} ماه`
+      : `${months} ماه و ${days} روز`;
+  }
+
+  // اگر بیشتر از یک سال
+  const years = Math.floor(months / 12);
+  const remainMonths = months % 12;
+
+  if (remainMonths === 0 && days === 0) {
+    return `${years} سال`;
+  }
+
+  if (days === 0) {
+    return `${years} سال و ${remainMonths} ماه`;
+  }
+
+  return `${years} سال و ${remainMonths} ماه و ${days} روز`;
+};
+
 
 
 const tabs = [
@@ -49,7 +131,15 @@ const tabs = [
 ];
 
 // ------- MODAL COMPONENT (بدون تغییر) --------
-const AddressModal: React.FC<AddressModalProps> = ({ isOpen, closeModal }) => {
+// ------- MODAL COMPONENT (اصلاح شده) --------
+const AddressModal: React.FC<AddressModalProps> = ({
+  isOpen,
+  closeModal,
+  addressData,
+  setAddressData,
+  onSave
+}) => {
+  // 🎯 بستن مودال با کلیک خارج از محتوای آن
   const handleOutside = useCallback((e: MouseEvent) => {
     if (!(e.target as HTMLElement).closest(".modal-content")) closeModal();
   }, [closeModal]);
@@ -59,27 +149,84 @@ const AddressModal: React.FC<AddressModalProps> = ({ isOpen, closeModal }) => {
     return () => document.removeEventListener("mousedown", handleOutside);
   }, [isOpen, handleOutside]);
 
+  // اگر مودال بسته است، چیزی رندر نشود
   if (!isOpen) return null;
 
   return (
     <div className="fixed inset-0 bg-dark/60 backdrop-blur-sm flex justify-center items-center z-99999">
       <div className="modal-content bg-white dark:bg-dark-2 p-8 rounded-xl shadow-2 w-full max-w-lg relative animate-fadeIn">
-        <button onClick={closeModal} className="absolute top-4 right-4 text-body hover:text-red transition-colors">
-          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+
+        {/* دکمه بستن */}
+        <button
+          onClick={closeModal}
+          className="absolute top-4 right-4 text-body hover:text-red transition-colors"
+        >
+          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+          </svg>
         </button>
+
         <h2 className="text-heading-6 font-bold text-dark dark:text-white mb-6">افزودن آدرس جدید</h2>
-        <form onSubmit={(e) => { e.preventDefault(); closeModal(); }}>
+
+        <form onSubmit={(e) => {
+          e.preventDefault();
+          // 🔴 ذخیره آدرس با تابع پاس داده شده از parent
+          onSave(addressData);
+          closeModal();
+        }}>
           <div className="space-y-4">
-            <div><label className="block text-sm font-medium text-body mb-1">نام گیرنده</label><input type="text" className="w-full border border-gray-3 rounded-lg px-4 py-3 focus:outline-none focus:border-blue bg-gray-1" /></div>
-            <div><label className="block text-sm font-medium text-body mb-1">آدرس کامل</label><textarea className="w-full border border-gray-3 rounded-lg px-4 py-3 focus:outline-none focus:border-blue bg-gray-1" rows={3} /></div>
-            <div><label className="block text-sm font-medium text-body mb-1">شماره تماس</label><input type="tel" className="w-full border border-gray-3 rounded-lg px-4 py-3 focus:outline-none focus:border-blue bg-gray-1" /></div>
+
+            {/* نام گیرنده */}
+            <div>
+              <label className="block text-sm font-medium text-body mb-1">نام گیرنده</label>
+              <input
+                type="text"
+                value={addressData.recipient}
+                readOnly // نام گیرنده خودکار از name است
+                className="w-full border border-gray-3 rounded-lg px-4 py-3 focus:outline-none focus:border-blue bg-gray-1"
+              />
+            </div>
+
+            {/* آدرس */}
+            <div>
+              <label className="block text-sm font-medium text-body mb-1">آدرس کامل</label>
+              <textarea
+                value={addressData.address}
+                onChange={(e) => setAddressData(prev => ({ ...prev, address: e.target.value }))}
+                className="w-full border border-gray-3 rounded-lg px-4 py-3 focus:outline-none focus:border-blue bg-gray-1"
+                rows={3}
+                required
+              />
+            </div>
+
+            {/* شماره تلفن */}
+            <div>
+              <label className="block text-sm font-medium text-body mb-1">شماره تماس</label>
+              <input
+                type="tel"
+                value={addressData.phone}
+                onChange={(e) => setAddressData(prev => ({ ...prev, phone: e.target.value }))}
+                className="w-full border border-gray-3 rounded-lg px-4 py-3 focus:outline-none focus:border-blue bg-gray-1"
+                required
+                pattern="^09\d{9}$" // 🔹 اعتبارسنجی شماره موبایل ایران
+                title="شماره موبایل باید ۰۹xxxxxxxxx باشد"
+              />
+            </div>
           </div>
-          <button type="submit" className="bg-blue hover:bg-blue-dark text-white font-medium px-6 py-3 rounded-lg mt-6 w-full transition-colors shadow-1">ذخیره آدرس</button>
+
+          {/* دکمه ذخیره */}
+          <button
+            type="submit"
+            className="bg-blue hover:bg-blue-dark text-white font-medium px-6 py-3 rounded-lg mt-6 w-full transition-colors shadow-1"
+          >
+            ذخیره آدرس
+          </button>
         </form>
       </div>
     </div>
   );
 };
+
 
 // ------- MAIN COMPONENT --------
 const MyAccountClient: React.FC<MyAccountClientProps> = () => {
@@ -87,6 +234,64 @@ const MyAccountClient: React.FC<MyAccountClientProps> = () => {
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<TabKey>("dashboard");
   const [isModalOpen, setIsModalOpen] = useState(false);
+
+  // 🏠 State داینامیک آدرس
+  const [addressData, setAddressData] = useState({
+    recipient: user.name || "",
+    address: user.address || "",
+    phone: user.phone || "",
+  });
+
+  useEffect(() => {
+    const fetchUser = async () => {
+      try {
+        const res = await fetch(`http://localhost:3000${USERS_URL}/${user._id}`);
+        if (res.ok) {
+          const data = await res.json();
+          // اگر address نداشت، خالی میذاریم
+          setAddressData({
+            recipient: data.name || "",
+            address: data.address || "",
+            phone: data.phone || "",
+          });
+        }
+      } catch (err) {
+        console.log("خطا در دریافت اطلاعات کاربر", err);
+      }
+    };
+
+    fetchUser();
+  }, [user._id]);
+
+  // 🎯 dispatch برای صدا زدن اکشن‌ها
+  const dispatch = useAppDispatch();
+
+  // ❤️ گرفتن لیست علاقه‌مندی‌ها از Redux
+  // دقت کن: اسم reducer دقیقاً wishlistReducer هست (طبق store خودت)
+  const wishlistItems = useAppSelector(
+    (state) => state.wishlistReducer.items
+  );
+
+
+  // 🔔 حذف تکی با toast
+  const handleRemoveItem = (id: number) => {
+    dispatch(removeItemFromWishlist(id));
+    toast.success("از علاقه‌مندی‌ها حذف شد");
+  };
+
+  // 🗑️ حذف همه
+  const handleRemoveAll = () => {
+    dispatch(removeAllItemsFromWishlist());
+    toast("همه علاقه‌مندی‌ها پاک شد", {
+      icon: "🗑️",
+    });
+  };
+
+  // ➕ افزودن به سبد خرید
+  const handleAddToCart = (item: any) => {
+    dispatch(addItemToCart({ ...item, quantity: 1 }));
+    toast.success("به سبد خرید اضافه شد");
+  };;
 
   // 🔴 تابع خروج از حساب (مشابه هدر)
   const handleLogout = async () => {
@@ -119,6 +324,32 @@ const MyAccountClient: React.FC<MyAccountClientProps> = () => {
   };
 
   const formatPrice = (price: number) => price.toLocaleString();
+  // 🔹 ذخیره یا ویرایش آدرس در سرور
+  const handleSaveAddress = async (data: { recipient: string; address: string; phone: string }) => {
+    // اگر آدرس وجود داشت ویرایش، اگر نبود ایجاد
+    try {
+      const res = await fetch(`${USERS_URL}/${user._id}`, {
+  method: 'PUT', // ✅ بک‌اند فقط PUT قبول می‌کنه
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({
+    address: data.address,
+    phone: data.phone,
+  }),
+});
+
+
+      if (res.ok) {
+        toast.success("آدرس با موفقیت ذخیره شد");
+        // 🔄 به‌روزرسانی local state
+        setAddressData(data);
+        router.refresh(); // رفرش برای گرفتن آدرس جدید از API
+      } else {
+        toast.error("خطا در ذخیره آدرس");
+      }
+    } catch (err) {
+      toast.error("ارتباط با سرور برقرار نشد");
+    }
+  };
 
   return (
     <section className="mt-18 sm:mt-12 md:mt-12 lg:mt-15 xl:mt-25 bg-gray-1 min-h-screen py-10 px-4 md:px-6" dir="rtl">
@@ -203,9 +434,12 @@ const MyAccountClient: React.FC<MyAccountClientProps> = () => {
                       <span className="text-body text-sm">فاکتورهای پرداخت شده</span>
                     </div>
                     <div className="bg-green-light-6 p-5 rounded-xl border border-green-light-4">
-                      <span className="text-green-dark text-3xl font-bold block mb-1">{user.dateLogin.split('/')[2]}</span>
-                      <span className="text-body text-sm">روز عضویت در ماه جاری</span>
+                      <span className="text-green-dark text-xl font-bold block mb-1">
+                        {getMembershipDuration(user.dateLogin)}
+                      </span>
+                      <span className="text-body text-sm">مدت عضویت در سایت</span>
                     </div>
+
                   </div>
 
                   <div className="mt-8">
@@ -295,42 +529,184 @@ const MyAccountClient: React.FC<MyAccountClientProps> = () => {
               )}
 
               {/* ADDRESSES TAB */}
+
               {activeTab === "addresses" && (
                 <div className="animate-fadeIn">
+
+                  {/* Header بخش آدرس‌ها */}
                   <div className="flex justify-between items-center mb-6">
                     <h2 className="text-heading-6 font-bold text-dark">آدرس‌های ثبت شده</h2>
-                    <button onClick={() => setIsModalOpen(true)} className="bg-green text-white px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2">افزودن آدرس</button>
+                    <button
+                      onClick={() => setIsModalOpen(true)} // باز کردن مودال
+                      className="bg-green text-white px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2"
+                    >
+                      افزودن آدرس
+                    </button>
                   </div>
+
+                  {/* کارت آدرس فعلی */}
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="border border-blue rounded-xl p-5 bg-blue-light-5/20 relative group">
-                      <span className="absolute top-4 left-4 bg-blue text-white text-[10px] px-2 py-0.5 rounded-full">پیش‌فرض</span>
+                      {user.address && (
+                        <span className="absolute top-4 left-4 bg-blue text-white text-[10px] px-2 py-0.5 rounded-full">پیش‌فرض</span>
+                      )}
                       <h4 className="font-bold text-dark mb-2">منزل</h4>
-                      <p className="text-body text-sm leading-relaxed mb-4">{user.address}</p>
-                      <p className="text-dark text-sm font-medium">{user.phone}</p>
+                      <p className="text-body text-sm leading-relaxed mb-4">{user.address || "هنوز آدرسی ثبت نشده"}</p>
+                      <p className="text-dark text-sm font-medium">{user.phone || "شماره تماس موجود نیست"}</p>
                     </div>
                   </div>
-                  <AddressModal isOpen={isModalOpen} closeModal={() => setIsModalOpen(false)} />
+
+                  {/* مودال افزودن/ویرایش آدرس */}
+                  <AddressModal
+                    isOpen={isModalOpen}
+                    closeModal={() => setIsModalOpen(false)}
+                    addressData={addressData} // 🏠 state داینامیک آدرس
+                    setAddressData={setAddressData}
+                    onSave={handleSaveAddress} // تابع ذخیره آدرس
+                  />
                 </div>
               )}
+
 
               {/* favrate TAB */}
               {activeTab === "favrate" && (
                 <div className="animate-fadeIn">
-                  <div className="flex justify-between items-center mb-6">
-                    <h2 className="text-heading-6 font-bold text-dark"> محصولات پسندیده شده</h2>
-                    {/* <button onClick={() => setIsModalOpen(true)} className="bg-green text-white px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2">افزودن آدرس</button> */}
-                  </div>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div className="border border-blue rounded-xl p-5 bg-blue-light-5/20 relative group">
-                      <span className="absolute top-4 left-4 bg-blue text-white text-[10px] px-2 py-0.5 rounded-full">پیش‌فرض</span>
-                      <h4 className="font-bold text-dark mb-2">منزل</h4>
-                      <p className="text-body text-sm leading-relaxed mb-4">{user.address}</p>
-                      <p className="text-dark text-sm font-medium">{user.phone}</p>
+                  {/* 📱 Sticky Header (Mobile only) */}
+                  <div className=" sticky top-0 z-20 bg-white border-b mb-3">
+                    <div className="flex items-center justify-between px-2 py-3">
+                      <div className="flex items-center gap-2">
+                        <HeartIcon className="w-5 h-5 text-red-500" />
+                        <span className="font-bold text-sm">
+                          علاقه‌مندی‌ها ({wishlistItems.length})
+                        </span>
+                      </div>
+
+                      {wishlistItems.length > 0 && (
+                        <button
+                          onClick={handleRemoveAll}
+                          className="flex items-center gap-1 text-xs text-red-500"
+                        >
+                          <TrashIcon className="w-4 h-4" />
+                          حذف همه
+                        </button>
+                      )}
                     </div>
                   </div>
-                  <AddressModal isOpen={isModalOpen} closeModal={() => setIsModalOpen(false)} />
+                  {/* ---------------------------- */}
+                  {/* 📱 Mobile View (Table-like) */}
+                  <div className="md:hidden space-y-2">
+                    {wishlistItems.map((item) => (
+                      <div
+                        key={item.id}
+                        className="
+        grid grid-cols-12 items-center gap-2
+        bg-white p-2 rounded-lg shadow-sm
+        transition-all duration-300
+        animate-[fadeSlide_.3s_ease]
+      "
+                      >
+                        {/* Image + title */}
+                        <div className="col-span-5 flex items-center gap-2">
+                          <img
+                            src={item.imgs?.thumbnails?.[0]}
+                            className="w-12 h-12 rounded-md object-cover"
+                          />
+                          <span className="text-xs line-clamp-2">
+                            {item.title}
+                          </span>
+                        </div>
+
+                        {/* Price */}
+                        <div className="col-span-3 text-center text-xs font-bold">
+                          {item.hasDiscount ? item.discountedPrice : item.price}
+                        </div>
+
+                        {/* Add to cart */}
+                        <button
+                          onClick={() => handleAddToCart(item)}
+                          className="col-span-2 text-green-600"
+                        >
+                          <ShoppingCartIcon className="w-5 h-5 mx-auto" />
+                        </button>
+
+                        {/* Remove */}
+                        <button
+                          onClick={() => handleRemoveItem(item.id)}
+                          className="col-span-2 text-red-500"
+                        >
+                          <XMarkIcon className="w-5 h-5 mx-auto" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+
+
+                  {/* 🖥️ Desktop View */}
+                  <div className="hidden md:grid grid-cols-2 lg:grid-cols-3 gap-6">
+                    {wishlistItems.map((item) => (
+                      <div
+                        key={item.id}
+                        className="
+        group relative bg-white border rounded-2xl p-4
+        shadow-sm hover:shadow-xl
+        transition-all duration-300
+      "
+                      >
+                        {/* Remove */}
+                        <button
+                          onClick={() => handleRemoveItem(item.id)}
+                          className="z-30 border-red-light-2 bg-red-light-5 border rounded-full p-1 absolute top-3 left-3 text-red hover:text-red hover:border-red-dark"
+                        >
+                          <XMarkIcon className="w-5 h-5" />
+                        </button>
+
+                        {/* Image */}
+                        <div className="overflow-hidden rounded-xl mb-3">
+                          <img
+                            src={item.imgs?.thumbnails?.[0]}
+                            className="h-44 w-full object-cover group-hover:scale-105 transition"
+                          />
+                        </div>
+
+                        {/* Title */}
+                        <h4 className="text-sm font-semibold line-clamp-2 mb-2">
+                          {item.title}
+                        </h4>
+
+                        {/* Price */}
+                        <div className="mb-3">
+                          {item.hasDiscount ? (
+                            <>
+                              <span className="text-red-500 font-bold">
+                                {item.discountedPrice}
+                              </span>
+                              <span className="line-through text-gray-400 text-sm ml-2">
+                                {item.price}
+                              </span>
+                            </>
+                          ) : (
+                            <span className="font-bold">{item.price}</span>
+                          )}
+                        </div>
+
+                        {/* Add to cart */}
+                        <button
+                          onClick={() => handleAddToCart(item)}
+                          className="
+          w-full flex items-center justify-center gap-2
+          bg-dark text-white text-sm py-2 rounded-xl
+          hover:bg-black transition
+        "
+                        >
+                          <ShoppingCartIcon className="w-5 h-5" />
+                          افزودن به سبد
+                        </button>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               )}
+
 
               {/* ACCOUNT DETAILS TAB */}
               {activeTab === "account-details" && (

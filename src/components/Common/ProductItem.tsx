@@ -12,7 +12,7 @@ import { AppDispatch } from "@/redux/store";
 import Link from "next/link";
 
 const ProductItem = ({ item }) => {
-  console.log( item ,"product item.tex file");
+  // console.log( item ,"product item.tex file");
 
   const { openModal } = useModalContext();
 
@@ -25,6 +25,7 @@ const ProductItem = ({ item }) => {
 
   // add to cart
   const handleAddToCart = () => {
+
     dispatch(
       addItemToCart({
         ...item,

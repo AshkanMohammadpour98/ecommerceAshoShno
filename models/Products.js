@@ -2,7 +2,7 @@ import { models, model, Schema } from "mongoose";
 
 const productsSchema = new Schema(
   {
-    
+
     // id فرانت
     id: {
       type: String,
@@ -42,6 +42,11 @@ const productsSchema = new Schema(
       required: true,
       min: 0,
     },
+    condition: {
+      type: String,
+      enum: ["نو آکبند", "استوک", "در حد نو", "کارکرده"],
+      default: "نو آکبند"
+    },
 
     discountedPrice: {
       type: Number,
@@ -67,11 +72,11 @@ const productsSchema = new Schema(
     imgs: {
       thumbnails: {
         type: [String],
-       
+
       },
       previews: {
         type: [String],
-        
+
       },
     },
 
@@ -87,6 +92,18 @@ const productsSchema = new Schema(
       },
       dateAddQrCode: String,
     },
+
+
+    description: {
+      short: { type: String, required: true },  //  جمله برای کارت محصول
+      full: { type: String, required: true }, // توضیحات کامل
+    }
+
+    // description: {
+    //   short: "مانیتور ۳۲ اینچ خمیده سامسونگ Odyssey G7 - ۲۴۰هرتز - ۱ms - در حد نو",
+
+    //   full: "این مانیتور فقط ۲ هفته توی دفتر استفاده شده و واقعاً در حد نوئه. هیچ خط و خشی روی صفحه یا بدنه نیست...",
+    // }
   },
   {
     timestamps: true, // createdAt , updatedAt

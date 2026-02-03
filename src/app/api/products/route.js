@@ -75,30 +75,45 @@ export async function POST(req) {
   try {
     await connectDB();
 
-    // 🟢 دریافت FormData (نه JSON)
     const data = await req.formData();
 
-    // 🟢 ذخیره عکس‌ها روی File System
+    /* =========================
+       ذخیره تصاویر
+    ========================= */
     const thumbnails = await saveFiles(
       data.getAll("thumbnails"),
       "thumbnails"
     );
+
     const previews = await saveFiles(
       data.getAll("previews"),
       "previews"
     );
 
-    // 🟢 آماده‌سازی داده محصول
+    /* =========================
+       🟢 داده نهایی محصول
+       content ❌
+       description ✅
+    ========================= */
     const productData = {
-      id: data.get("id"),
       title: data.get("title"),
-      content: data.get("content"),
+      id: data.get("id"),
+      // ✅ جایگزین content
+      description: {
+        short: data.get("descriptionShort") || "",
+        full: data.get("descriptionFull") || "",
+      },
+
+      // ✅ هم‌راستا با PATCH
+      condition: data.get("condition") || "نو آکبند",
+
       categorie: data.get("categorie"),
       date: data.get("date"),
 
       price: Number(data.get("price")),
       reviews: Number(data.get("reviews")),
-      count: Number(data.get("count") || 1), //  count اضافه شد
+      count: Number(data.get("count") || 1),
+
       hasDiscount: data.get("hasDiscount") === "true",
       discountedPrice: data.get("discountedPrice")
         ? Number(data.get("discountedPrice"))
@@ -109,11 +124,7 @@ export async function POST(req) {
         previews,
       },
     };
-    
-    // console.log(productData);
-    
 
-    // 🟢 ذخیره در MongoDB
     const product = await Products.create(productData);
 
     return NextResponse.json(
@@ -122,10 +133,10 @@ export async function POST(req) {
     );
   } catch (error) {
     console.error("POST PRODUCT ERROR:", error);
-
     return NextResponse.json(
       { success: false, message: error.message },
       { status: 500 }
     );
   }
 }
+
