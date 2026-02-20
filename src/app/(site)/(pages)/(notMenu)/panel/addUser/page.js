@@ -11,8 +11,7 @@ import {
   UserCircleIcon,
   EyeIcon,
   EyeSlashIcon,
-  PhotoIcon,
-  XMarkIcon,
+  UserIcon,
   DevicePhoneMobileIcon,
   EnvelopeIcon,
 } from "@heroicons/react/24/outline";
@@ -74,26 +73,26 @@ export default function AddUserForm() {
   const [imagePreview, setImagePreview] = useState("");
 
   // --------------------- افکت‌ها ---------------------
-// --------------------- افکت‌ها ---------------------
-useEffect(() => {
-  // گرفتن دسته‌بندی‌ها   
-  fetch(`${BASE_URL}/api/categorys`)
-    .then((res) => res.json())
-    .then((result) => {
-      // چون دیتا به صورت { success: true, data: [...] } است:
-      if (result.success && Array.isArray(result.data)) {
-        const categoryNames = result.data.map((c) => c.name);
-        setCategories(categoryNames);
-      } else {
-        console.warn("ساختار دیتای دسته‌بندی معتبر نیست", result);
-      }
-    })
-    .catch((err) => {
-      console.error("خطا در بارگذاری دسته‌ها:", err);
-      // مقادیر پیش‌فرض برای اینکه فرم خالی نماند
-      setCategories(["Desktop", "Laptop", "Mobile"]); 
-    });
-}, []);
+  // --------------------- افکت‌ها ---------------------
+  useEffect(() => {
+    // گرفتن دسته‌بندی‌ها   
+    fetch(`${BASE_URL}/api/categorys`)
+      .then((res) => res.json())
+      .then((result) => {
+        // چون دیتا به صورت { success: true, data: [...] } است:
+        if (result.success && Array.isArray(result.data)) {
+          const categoryNames = result.data.map((c) => c.name);
+          setCategories(categoryNames);
+        } else {
+          console.warn("ساختار دیتای دسته‌بندی معتبر نیست", result);
+        }
+      })
+      .catch((err) => {
+        console.error("خطا در بارگذاری دسته‌ها:", err);
+        // مقادیر پیش‌فرض برای اینکه فرم خالی نماند
+        setCategories(["Desktop", "Laptop", "Mobile"]);
+      });
+  }, []);
 
   useEffect(() => {
     // گرفتن محصولات فقط وقتی لازم شد
@@ -132,9 +131,9 @@ useEffect(() => {
     setFormData((prev) =>
       prev.SuggestedCategories.includes(categoryName)
         ? {
-            ...prev,
-            SuggestedCategories: prev.SuggestedCategories.filter((c) => c !== categoryName),
-          }
+          ...prev,
+          SuggestedCategories: prev.SuggestedCategories.filter((c) => c !== categoryName),
+        }
         : { ...prev, SuggestedCategories: [...prev.SuggestedCategories, categoryName] }
     );
   };
@@ -156,7 +155,7 @@ useEffect(() => {
           ...prev.PurchasedProducts,
           {
             ...product,
-            dateSlase: getNowJalali(), 
+            dateSlase: getNowJalali(),
           },
         ];
         return {
@@ -216,8 +215,8 @@ useEffect(() => {
         icon: "error",
         title: "خطا در فرم",
         text: v.msg,
-        timer: 2000, 
-        timerProgressBar: true, 
+        timer: 2000,
+        timerProgressBar: true,
         showConfirmButton: false,
       });
       return;
@@ -244,8 +243,8 @@ useEffect(() => {
         dateSlase: toEnglishDigits(p.dateSlase || ""),
       })),
       purchaseInvoice: [{ id: generateInvoiceId(), countProducts: purchaseCount }],
-      img: formData.img || "", 
-      address: formData.address || "آدرس وجود ندارد", 
+      img: formData.img || "",
+      address: formData.address || "آدرس وجود ندارد",
     };
 
     try {
@@ -256,7 +255,7 @@ useEffect(() => {
         body: JSON.stringify({ email: payload.email, phone: payload.phone }),
       });
       const checkData = await checkRes.json();
-      
+
       if (checkData.exists) {
         Swal.fire({ icon: "warning", title: "تکراری", text: "کاربری با این ایمیل یا شماره قبلاً ثبت شده است" });
         return;
@@ -276,8 +275,8 @@ useEffect(() => {
           icon: "success",
           title: "موفقیت!",
           text: "کاربر جدید با موفقیت ایجاد شد ✅",
-          timer: 2000, 
-          timerProgressBar: true, 
+          timer: 2000,
+          timerProgressBar: true,
           showConfirmButton: false,
         });
 
@@ -316,39 +315,19 @@ useEffect(() => {
       <h2 className="text-dark text-xl font-bold mb-6 text-center">افزودن کاربر جدید</h2>
 
       <form onSubmit={handleSubmit} className="space-y-6">
-        {/* آواتار + انتخاب تصویر (اختیاری) */}
         <div className="flex flex-col sm:flex-row sm:items-center gap-4">
-          <div className="w-16 h-16 rounded-full border border-gray-3 flex items-center justify-center bg-gray-1 overflow-hidden">
-            {imagePreview ? (
-              <img src={imagePreview} alt="پیش‌نمایش" className="w-full h-full object-cover" />
-            ) : (
-              <UserCircleIcon className="w-10 h-10 text-blue" />
-            )}
-          </div>
+         <div className="w-16 h-16 rounded-full border border-gray-3 flex items-center justify-center bg-gray-1">
+  {formData.gender === "female" ? (
+    // 👩 آیکون خانم
+    <UserIcon className="w-10 h-10 text-pink-500" />
+  ) : (
+    // 👨 آیکون آقا
+    <UserCircleIcon className="w-10 h-10 text-blue-500" />
+  )}
+</div>
 
-          <div className="flex items-center gap-3">
-            <label
-              htmlFor="avatar"
-              className="inline-flex items-center gap-2 px-3 py-2 rounded-md border border-gray-3 text-dark bg-white hover:bg-gray-1 transition cursor-pointer"
-            >
-              <PhotoIcon className="w-5 h-5" />
-              انتخاب تصویر (اختیاری)
-            </label>
-            <input id="avatar" type="file" accept="image/*" className="hidden" onChange={handleImageChange} />
-
-            {imagePreview && (
-              <button
-                type="button"
-                onClick={clearImage}
-                className="inline-flex items-center gap-1 px-3 py-2 rounded-md border border-gray-3 text-red bg-white hover:bg-red hover:text-white transition"
-                aria-label="حذف تصویر"
-              >
-                <XMarkIcon className="w-5 h-5" />
-                حذف
-              </button>
-            )}
-          </div>
         </div>
+
 
         {/* نام و نام خانوادگی */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -413,11 +392,10 @@ useEffect(() => {
             <button
               type="button"
               onClick={() => setRegisterMethod("phone")}
-              className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full border text-sm transition ${
-                registerMethod === "phone"
+              className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full border text-sm transition ${registerMethod === "phone"
                   ? "bg-blue text-white border-blue"
                   : "bg-gray-1 border-gray-3 text-dark hover:bg-gray-2"
-              }`}
+                }`}
             >
               <DevicePhoneMobileIcon className="w-4 h-4" />
               موبایل
@@ -425,11 +403,10 @@ useEffect(() => {
             <button
               type="button"
               onClick={() => setRegisterMethod("email")}
-              className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full border text-sm transition ${
-                registerMethod === "email"
+              className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full border text-sm transition ${registerMethod === "email"
                   ? "bg-blue text-white border-blue"
                   : "bg-gray-1 border-gray-3 text-dark hover:bg-gray-2"
-              }`}
+                }`}
             >
               <EnvelopeIcon className="w-4 h-4" />
               ایمیل
@@ -546,11 +523,10 @@ useEffect(() => {
                 type="button"
                 key={cat}
                 onClick={() => handleCategoryChange(cat)}
-                className={`px-3 py-1 rounded-full border text-sm transition ${
-                  formData.SuggestedCategories.includes(cat)
+                className={`px-3 py-1 rounded-full border text-sm transition ${formData.SuggestedCategories.includes(cat)
                     ? "bg-blue text-white border-blue"
                     : "bg-gray-1 border-gray-3 text-dark hover:bg-gray-2"
-                }`}
+                  }`}
               >
                 {cat}
               </button>
@@ -591,11 +567,10 @@ useEffect(() => {
                   return (
                     <div
                       key={product.id}
-                      className={`p-3 border rounded-md cursor-pointer transition ${
-                        isSelected
+                      className={`p-3 border rounded-md cursor-pointer transition ${isSelected
                           ? "bg-blue text-white border-blue"
                           : "bg-white border-gray-3 hover:bg-gray-2"
-                      }`}
+                        }`}
                       onClick={() => handleProductToggle(product)}
                     >
                       <p className="font-medium text-sm">{product.title}</p>

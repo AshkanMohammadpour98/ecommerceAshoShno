@@ -1,7 +1,5 @@
 "use client";
 import React from "react";
-
-import { Product } from "@/types/product";
 import { useModalContext } from "@/app/context/QuickViewModalContext";
 import { updateQuickView } from "@/redux/features/quickView-slice";
 import { addItemToCart } from "@/redux/features/cart-slice";
@@ -11,8 +9,8 @@ import { AppDispatch } from "@/redux/store";
 import Link from "next/link";
 import Image from "next/image";
 
-const SingleListItem = ({ item  }) => {
-    // منطق ستاره ها
+const SingleListItem = ({ item }) => {
+  // منطق ستاره ها
   const totalStars = 5;
 
   // تبدیل به عدد و محدود کردن بین 0 تا totalStars
@@ -35,7 +33,6 @@ const SingleListItem = ({ item  }) => {
         quantity: 1,
       })
     );
-  
   };
 
   const handleItemToWishList = () => {
@@ -49,151 +46,144 @@ const SingleListItem = ({ item  }) => {
   };
 
   return (
-    <div className="group rounded-lg bg-white shadow-1">
-      <div className="flex">
-        <div className="shadow-list relative overflow-hidden flex items-center justify-center max-w-[270px] w-full sm:min-h-[270px] p-4">
-          <Image src={item.imgs.previews[0]} alt="" width={250} height={250} />
-
-          <div className="absolute left-0 bottom-0 translate-y-full w-full flex items-center justify-center gap-2.5 pb-5 ease-linear duration-200 group-hover:translate-y-0">
-            <button
+    <div dir="rtl" className="group rounded-lg bg-white shadow-1 border border-gray-100 hover:shadow-2 transition-all duration-300">
+      <div className="flex flex-col md:flex-row">
+        
+        {/* ======== بخش تصویر محصول ======== */}
+        <div className="relative overflow-hidden flex items-center justify-center bg-gray-50/50 min-w-[240px] md:max-w-[240px] w-full p-4 rounded-r-lg">
+          <Image 
+            src={item.imgs.previews[0]} 
+            alt={item.title} 
+            width={220} 
+            height={220} 
+            className="object-contain mix-blend-multiply group-hover:scale-105 transition-transform duration-500"
+          />
+          
+          {/* وضعیت محصول روی تصویر */}
+          {item.condition && (
+            <span className="absolute top-3 right-3 text-[10px] font-bold px-3 py-1 rounded-full bg-blue text-white shadow-sm z-10">
+              {item.condition}
+            </span>
+          )}
+          {/* لایه اکشن‌های سریع که در هاور ظاهر می‌شود */}
+          <div className=" absolute inset-0
+    bg-black/0 md:bg-black/5
+    opacity-100
+    md:opacity-0
+    md:group-hover:opacity-100
+    transition-opacity duration-300
+    flex items-center justify-center gap-3">
+             <button
               onClick={() => {
                 openModal();
                 handleQuickViewUpdate();
               }}
-              aria-label="button for quick view"
-              className="flex items-center justify-center w-9 h-9 rounded-[5px] shadow-1 ease-out duration-200 text-dark bg-white hover:text-blue"
+              className="w-10 h-10 rounded-full bg-white text-dark hover:bg-blue hover:text-white flex items-center justify-center shadow-lg transition-all transform hover:-translate-y-1"
+              title="مشاهده سریع"
             >
-              <svg
-                className="fill-current"
-                width="16"
-                height="16"
-                viewBox="0 0 16 16"
-                fill="none"
-                xmlns="http://www.w3.org/2000/svg"
-              >
-                <path
-                  fillRule="evenodd"
-                  clipRule="evenodd"
-                  d="M8.00016 5.5C6.61945 5.5 5.50016 6.61929 5.50016 8C5.50016 9.38071 6.61945 10.5 8.00016 10.5C9.38087 10.5 10.5002 9.38071 10.5002 8C10.5002 6.61929 9.38087 5.5 8.00016 5.5ZM6.50016 8C6.50016 7.17157 7.17174 6.5 8.00016 6.5C8.82859 6.5 9.50016 7.17157 9.50016 8C9.50016 8.82842 8.82859 9.5 8.00016 9.5C7.17174 9.5 6.50016 8.82842 6.50016 8Z"
-                  fill=""
-                />
-                <path
-                  fillRule="evenodd"
-                  clipRule="evenodd"
-                  d="M8.00016 2.16666C4.99074 2.16666 2.96369 3.96946 1.78721 5.49791L1.76599 5.52546C1.49992 5.87102 1.25487 6.18928 1.08862 6.5656C0.910592 6.96858 0.833496 7.40779 0.833496 8C0.833496 8.5922 0.910592 9.03142 1.08862 9.4344C1.25487 9.81072 1.49992 10.129 1.76599 10.4745L1.78721 10.5021C2.96369 12.0305 4.99074 13.8333 8.00016 13.8333C11.0096 13.8333 13.0366 12.0305 14.2131 10.5021L14.2343 10.4745C14.5004 10.129 14.7455 9.81072 14.9117 9.4344C15.0897 9.03142 15.1668 8.5922 15.1668 8C15.1668 7.40779 15.0897 6.96858 14.9117 6.5656C14.7455 6.18927 14.5004 5.87101 14.2343 5.52545L14.2131 5.49791C13.0366 3.96946 11.0096 2.16666 8.00016 2.16666ZM2.57964 6.10786C3.66592 4.69661 5.43374 3.16666 8.00016 3.16666C10.5666 3.16666 12.3344 4.69661 13.4207 6.10786C13.7131 6.48772 13.8843 6.7147 13.997 6.9697C14.1023 7.20801 14.1668 7.49929 14.1668 8C14.1668 8.50071 14.1023 8.79199 13.997 9.0303C13.8843 9.28529 13.7131 9.51227 13.4207 9.89213C12.3344 11.3034 10.5666 12.8333 8.00016 12.8333C5.43374 12.8333 3.66592 11.3034 2.57964 9.89213C2.28725 9.51227 2.11599 9.28529 2.00334 9.0303C1.89805 8.79199 1.8335 8.50071 1.8335 8C1.8335 7.49929 1.89805 7.20801 2.00334 6.9697C2.11599 6.7147 2.28725 6.48772 2.57964 6.10786Z"
-                  fill=""
-                />
+              <svg width="18" height="18" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path fillRule="evenodd" clipRule="evenodd" d="M8 5.5C6.619 5.5 5.5 6.619 5.5 8C5.5 9.381 6.619 10.5 8 10.5C9.381 10.5 10.5 9.381 10.5 8C10.5 6.619 9.381 5.5 8 5.5ZM6.5 8C6.5 7.172 7.172 6.5 8 6.5C8.829 6.5 9.5 7.172 9.5 8C9.5 8.828 8.829 9.5 8 9.5C7.172 9.5 6.5 8.828 6.5 8Z" fill="currentColor"/>
+                <path fillRule="evenodd" clipRule="evenodd" d="M8 2.167C5 2.167 3 3.97 1.8 5.525C1.5 5.87 1.25 6.19 1.1 6.566C0.9 6.97 0.83 7.408 0.83 8C0.83 8.592 0.91 9.031 1.1 9.434C1.25 9.81 1.5 10.13 1.8 10.475C3 12.03 5 13.833 8 13.833C11 13.833 13 12.03 14.2 10.475C14.5 10.13 14.75 9.81 14.9 9.434C15.1 9.031 15.17 8.592 15.17 8C15.17 7.408 15.1 6.97 14.9 6.566C14.75 6.19 14.5 5.87 14.2 5.525C13 3.97 11 2.167 8 2.167Z" fill="currentColor"/>
               </svg>
             </button>
-
             <button
-              onClick={() => handleAddToCart()}
-              className="inline-flex font-medium text-custom-sm py-[7px] px-5 rounded-[5px] bg-blue text-white ease-out duration-200 hover:bg-blue-dark"
+              onClick={handleItemToWishList}
+              className="w-10 h-10 rounded-full bg-white text-dark hover:bg-red-500 hover:text-white flex items-center justify-center shadow-lg transition-all transform hover:-translate-y-1"
+              title="افزودن به علاقه‌مندی"
             >
-              فزودن به سبد خرید
-            </button>
-
-            <button
-              onClick={() => handleItemToWishList()}
-              aria-label="button for favorite select"
-              className="flex items-center justify-center w-9 h-9 rounded-[5px] shadow-1 ease-out duration-200 text-dark bg-white hover:text-blue"
-            >
-              <svg
-                className="fill-current"
-                width="16"
-                height="16"
-                viewBox="0 0 16 16"
-                fill="none"
-                xmlns="http://www.w3.org/2000/svg"
-              >
-                <path
-                  fillRule="evenodd"
-                  clipRule="evenodd"
-                  d="M3.74949 2.94946C2.6435 3.45502 1.83325 4.65749 1.83325 6.0914C1.83325 7.55633 2.43273 8.68549 3.29211 9.65318C4.0004 10.4507 4.85781 11.1118 5.694 11.7564C5.89261 11.9095 6.09002 12.0617 6.28395 12.2146C6.63464 12.491 6.94747 12.7337 7.24899 12.9099C7.55068 13.0862 7.79352 13.1667 7.99992 13.1667C8.20632 13.1667 8.44916 13.0862 8.75085 12.9099C9.05237 12.7337 9.3652 12.491 9.71589 12.2146C9.90982 12.0617 10.1072 11.9095 10.3058 11.7564C11.142 11.1118 11.9994 10.4507 12.7077 9.65318C13.5671 8.68549 14.1666 7.55633 14.1666 6.0914C14.1666 4.65749 13.3563 3.45502 12.2503 2.94946C11.1759 2.45832 9.73214 2.58839 8.36016 4.01382C8.2659 4.11175 8.13584 4.16709 7.99992 4.16709C7.864 4.16709 7.73393 4.11175 7.63967 4.01382C6.26769 2.58839 4.82396 2.45832 3.74949 2.94946ZM7.99992 2.97255C6.45855 1.5935 4.73256 1.40058 3.33376 2.03998C1.85639 2.71528 0.833252 4.28336 0.833252 6.0914C0.833252 7.86842 1.57358 9.22404 2.5444 10.3172C3.32183 11.1926 4.2734 11.9253 5.1138 12.5724C5.30431 12.7191 5.48911 12.8614 5.66486 12.9999C6.00636 13.2691 6.37295 13.5562 6.74447 13.7733C7.11582 13.9903 7.53965 14.1667 7.99992 14.1667C8.46018 14.1667 8.88401 13.9903 9.25537 13.7733C9.62689 13.5562 9.99348 13.2691 10.335 12.9999C10.5107 12.8614 10.6955 12.7191 10.886 12.5724C11.7264 11.9253 12.678 11.1926 13.4554 10.3172C14.4263 9.22404 15.1666 7.86842 15.1666 6.0914C15.1666 4.28336 14.1434 2.71528 12.6661 2.03998C11.2673 1.40058 9.54129 1.5935 7.99992 2.97255Z"
-                  fill=""
-                />
+              <svg width="18" height="18" viewBox="0 0 16 16" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                <path d="M8 2.972C6.458 1.594 4.732 1.4 3.334 2.04C1.856 2.715 0.833 4.283 0.833 6.091C0.833 7.868 1.574 9.224 2.544 10.317C3.322 11.193 4.273 11.925 5.114 12.572L8 14.167L10.886 12.572C11.726 11.925 12.678 11.193 13.455 10.317C14.426 9.224 15.167 7.868 15.167 6.091C15.167 4.283 14.143 2.715 12.666 2.04C11.267 1.4 9.541 1.594 8 2.972Z" />
               </svg>
             </button>
           </div>
         </div>
 
-        <div className="w-full flex flex-col gap-5 sm:flex-row sm:items-center justify-center sm:justify-between py-5 px-4 sm:px-7.5 lg:pl-11 lg:pr-12">
-          <div>
-            <h3 className="font-medium text-dark ease-out duration-200 hover:text-blue mb-1.5">
-              <Link href={`/shop-details/${item._id}`}> {item.title} </Link>
+        {/* ======== بخش اطلاعات مرکزی ======== */}
+        <div className="flex-grow flex flex-col md:flex-row p-6 lg:p-8 gap-6">
+          
+          <div className="flex-grow flex flex-col justify-center border-l border-gray-50 pl-6">
+            <div className="flex items-center gap-2 mb-2 text-xs text-blue font-medium uppercase tracking-wider">
+              <span>{item.categorie}</span>
+              <span className="w-1 h-1 bg-gray-300 rounded-full"></span>
+              <span>کد محصول: {item.id}</span>
+            </div>
+
+            <h3 className="text-xl font-bold text-dark hover:text-blue transition-colors mb-3">
+              <Link href={`/shop-details/${item._id?.$oid || item._id}`}> {item.title} </Link>
             </h3>
 
-            <span className="flex items-center gap-2 font-medium text-lg">
-              {(item.hasDiscount && item.discountedPrice && item.discountedPrice > 0) ? (
+            {/* بخش توضیحات کوتاه برای پر کردن فضای خالی میانی */}
+            {item.description?.short && (
+              <p className="text-gray-500 text-sm leading-7 line-clamp-2 mb-4">
+                {item.description.short}
+              </p>
+            )}
+
+            <div className="flex items-center gap-2.5">
+              <div className="flex items-center gap-1">
+                {[...Array(totalStars)].map((_, i) => (
+                  <StarItem key={i} index={i} safeFilled={safeFilled} />
+                ))}
+              </div>
+              <p className="text-xs text-gray-400 font-medium mt-1">({item.reviews}امتیاز)</p>
+            </div>
+          </div>
+
+          {/* ======== بخش قیمت و دکمه خرید ======== */}
+          <div className="md:min-w-[180px] flex flex-col justify-center items-center md:items-start gap-4">
+            <div className="flex flex-col items-center md:items-start">
+              {item.hasDiscount && item.discountedPrice ? (
                 <>
-                  <span className="text-dark-4 line-through">${item.price.toLocaleString()}</span>
-                  <span className="text-dark">${item.discountedPrice.toLocaleString()}</span>
+                  <span className="text-gray-400 line-through text-sm decoration-red-400/50">${item.price.toLocaleString()}</span>
+                  <span className="text-2xl font-black text-blue">${item.discountedPrice.toLocaleString()}</span>
                 </>
               ) : (
-                <span className="text-dark">${item.price.toLocaleString()}</span>
+                <span className="text-2xl font-black text-dark">${item.price.toLocaleString()}</span>
               )}
-            </span>
+            </div>
+            
+            <button
+              onClick={handleAddToCart}
+              className="w-full bg-dark hover:bg-blue text-white px-5 py-3 rounded-md text-sm font-bold transition-all flex items-center justify-center gap-2 group/btn"
+            >
+              <svg width="18" height="18" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" className="transition-transform group-hover/btn:translate-x-1">
+                <path d="M14.1667 15.8333C14.6269 15.8333 15 16.2064 15 16.6667C15 17.1269 14.6269 17.5 14.1667 17.5C13.7064 17.5 13.3333 17.1269 13.3333 16.6667C13.3333 16.2064 13.7064 15.8333 14.1667 15.8333Z" fill="currentColor"/>
+                <path d="M7.5 15.8333C7.96024 15.8333 8.33333 16.2064 8.33333 16.6667C8.33333 17.1269 7.96024 17.5 7.5 17.5C7.03976 17.5 6.66667 17.1269 6.66667 16.6667C6.66667 16.2064 7.03976 15.8333 7.5 15.8333Z" fill="currentColor"/>
+                <path d="M2.5 3.33333H4.16667L5 11.6667H15L15.8333 5H5.83333" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+              <span>افزودن به سبد</span>
+            </button>
+            
+            <p className={`text-[11px] font-bold ${item.count > 0 ? 'text-green-600' : 'text-red-500'}`}>
+               {item.count > 0 ? `در انبار: ${item.count} عدد موجود` : 'ناموجود در انبار'}
+            </p>
           </div>
 
-          <div className="flex items-center gap-2.5 mb-2">
-            <div style={{ display: "flex", gap: "4px" }}>
-                  {[...Array(totalStars)].map((_, i) => {
-                    // ستاره پر
-                    if (i < Math.floor(safeFilled)) {
-                      return (
-                        <Image
-                          key={i}
-                          src="/images/icons/icon-star.svg"
-                          alt="star icon"
-                          width={15}
-                          height={15}
-                        />
-                      );
-                    }
-                    // ستاره نیمه پر (مثلاً برای امتیاز 3.5)
-                    if (i === Math.floor(safeFilled) && safeFilled % 1 >= 0.5) {
-                      return (
-                        <Image
-                          key={i}
-                          src="/images/icons/icon-star-half.svg"
-                          alt="half star icon"
-                          width={15}
-                          height={15}
-                        />
-                      );
-                    }
-                    // ستاره خالی (SVG که دادی)
-                    return (
-                      <svg
-                        key={i}
-                        className="fill-gray-4"
-                        width="18"
-                        height="18"
-                        viewBox="0 0 18 18"
-                        fill="none"
-                        xmlns="http://www.w3.org/2000/svg"
-                      >
-                        <g clipPath="url(#clip0_375_9172)">
-                          <path
-                            d="M16.7906 6.72187L11.7 5.93438L9.39377 1.09688C9.22502 0.759375 8.77502 0.759375 8.60627 1.09688L6.30002 5.9625L1.23752 6.72187C0.871891 6.77812 0.731266 7.25625 1.01252 7.50938L4.69689 11.3063L3.82502 16.6219C3.76877 16.9875 4.13439 17.2969 4.47189 17.0719L9.05627 14.5687L13.6125 17.0719C13.9219 17.2406 14.3156 16.9594 14.2313 16.6219L13.3594 11.3063L17.0438 7.50938C17.2688 7.25625 17.1563 6.77812 16.7906 6.72187Z"
-                            fill=""
-                          />
-                        </g>
-                        <defs>
-                          <clipPath id="clip0_375_9172">
-                            <rect width="18" height="18" fill="white" />
-                          </clipPath>
-                        </defs>
-                      </svg>
-                    );
-                  })}
-                </div>
-
-            <p className="text-custom-sm">({item.reviews})</p>
-          </div>
         </div>
       </div>
     </div>
+  );
+};
+
+// کامپوننت داخلی برای مدیریت بهینه ستاره‌ها
+const StarItem = ({ index, safeFilled }) => {
+  // ستاره پر
+  if (index < Math.floor(safeFilled)) {
+    return (
+      <Image src="/images/icons/icon-star.svg" alt="star" width={14} height={14} />
+    );
+  }
+  // ستاره نیمه
+  if (index === Math.floor(safeFilled) && safeFilled % 1 >= 0.5) {
+    return (
+      <Image src="/images/icons/icon-star-half.svg" alt="half star" width={14} height={14} />
+    );
+  }
+  // ستاره خالی
+  return (
+    <svg className="text-gray-200 fill-current" width="16" height="16" viewBox="0 0 18 18">
+      <path d="M16.7906 6.72187L11.7 5.93438L9.39377 1.09688C9.22502 0.759375 8.77502 0.759375 8.60627 1.09688L6.30002 5.9625L1.23752 6.72187C0.871891 6.77812 0.731266 7.25625 1.01252 7.50938L4.69689 11.3063L3.82502 16.6219C3.76877 16.9875 4.13439 17.2969 4.47189 17.0719L9.05627 14.5687L13.6125 17.0719C13.9219 17.2406 14.3156 16.9594 14.2313 16.6219L13.3594 11.3063L17.0438 7.50938C17.2688 7.25625 17.1563 6.77812 16.7906 6.72187Z" />
+    </svg>
   );
 };
 

@@ -17,6 +17,7 @@ const QuickViewModal = () => {
   const { isModalOpen, closeModal } = useModalContext();
   const { openPreviewModal } = usePreviewSlider();
   const [quantity, setQuantity] = useState(1);
+  const [showFull, setShowFull] = useState(false);
 
   const dispatch = useDispatch<AppDispatch>();
 
@@ -254,7 +255,7 @@ const QuickViewModal = () => {
 
                   <span>
                     <span className="font-medium text-dark"> 4.7 Rating </span>
-                    <span className="text-dark-2"> (5 reviews) </span>
+                    <span className="text-dark-2"> (5 امتیاز) </span>
                   </span>
                 </div>
 
@@ -283,16 +284,46 @@ const QuickViewModal = () => {
                     </defs>
                   </svg>
 
-                  <span className="font-medium text-dark"> In Stock </span>
+                  <span className="font-medium text-dark"> {product.condition} </span>
                 </div>
               </div>
 
-              <p>
-                متن لوریم فارسی، یا همان «طرح‌نما»، متنی ساختگی ض77777777ض
-                و بی‌معنی است که برای نشان دادن ظاهر و چیدمان یک طراحی
-                (مثل وب‌سایت یا فایل چاپی) بدون حواس‌پرتی از محتوای
-                واقعی به کار می‌رود.
-              </p>
+          {/* بخش توضیحات و توضیحات بیشتر */}
+<div className="text-gray-700 leading-7">
+  <div
+    className={`overflow-hidden transition-all duration-500 ease-in-out ${
+      showFull ? "max-h-[2000px] opacity-100" : "max-h-24 opacity-100"
+    }`}
+  >
+    <p>
+      {showFull
+        ? product.description?.full || "توضیحی موجود نیست"
+        : product.description?.short || "توضیحی موجود نیست"}
+
+      {!showFull && product.description?.short && (
+        <>
+          <span>...</span>
+          <button
+            onClick={() => setShowFull(true)}
+            className="mr-1 text-blue-light hover:text-blue font-medium transition-colors"
+          >
+            بیشتر
+          </button>
+        </>
+      )}
+
+      {showFull && product.description?.full && (
+        <button
+          onClick={() => setShowFull(false)}
+          className="mr-1 text-sm text-blue-light hover:text-blue font-medium transition-colors"
+        >
+          نمایش کمتر
+        </button>
+      )}
+    </p>
+  </div>
+</div>
+
 
               <div className="flex flex-wrap justify-between gap-5 mt-6 mb-7.5">
                 <div>

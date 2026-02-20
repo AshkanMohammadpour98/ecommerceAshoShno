@@ -6,8 +6,8 @@ import { writeFile } from "fs/promises";
 import path from "path";
 import crypto from "crypto";
 import fs from "fs";
-  const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL
-  const CATEGORYS_URL = process.env.NEXT_PUBLIC_API_CATEGORYS_URL
+const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL
+const CATEGORYS_URL = process.env.NEXT_PUBLIC_API_CATEGORYS_URL
 
 /* =========================
    تابع کمکی برای حذف فیزیکی فایل‌ها
@@ -31,13 +31,13 @@ export async function GET(req, { params }) {
   try {
     await connectDB();
 
-    const { _id } = await  params;
+    const { _id } = await params;
     console.log(_id);
-  
-    
+
+
     const product = await Product.findById(_id);
     console.log(product);
-    
+
 
     if (!product) {
       return NextResponse.json(
@@ -96,6 +96,8 @@ async function saveFiles(files, subFolder) {
 export async function PATCH(req, { params }) {
   try {
     await connectDB();
+    const fd = new FormData();
+
 
     // 🟢 دریافت id محصول از URL
     const { _id } = await params;
@@ -105,11 +107,25 @@ export async function PATCH(req, { params }) {
 
     // 🟢 گرفتن محصول فعلی برای fallback
     const product = await Product.findById(_id);
+
     if (!product) {
       return NextResponse.json(
         { message: "محصول یافت نشد" },
         { status: 404 }
       );
+    }
+    /* =========================
+       🟢 QR Datas (جدید)
+    ========================= */
+    let QRDatas = product.QRDatas;
+
+    const qrRaw = formData.get("QRDatas");
+    if (qrRaw) {
+      try {
+        QRDatas = JSON.parse(qrRaw);
+      } catch (e) {
+        console.warn("QRDatas JSON parse failed");
+      }
     }
 
     /* =========================
@@ -125,10 +141,6 @@ export async function PATCH(req, { params }) {
     const discountedPrice =
       formData.get("discountedPrice") || product.discountedPrice;
 
-    /* =========================
-       🟢 description (خیلی مهم)
-       اینجا مشکل اصلی حل شد
-    ========================= */
     const descriptionShort =
       formData.get("descriptionShort") ||
       product.description?.short ||
@@ -147,48 +159,48 @@ export async function PATCH(req, { params }) {
       product.condition ||
       "نو آکبند";
 
-   /* =========================
-   تصاویر
-   فقط ایندکس‌هایی که فایل جدید دارند تغییر می‌کنند
-   🟢 تغییر جدید: اگر عکس قبلی وجود داشت، قبل از جایگزینی حذف می‌شود
-   🟢 تغییر جدید: فولدر جدید ساخته نمی‌شود، عکس در همان فولدر قبلی جایگزین می‌شود
-========================= */
-let updatedThumbnails = [...(product.imgs?.thumbnails || [])];
-let updatedPreviews = [...(product.imgs?.previews || [])];
+    /* =========================
+    تصاویر
+    فقط ایندکس‌هایی که فایل جدید دارند تغییر می‌کنند
+    🟢 تغییر جدید: اگر عکس قبلی وجود داشت، قبل از جایگزینی حذف می‌شود
+    🟢 تغییر جدید: فولدر جدید ساخته نمی‌شود، عکس در همان فولدر قبلی جایگزین می‌شود
+ ========================= */
+    let updatedThumbnails = [...(product.imgs?.thumbnails || [])];
+    let updatedPreviews = [...(product.imgs?.previews || [])];
 
-for (let i = 0; i < 4; i++) {
-  const thumbFile = formData.get(`thumb_${i}`);
-  if (thumbFile && typeof thumbFile !== "string") {
-    // 🟢 تعیین فولدر بر اساس عکس قبلی یا title
-    let folderNameThumb = updatedThumbnails[i]
-      ? updatedThumbnails[i].split("/uploads/products/")[1].split("/")[0] // فولدر موجود
-      : title.replace(/\s+/g, "-"); // اگر عکس قبلی نبود، فولدر جدید بر اساس title ساخته می‌شود
+    for (let i = 0; i < 4; i++) {
+      const thumbFile = formData.get(`thumb_${i}`);
+      if (thumbFile && typeof thumbFile !== "string") {
+        // 🟢 تعیین فولدر بر اساس عکس قبلی یا title
+        let folderNameThumb = updatedThumbnails[i]
+          ? updatedThumbnails[i].split("/uploads/products/")[1].split("/")[0] // فولدر موجود
+          : title.replace(/\s+/g, "-"); // اگر عکس قبلی نبود، فولدر جدید بر اساس title ساخته می‌شود
 
-    const saved = await saveFiles([thumbFile], folderNameThumb);
+        const saved = await saveFiles([thumbFile], folderNameThumb);
 
-    // 🟢 حذف عکس قبلی قبل از جایگزینی با عکس جدید
-    if (updatedThumbnails[i]) removeFile(updatedThumbnails[i]);
+        // 🟢 حذف عکس قبلی قبل از جایگزینی با عکس جدید
+        if (updatedThumbnails[i]) removeFile(updatedThumbnails[i]);
 
-    // 🟢 جایگزینی عکس جدید
-    updatedThumbnails[i] = saved[0];
-  }
+        // 🟢 جایگزینی عکس جدید
+        updatedThumbnails[i] = saved[0];
+      }
 
-  const prevFile = formData.get(`prev_${i}`);
-  if (prevFile && typeof prevFile !== "string") {
-    // 🟢 تعیین فولدر بر اساس عکس قبلی یا title
-    let folderNamePrev = updatedPreviews[i]
-      ? updatedPreviews[i].split("/uploads/products/")[1].split("/")[0] // فولدر موجود
-      : title.replace(/\s+/g, "-"); // اگر عکس قبلی نبود، فولدر جدید بر اساس title ساخته می‌شود
+      const prevFile = formData.get(`prev_${i}`);
+      if (prevFile && typeof prevFile !== "string") {
+        // 🟢 تعیین فولدر بر اساس عکس قبلی یا title
+        let folderNamePrev = updatedPreviews[i]
+          ? updatedPreviews[i].split("/uploads/products/")[1].split("/")[0] // فولدر موجود
+          : title.replace(/\s+/g, "-"); // اگر عکس قبلی نبود، فولدر جدید بر اساس title ساخته می‌شود
 
-    const saved = await saveFiles([prevFile], folderNamePrev);
+        const saved = await saveFiles([prevFile], folderNamePrev);
 
-    // 🟢 حذف عکس قبلی قبل از جایگزینی با عکس جدید
-    if (updatedPreviews[i]) removeFile(updatedPreviews[i]);
+        // 🟢 حذف عکس قبلی قبل از جایگزینی با عکس جدید
+        if (updatedPreviews[i]) removeFile(updatedPreviews[i]);
 
-    // 🟢 جایگزینی عکس جدید
-    updatedPreviews[i] = saved[0];
-  }
-}
+        // 🟢 جایگزینی عکس جدید
+        updatedPreviews[i] = saved[0];
+      }
+    }
 
 
     /* =========================
@@ -212,6 +224,7 @@ for (let i = 0; i < 4; i++) {
           thumbnails: updatedThumbnails,
           previews: updatedPreviews,
         },
+        QRDatas,
       },
       { new: true }
     );
@@ -240,7 +253,7 @@ for (let i = 0; i < 4; i++) {
 export async function DELETE(req, { params }) {
   try {
     await connectDB();
-    const { _id } =  await params;
+    const { _id } = await params;
 
     // 1. پیدا کردن محصول قبل از حذف برای دسترسی به آدرس تصاویر
     const product = await Product.findById(_id);
@@ -268,13 +281,13 @@ export async function DELETE(req, { params }) {
     // 5. تعامل با API دسته‌بندی (طبق درخواست شما)
     // نکته: اگر نیاز دارید آیتمی از دسته‌بندی‌ها کم شود، اینجا باید ریکوئست بزنید
     try {
-       await fetch(`${BASE_URL}${CATEGORYS_URL}`, {
-         method: 'DELETE',
-         body: JSON.stringify({ categoryName: product.categorie }),
-         headers: { 'Content-Type': 'application/json' }
-       });
+      await fetch(`${BASE_URL}${CATEGORYS_URL}`, {
+        method: 'DELETE',
+        body: JSON.stringify({ categoryName: product.categorie }),
+        headers: { 'Content-Type': 'application/json' }
+      });
     } catch (catErr) {
-       console.log("خطا در آپدیت دسته‌بندی، اما محصول حذف شد.");
+      console.log("خطا در آپدیت دسته‌بندی، اما محصول حذف شد.");
     }
 
     return NextResponse.json(

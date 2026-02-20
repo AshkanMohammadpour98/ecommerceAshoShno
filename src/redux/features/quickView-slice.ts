@@ -16,6 +16,10 @@ const initialState = {
     title: "", // عنوان محصول
     reviews: 0, // تعداد نظرات
     count : 0,
+     description: {
+      short: "",  //  جمله برای کارت محصول
+      full: "", // توضیحات کامل
+    } ,
     price: 0, // قیمت اصلی
     hasDiscount : false , // ایا تخفیف دارد یا نه
     discountedPrice: 0, // قیمت با تخفیف
@@ -23,6 +27,7 @@ const initialState = {
     id: 0, // شناسه محصول برای کارهای دستی کوچک
     _id: 0, // شناسه محصول
     images: [], // لیست تصاویر
+    condition : "نو آکبند",
     imgs: { thumbnails: [], previews: [] }, // تصاویر بندانگشتی و پیش‌نمایش
   } ,
 } ;

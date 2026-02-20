@@ -69,9 +69,24 @@ const SingleGridItem = ({ item }) => {
           width={250}
           height={250}
         />
+        
+        {/* ======== وضعیت محصول روی تصویر ======== */}
+{item.condition && (
+  <span
+    className={`absolute top-2 right-2 text-xs font-semibold px-2 py-1 rounded-full bg-blue text-white shadow-md `}
+  >
+    {item.condition}
+  </span>
+)}
+
 
         {/* دکمه‌هایی که با هاور ظاهر می‌شوند */}
-        <div className="absolute left-0 bottom-0 translate-y-full w-full flex items-center justify-center gap-2.5 pb-5 ease-linear duration-200 group-hover:translate-y-0">
+        <div className=" absolute left-0 bottom-0 w-full
+    translate-y-0
+    md:translate-y-full
+    md:group-hover:translate-y-0
+    flex items-center justify-center gap-2.5 pb-5
+    transition-transform duration-300 ease-out">
 
           {/* دکمه مشاهده سریع */}
           <button

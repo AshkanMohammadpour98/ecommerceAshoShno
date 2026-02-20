@@ -3,7 +3,7 @@ import Users from '/models/Users'
 import connectDB from '/utils/ConnectDB'
 import bcrypt from "bcrypt";
 import jwt from 'jsonwebtoken'
-import {serialize} from "cookie"
+import { serialize } from "cookie"
 import { NextResponse } from 'next/server';
 
 
@@ -44,10 +44,35 @@ export async function POST(request) {
     }
 
     // ============================
-    // ۲) پیدا کردن کاربر بر اساس ایمیل
+    // ۲) پیدا کردن کاربر بر اساس ایمیل و شماره
     // ============================
 
-    const isUserExist = await Users.findOne({ email });
+    // پیدا کردن کاربر
+let isUserExist;
+
+// ============================
+// ✨ نرمال‌سازی ایمیل (حل مشکل حروف بزرگ/کوچیک)
+// ============================
+
+if (email && email.trim() !== "") {
+
+  // ۱️⃣ حذف فاصله‌های اضافی و تبدیل به lowercase
+  const cleanEmail = email.trim().toLowerCase();
+
+  // ۲️⃣ جستجو به صورت case-insensitive
+  // حتی اگر در دیتابیس حروف بزرگ ذخیره شده باشد پیدا می‌شود
+  isUserExist = await Users.findOne({
+    email: { $regex: new RegExp("^" + cleanEmail + "$", "i") }
+  });
+
+} else if (phone && phone.trim() !== "") {
+
+  //  برای شماره تلفن فقط trim کافی است
+  const cleanPhone = phone.trim();
+
+  isUserExist = await Users.findOne({ phone: cleanPhone });
+}
+
 
     // اگر ایمیل اشتباه باشد یا کاربر وجود نداشته باشد
     if (!isUserExist) {
@@ -108,9 +133,9 @@ export async function POST(request) {
         maxAge: 60 * 60 * 2, // اعتبار ۲ ساعت
         // sameSite: "strict",   // جلوگیری از CSRF
         // secure: true,   // فقط روی HTTPS فعال می‌شود
-         sameSite: "lax",
-    secure: process.env.NODE_ENV === "production",
-                       // اگر روی localhost تست می‌کنی باید false کنی
+        sameSite: "lax",
+        secure: process.env.NODE_ENV === "production",
+        // اگر روی localhost تست می‌کنی باید false کنی
       })
     );
 
@@ -137,8 +162,8 @@ export function PUT() {
   return Response.json({ error: "Method Not Allowed", status: 405 });
 }
 export function DELETE() {
-  return Response.json({ error: "Method Not Allowed" ,status: 405 });
+  return Response.json({ error: "Method Not Allowed", status: 405 });
 }
 export function PATCH() {
-  return Response.json({ error: "Method Not Allowed" , status: 405 });
+  return Response.json({ error: "Method Not Allowed", status: 405 });
 }

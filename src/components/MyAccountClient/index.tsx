@@ -241,6 +241,106 @@ const MyAccountClient: React.FC<MyAccountClientProps> = () => {
     address: user.address || "",
     phone: user.phone || "",
   });
+  // 🟢 state برای ویرایش اطلاعات حساب (نام، ایمیل، تلفن)
+  const [accountForm, setAccountForm] = useState({
+    name: user.name || "",
+    lastName: user.lastName || "",
+    email: user.email || "",
+    phone: user.phone || "",
+  });
+  // 🔴 state برای مدیریت خطاهای ولیدیشن
+  const [accountErrors, setAccountErrors] = useState({
+    email: "",
+    phone: "",
+  });
+  // ✅ Regex حرفه‌ای ایمیل
+  const emailRegex =
+    /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+
+  // ✅ Regex موبایل ایران (فقط 09 شروع شود و 11 رقم)
+  const phoneRegex =
+    /^09\d{9}$/;
+
+  // 🟢 هندل تغییر فیلدها + پاک شدن ارور هنگام تایپ
+  const handleAccountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+
+    setAccountForm((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+
+    // پاک شدن خطای همان فیلد هنگام تایپ
+    setAccountErrors((prev) => ({
+      ...prev,
+      [name]: "",
+    }));
+  };
+
+
+  // 🛑 جلوگیری از حذف همزمان ایمیل و تلفن
+  // 🛑 ولیدیشن کامل ایمیل و شماره
+  const validateContactFields = () => {
+    let errors = {
+      email: "",
+      phone: "",
+    };
+
+    let isValid = true;
+
+    // ❌ اگر هر دو خالی باشند
+    if (!accountForm.email && !accountForm.phone) {
+      errors.email = "حداقل یکی از ایمیل یا شماره تلفن باید وارد شود";
+      errors.phone = "حداقل یکی از ایمیل یا شماره تلفن باید وارد شود";
+      isValid = false;
+    }
+
+    // 🔵 اگر ایمیل وارد شده ولی معتبر نیست
+    if (accountForm.email && !emailRegex.test(accountForm.email)) {
+      errors.email = "فرمت ایمیل معتبر نیست";
+      isValid = false;
+    }
+
+    // 🔵 اگر شماره وارد شده ولی معتبر نیست
+    if (accountForm.phone && !phoneRegex.test(accountForm.phone)) {
+      errors.phone = "شماره موبایل باید 09xxxxxxxxx باشد";
+      isValid = false;
+    }
+
+    setAccountErrors(errors);
+
+    return isValid;
+  };
+
+  // 💾 ذخیره تغییرات حساب کاربری
+  const handleSaveAccount = async () => {
+
+    // اعتبارسنجی حداقل یکی از ایمیل یا شماره
+    if (!validateContactFields()) return;
+
+    try {
+      const res = await fetch(`${USERS_URL}/${user._id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: accountForm.name,
+          lastName: accountForm.lastName,
+          email: accountForm.email,
+          phone: accountForm.phone,
+        }),
+      });
+
+      if (res.ok) {
+        toast.success("اطلاعات با موفقیت بروزرسانی شد");
+        router.refresh();
+      } else {
+        toast.error("خطا در ذخیره اطلاعات");
+      }
+    } catch (err) {
+      toast.error("ارتباط با سرور برقرار نشد");
+    }
+  };
+
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -323,19 +423,21 @@ const MyAccountClient: React.FC<MyAccountClientProps> = () => {
     }
   };
 
-  const formatPrice = (price: number) => price.toLocaleString();
+  const formatPrice = (price?: number | null) =>
+    (price ?? 0).toLocaleString();
+
   // 🔹 ذخیره یا ویرایش آدرس در سرور
   const handleSaveAddress = async (data: { recipient: string; address: string; phone: string }) => {
     // اگر آدرس وجود داشت ویرایش، اگر نبود ایجاد
     try {
       const res = await fetch(`${USERS_URL}/${user._id}`, {
-  method: 'PUT', // ✅ بک‌اند فقط PUT قبول می‌کنه
-  headers: { 'Content-Type': 'application/json' },
-  body: JSON.stringify({
-    address: data.address,
-    phone: data.phone,
-  }),
-});
+        method: 'PUT', // ✅ بک‌اند فقط PUT قبول می‌کنه
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          address: data.address,
+          phone: data.phone,
+        }),
+      });
 
 
       if (res.ok) {
@@ -498,11 +600,26 @@ const MyAccountClient: React.FC<MyAccountClientProps> = () => {
                           </div>
                           <div className="flex justify-between items-end mt-4">
                             <div className="flex flex-col">
-                              {product.hasDiscount && <span className="text-xs text-red line-through decoration-red">{formatPrice(product.price)} $</span>}
-                              <span className="text-xl font-bold text-dark">{formatPrice(product.discountedPrice)} $</span>
+
+                              {product.hasDiscount && (
+                                <span className="text-xs text-red line-through decoration-red">
+                                  {formatPrice(product.price)} $
+                                </span>
+                              )}
+
+                              <span className="text-xl font-bold text-dark">
+                                {formatPrice(
+                                  product.hasDiscount ? product.discountedPrice : product.price
+                                )} $
+                              </span>
+
                             </div>
-                            <button className="text-blue text-sm font-medium hover:underline">مشاهده فاکتور</button>
+
+                            <button className="text-blue text-sm font-medium hover:underline">
+                              مشاهده فاکتور
+                            </button>
                           </div>
+
                         </div>
                       </div>
                     ))}
@@ -634,7 +751,7 @@ const MyAccountClient: React.FC<MyAccountClientProps> = () => {
                           onClick={() => handleRemoveItem(item.id)}
                           className="col-span-2 text-red-500"
                         >
-                          <XMarkIcon className="w-5 h-5 mx-auto" />
+                          <XMarkIcon className="w-5 h-5 mx-auto text-red" />
                         </button>
                       </div>
                     ))}
@@ -711,16 +828,102 @@ const MyAccountClient: React.FC<MyAccountClientProps> = () => {
               {/* ACCOUNT DETAILS TAB */}
               {activeTab === "account-details" && (
                 <div className="animate-fadeIn">
-                  <h2 className="text-heading-6 font-bold text-dark mb-6">ویرایش اطلاعات حساب</h2>
-                  <form className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div className="space-y-1"><label className="text-sm font-medium text-body">نام</label><input type="text" defaultValue={user.name} className="w-full border border-gray-3 rounded-lg px-4 py-3 bg-white" /></div>
-                    <div className="space-y-1"><label className="text-sm font-medium text-body">نام خانوادگی</label><input type="text" defaultValue={user.lastName} className="w-full border border-gray-3 rounded-lg px-4 py-3 bg-white" /></div>
+                  <h2 className="text-heading-6 font-bold text-dark mb-6">
+                    ویرایش اطلاعات حساب
+                  </h2>
+
+                  <form
+                    onSubmit={(e) => {
+                      e.preventDefault();
+                      handleSaveAccount();
+                    }}
+                    className="grid grid-cols-1 md:grid-cols-2 gap-6"
+                  >
+                    {/* نام */}
+                    <div className="space-y-1">
+                      <label className="text-sm font-medium text-body">نام</label>
+                      <input
+                        type="text"
+                        name="name"
+                        value={accountForm.name}
+                        onChange={handleAccountChange}
+                        className="w-full border border-gray-3 rounded-lg px-4 py-3 bg-white"
+                      />
+                    </div>
+
+                    {/* نام خانوادگی */}
+                    <div className="space-y-1">
+                      <label className="text-sm font-medium text-body">نام خانوادگی</label>
+                      <input
+                        type="text"
+                        name="lastName"
+                        value={accountForm.lastName}
+                        onChange={handleAccountChange}
+                        className="w-full border border-gray-3 rounded-lg px-4 py-3 bg-white"
+                      />
+                    </div>
+
+                    {/* ایمیل */}
+                    <div className="space-y-1">
+                      <label className="text-sm font-medium text-body">
+                        ایمیل
+                      </label>
+                      <input
+                        type="email"
+                        name="email"
+                        value={accountForm.email}
+                        onChange={handleAccountChange}
+                        placeholder="در صورت تمایل ایمیل وارد کنید"
+                        className={`w-full border rounded-lg px-4 py-3 bg-white
+      ${accountErrors.email ? "border-red" : "border-gray-3"}`}
+                      />
+
+                      {/* 🔴 نمایش خطا */}
+                      {accountErrors.email && (
+                        <p className="text-red text-xs mt-1">
+                          {accountErrors.email}
+                        </p>
+                      )}
+                    </div>
+
+
+                    {/* شماره تلفن */}
+                    <div className="space-y-1">
+                      <label className="text-sm font-medium text-body">
+                        شماره تلفن
+                      </label>
+                      <input
+                        type="tel"
+                        name="phone"
+                        value={accountForm.phone}
+                        onChange={handleAccountChange}
+                        placeholder="09xxxxxxxxx"
+                        className={`w-full border rounded-lg px-4 py-3 bg-white
+      ${accountErrors.phone ? "border-red" : "border-gray-3"}`}
+                      />
+
+                      {/* 🔴 نمایش خطا */}
+                      {accountErrors.phone && (
+                        <p className="text-red text-xs mt-1">
+                          {accountErrors.phone}
+                        </p>
+                      )}
+                    </div>
+
+
+                    {/* دکمه ذخیره */}
                     <div className="col-span-1 md:col-span-2 flex justify-end mt-4">
-                      <button type="button" className="bg-blue hover:bg-blue-dark text-white px-8 py-3 rounded-lg font-medium shadow-2">ذخیره تغییرات</button>
+                      <button
+                        type="submit"
+                        className="bg-blue hover:bg-blue-dark text-white px-8 py-3 rounded-lg font-medium shadow-2"
+                      >
+                        ذخیره تغییرات
+                      </button>
                     </div>
                   </form>
                 </div>
               )}
+
             </div>
           </div>
         </div>

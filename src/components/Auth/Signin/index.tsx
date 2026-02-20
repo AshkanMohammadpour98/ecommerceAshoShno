@@ -19,16 +19,6 @@ const toEnglishDigits = (s = "") =>
 
 const onlyDigitsEnglish = (val = "") => toEnglishDigits(val).replace(/\D/g, "");
 
-// کوکی با انقضای پیش‌فرض 1 روز (86400 ثانیه)
-// const setCookie = (name, value, { maxAgeSec = 86400 } = {}) => {
-//   const secure =
-//     typeof window !== "undefined" && window.location.protocol === "https:" ? "; Secure" : "";
-//   document.cookie = `${name}=${encodeURIComponent(
-//     value
-//   )}; Path=/; Max-Age=${maxAgeSec}; SameSite=Lax${secure}`;
-// };
-
-
 // ===================================================
 
 export default function SigninPage() {
@@ -52,6 +42,10 @@ export default function SigninPage() {
 const handleSubmit = async (e) => {
   e.preventDefault();
 
+  if (password.length < 6) {
+  return { ok: false, msg: "رمز باید حداقل ۶ کاراکتر باشد." };
+}
+
   // ============= بررسی اولیه ورودی‌ها =============
   const v = validate();
   if (!v.ok) {
@@ -71,7 +65,7 @@ const handleSubmit = async (e) => {
         : identifier.trim().toLowerCase();
 
     // ============= ساختن payload ارسالی به API =============
-    // API شما گفته فقط "یکی" از این دو باید پر باشد
+    // API   فقط "یکی" از این دو باید پر باشد البته هردو هم میشه پر باشه
     const payload = {
       phone: loginMethod === "phone" ? normalizedIdentifier : "",
       email: loginMethod === "email" ? normalizedIdentifier : "",
@@ -97,7 +91,7 @@ const handleSubmit = async (e) => {
       Swal.fire({
         icon: "error",
         title: "ورود ناموفق",
-        text: data.message || "اطلاعات وارد شده صحیح نیست.",
+        text: data.error || data.message || "اطلاعات وارد شده صحیح نیست.",
       });
       return;
     }

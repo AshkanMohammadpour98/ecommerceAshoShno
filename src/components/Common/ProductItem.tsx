@@ -57,8 +57,19 @@ const ProductItem = ({ item }) => {
   return (
     <div className="group  bg-white shadow-1 p-2 rounded-lg">
       <div className="relative flex h-[280px] w-full items-center justify-center overflow-hidden rounded-lg  mb-4">
-{       item.imgs.previews[0] && <Image src={item.imgs.previews[0] } alt="img previews" width={250} height={250} />
-}
+        {item.imgs.previews[0] && <Image src={item.imgs.previews[0]} alt="img previews" width={250} height={250} />
+        }
+  
+        {/* ======== وضعیت محصول روی تصویر ======== */}
+{item.condition && (
+  <span
+    className={`absolute top-2 right-2 text-xs font-semibold px-2 py-1 rounded-full bg-blue text-white shadow-md `}
+  >
+    {item.condition}
+  </span>
+)}
+
+
         <div className="absolute left-0 bottom-0 translate-y-full w-full flex items-center justify-center gap-2.5 pb-5 ease-linear duration-200 group-hover:translate-y-0">
           <button
             onClick={() => {
@@ -127,51 +138,51 @@ const ProductItem = ({ item }) => {
       <div className="mb-3 flex items-center justify-between">
         <div className="flex items-center gap-1.5">
           {/* <!-- stars --> */}
-               <div className="flex items-center gap-2.5 mb-2">
-                 <div style={{ display: "flex", gap: "4px" }}>
-                   {[...Array(totalStars)].map((_, i) => {
-                     if (i < Math.floor(safeFilled)) {
-                       return (
-                         <Image
-                           key={i}
-                           src="/images/icons/icon-star.svg"
-                           alt="star"
-                           width={15}
-                           height={15}
-                         />
-                       );
-                     }
-                     if (i === Math.floor(safeFilled) && safeFilled % 1 >= 0.5) {
-                       return (
-                         <Image
-                           key={i}
-                           src="/images/icons/icon-star-half.svg"
-                           alt="half-star"
-                           width={15}
-                           height={15}
-                         />
-                       );
-                     }
-                     return (
-                       <svg
-                         key={i}
-                         className="fill-gray-4"
-                         width="18"
-                         height="18"
-                         viewBox="0 0 18 18"
-                         fill="none"
-                         xmlns="http://www.w3.org/2000/svg"
-                       >
-                         <path
-                           d="M16.7906 6.72187L11.7 5.93438L9.39377 1.09688C9.22502 0.759375 8.77502 0.759375 8.60627 1.09688L6.30002 5.9625L1.23752 6.72187C0.871891 6.77812 0.731266 7.25625 1.01252 7.50938L4.69689 11.3063L3.82502 16.6219C3.76877 16.9875 4.13439 17.2969 4.47189 17.0719L9.05627 14.5687L13.6125 17.0719C13.9219 17.2406 14.3156 16.9594 14.2313 16.6219L13.3594 11.3063L17.0438 7.50938C17.2688 7.25625 17.1563 6.77812 16.7906 6.72187Z"
-                           fill=""
-                         />
-                       </svg>
-                     );
-                   })}
-                 </div>
-                 <p className="text-custom-sm">({item.reviews} از 5)</p>
-               </div>
+          <div className="flex items-center gap-2.5 mb-2">
+            <div style={{ display: "flex", gap: "4px" }}>
+              {[...Array(totalStars)].map((_, i) => {
+                if (i < Math.floor(safeFilled)) {
+                  return (
+                    <Image
+                      key={i}
+                      src="/images/icons/icon-star.svg"
+                      alt="star"
+                      width={15}
+                      height={15}
+                    />
+                  );
+                }
+                if (i === Math.floor(safeFilled) && safeFilled % 1 >= 0.5) {
+                  return (
+                    <Image
+                      key={i}
+                      src="/images/icons/icon-star-half.svg"
+                      alt="half-star"
+                      width={15}
+                      height={15}
+                    />
+                  );
+                }
+                return (
+                  <svg
+                    key={i}
+                    className="fill-gray-4"
+                    width="18"
+                    height="18"
+                    viewBox="0 0 18 18"
+                    fill="none"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path
+                      d="M16.7906 6.72187L11.7 5.93438L9.39377 1.09688C9.22502 0.759375 8.77502 0.759375 8.60627 1.09688L6.30002 5.9625L1.23752 6.72187C0.871891 6.77812 0.731266 7.25625 1.01252 7.50938L4.69689 11.3063L3.82502 16.6219C3.76877 16.9875 4.13439 17.2969 4.47189 17.0719L9.05627 14.5687L13.6125 17.0719C13.9219 17.2406 14.3156 16.9594 14.2313 16.6219L13.3594 11.3063L17.0438 7.50938C17.2688 7.25625 17.1563 6.77812 16.7906 6.72187Z"
+                      fill=""
+                    />
+                  </svg>
+                );
+              })}
+            </div>
+            <p className="text-custom-sm">({item.reviews} از 5)</p>
+          </div>
         </div>
       </div>
 

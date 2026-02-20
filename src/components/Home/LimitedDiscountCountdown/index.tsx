@@ -41,12 +41,6 @@ const CounDown = () => {
   const [timeProgress, setTimeProgress] = useState(0);
 
 
-
-
-  console.log(
-    `${BASE_URL}${LIMITED_DISCOUNT_URL}`
-  );
-
   // ============================================
   // دریافت داده‌ها از API
   // ============================================
@@ -268,11 +262,19 @@ const CounDown = () => {
                 {product.title}
               </h2>
 
-              {/* توضیح */}
+              {/* توضیح وارد شده برای محصول */}
               <p className="text-body leading-relaxed mb-4">
                 {discount.description ||
                   "این محصول با تخفیف زمان‌دار ارائه شده است. فرصت را از دست ندهید!"}
               </p>
+              {/* توضیح کوتاه محصول */}
+              {/* توضیح کوتاه محصول */}
+              {product?.description?.short && (
+                <p className="text-body leading-relaxed mb-4">
+                  {product.description.short}
+                </p>
+              )}
+
 
               {/* قیمت */}
               <div className="flex items-center gap-3 mb-4 justify-start flex-wrap">
@@ -357,8 +359,8 @@ const CounDown = () => {
                 href={`/shop-details/${product._id}`}
                 aria-label="مشاهده محصول"
                 className={`inline-flex items-center justify-center font-semibold text-white py-4 px-10 rounded-xl ease-out duration-200 shadow-2 ${expired
-                    ? "bg-gray-4 cursor-not-allowed"
-                    : "bg-blue hover:bg-blue-dark hover:shadow-3 hover:scale-105"
+                  ? "bg-gray-4 cursor-not-allowed"
+                  : "bg-blue hover:bg-blue-dark hover:shadow-3 hover:scale-105"
                   }`}
                 onClick={(e) => expired && e.preventDefault()}
               >

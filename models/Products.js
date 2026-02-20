@@ -80,18 +80,13 @@ const productsSchema = new Schema(
       },
     },
 
-    QRDatas: {
-      id: String,
-      name: String,
-      config: Schema.Types.Mixed,
-      preview: {
-        url: String,
-        width: Number,
-        height: Number,
-        mime: String,
-      },
-      dateAddQrCode: String,
-    },
+ QRDatas: {
+  id: String,
+  name: String,
+  config: Schema.Types.Mixed,
+  dateAddQrCode: String,
+},
+
 
 
     description: {

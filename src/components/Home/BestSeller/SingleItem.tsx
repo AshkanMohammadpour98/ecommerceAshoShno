@@ -127,7 +127,13 @@ const SingleItem = ({ item }) => {
         </div>
 
         {/* دکمه‌های کناری */}
-        <div className="absolute right-0 bottom-0 translate-x-full u-w-full flex flex-col gap-2 p-5.5 ease-linear duration-300 group-hover:translate-x-0">
+        <div className="absolute right-0 bottom-0 u-w-full
+    flex flex-col gap-2 p-5.5
+    transition-transform duration-300 ease-linear
+
+    translate-x-0
+    md:translate-x-full
+    md:group-hover:translate-x-0">
           <button
             onClick={() => {
               handleQuickViewUpdate();

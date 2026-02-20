@@ -282,18 +282,18 @@ const ProductDetails = () => {
                 <h1 className="text-3xl md:text-4xl font-black text-gray-900 leading-tight">{product.title}</h1>
                 {/* وضعیت محصول (نو، استوک، کارکرده و...) */}
                 {/* وضعیت محصول */}
-{product.condition && (
-  <div
-    className={`
+                {product.condition && (
+                  <div
+                    className={`
       mt-2 inline-flex items-center gap-2 px-4 py-1.5 rounded-full
       text-xs font-black
       ${CONDITION_STYLES[product.condition] || "bg-gray-100 text-gray-600"}
     `}
-  >
-    <span className="w-2 h-2 rounded-full bg-current opacity-70"></span>
-    {product.condition}
-  </div>
-)}
+                  >
+                    <span className="w-2 h-2 rounded-full bg-current opacity-70"></span>
+                    {product.condition}
+                  </div>
+                )}
 
                 <div className="flex gap-2 shrink-0">
                   <button
@@ -563,7 +563,7 @@ const ProductDetails = () => {
                   <button onClick={() => {
                     navigator.clipboard.writeText(window.location.href);
                     alert("لینک محصول کپی شد");
-                  }} className="flex items-center gap-2 text-xs font-bold text-blue-light bg-white border border-blue-dark px-4 py-2 rounded-xl hover:bg-blue-dark hover:text-white transition-all">
+                  }} className="flex items-center gap-2 text-xs font-bold text-blue-light bg-white border border-blue px-4 py-2 rounded-xl hover:bg-blue hover:text-white transition-all">
                     <ClipboardDocumentIcon className="w-4 h-4" /> کپی لینک
                   </button>
                 </div>
@@ -617,18 +617,105 @@ const ProductDetails = () => {
                 )}
 
 
-                {activeTab === 'specs' && (
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                {activeTab === "specs" && (
+                  <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-4">
+
+                    {/* مشخصات پایه */}
                     <SpecRow label="دسته‌بندی" value={product.categorie} />
                     <SpecRow label="کد اختصاصی" value={product._id} isMono />
-                    <SpecRow label="وضعیت انبار" value={`${product.count} عدد موجود`} isGreen />
+                    <SpecRow
+                      label="وضعیت انبار"
+                      value={`${product.count} عدد موجود`}
+                      isGreen
+                    />
                     <SpecRow label="تاریخ درج" value={product.date} />
-                    {/* نمایش داینامیک مشخصات از API در صورت وجود */}
-                    {product.specs && Object.entries(product.specs).map(([key, val]: any) => (
-                      <SpecRow key={key} label={key} value={val} />
-                    ))}
+
+                    {/* ================= QR CODE ================= */}
+                    {product?.QRDatas?.config?.value && (
+                      <div
+                        className="md:col-span-2 mt-4 p-5 rounded-3xl border border-dashed border-blue-200 bg-gradient-to-br from-blue-50/60 to-white flex flex-col sm:flex-row gap-6 items-center"
+                      >
+                        {/* QR Preview */}
+                        <div className="shrink-0 bg-white p-4 rounded-2xl border shadow-sm">
+                          <img
+                            src={`https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=${encodeURIComponent(
+                              product.QRDatas.config.value
+                            )}`}
+                            alt="QR Code"
+                            className="w-32 h-32 object-contain"
+                          />
+                        </div>
+
+                        {/* QR Details */}
+                        <div className="flex-1 w-full space-y-3 text-sm">
+
+                          <div className="flex items-center gap-2 font-black text-blue-700">
+                            <QrCodeIcon className="w-5 h-5" />
+                            شناسنامه دیجیتال محصول
+                          </div>
+
+                          <p className="text-gray-600 text-xs leading-6 break-all bg-white rounded-xl p-3 border">
+                            {product.QRDatas.config.value}
+                          </p>
+
+                          {product.QRDatas.dateAddQrCode && (
+                            <p className="text-[11px] text-gray-400 font-bold">
+                              تاریخ ایجاد QR: {product.QRDatas.dateAddQrCode}
+                            </p>
+                          )}
+
+                          {/* Actions */}
+                          <div className="flex flex-wrap gap-3 pt-2">
+                            <button
+                              onClick={() => {
+                                navigator.clipboard.writeText(
+                                  product.QRDatas.config.value
+                                );
+                                Swal.fire({
+                                  icon: "success",
+                                  title: "لینک QR کپی شد",
+                                  timer: 1200,
+                                  showConfirmButton: false,
+                                });
+                              }}
+                              className={`
+                inline-flex items-center gap-2
+                px-4 py-2 rounded-xl text-xs font-bold
+                bg-white border border-blue-200 text-blue-600
+                hover:bg-blue-600 hover:text-blue
+                transition-all
+              `}
+                            >
+                              <ClipboardDocumentIcon className="w-4 h-4" />
+                              کپی لینک QR
+                            </button>
+
+                            <a
+                              href={product.QRDatas.config.value}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className={`
+                inline-flex items-center gap-2
+                px-4 py-2 rounded-xl text-xs font-bold
+                bg-blue-600 text-white
+                hover:bg-blue-700 transition-all
+              `}
+                            >
+                              مشاهده لینک
+                            </a>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* ================= مشخصات داینامیک ================= */}
+                    {product?.specs &&
+                      Object.entries(product.specs).map(([key, value]: any) => (
+                        <SpecRow key={key} label={key} value={value} />
+                      ))}
                   </div>
                 )}
+
 
                 {activeTab === 'reviews' && (
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-8 items-center">
